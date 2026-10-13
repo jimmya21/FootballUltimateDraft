@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07090d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Grid">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>Grid</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root { --bg:#07090d; --ink:#eceae4; --muted:#9aa0aa; --edge:#4f5866; --accent:#2fbf8f; --field:#1b212a; --fieldtext:#f3f1ec; }
+  * { box-sizing:border-box; }
+  html { touch-action:manipulation; -webkit-text-size-adjust:100%; background:var(--bg); }
+  .cell, #board svg { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  .cell.filled { touch-action:none; }
+  #boardWrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  #pickerSearch { font-size:16px; }
+  #solveOverlay { position:fixed; inset:0; z-index:50; background:var(--bg); display:flex; flex-direction:column; }
+  #solveOverlay[hidden] { display:none; }
+  #solveOverlay .bar { display:flex; align-items:center; gap:12px; padding:calc(10px + env(safe-area-inset-top)) 16px 10px; }
+  #solveFrame { flex:1; border:0; width:100%; background:var(--bg); }
+  @media (pointer:coarse) { .cell .lvl { font-size:16px; transform:scale(.62); transform-origin:center top; margin-bottom:-8px; } }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif; }
+  header { padding-top:calc(16px + env(safe-area-inset-top)) !important; display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; justify-content:space-between; padding:16px 24px; }
+  h1 { margin:0; font-size:1.4rem; letter-spacing:.02em; }
+  #status { color:var(--muted); font-size:.9rem; }
+  button { font:inherit; padding:9px 16px; border-radius:6px; border:2px solid var(--ink); background:var(--ink); color:var(--bg); cursor:pointer; }
+  button:focus-visible, select:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  #board { position:relative; width:min(100%,1000px); margin:0 auto 8px; aspect-ratio:1036/877; }
+  #board svg { position:absolute; inset:0; width:100%; height:100%; }
+  .edge { stroke:var(--edge); stroke-width:2.5; transition:stroke .2s; }
+  .edge.c0 { stroke:#b5524f; stroke-width:4; }
+  .edge.c1 { stroke:#c2ad3f; stroke-width:4; }
+  .edge.c2 { stroke:#5aa064; stroke-width:4; }
+  .hex { fill:#151a22; stroke:#4a5361; stroke-width:2; }
+  .shine { fill:url(#shine); pointer-events:none; opacity:0; }
+  .chem { fill:#222833; stroke:#4a5361; stroke-width:2; }
+  #total { position:sticky; bottom:0; padding-bottom:calc(14px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 12px 14px; background:linear-gradient(transparent, var(--bg) 35%); color:var(--muted); text-align:center; }
+  #total .row { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px 40px; }
+  #total .two strong { font-size:1.35rem; }
+  #total .stat { display:flex; flex-direction:column; align-items:center; }
+  #total strong { font-size:2rem; line-height:1.1; color:var(--ink); }
+  #total small { font-size:.75rem; min-height:1em; }
+  #total .draft strong { color:var(--accent); }
+  .hex.ok { stroke:#5aa064 !important; stroke-width:6; }
+  .hex.bad { stroke:#b5524f !important; stroke-width:6; }
+  .hex, .chem { touch-action:none; }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  #solve { align-self:center; }
+  .cell.filled { cursor:grab; }
+  body.view .cell.filled { cursor:default; }
+  .cell.filled .pick { cursor:pointer; }
+  .info { user-select:none; }
+  body.dragging { cursor:grabbing; user-select:none; }
+  .ghost { position:fixed; transform:translate(-50%,-130%); padding:6px 12px; border-radius:6px; background:#eceae4; color:#07090d; font-weight:600; pointer-events:none; z-index:10; box-shadow:0 4px 14px rgba(0,0,0,.5); }
+  .cell { position:absolute; width:15.5%; transform:translate(-50%,-50%); text-align:center; color:#f3f1ec; }
+  .cell select:not(.lvl) { display:none; }
+  .cell .lvl { display:block; margin:3px auto 0; font:inherit; font-size:clamp(.55rem,1.2vw,.75rem); padding:1px 4px; border-radius:4px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); cursor:pointer; }
+  .cell .lvl[hidden] { display:none; }
+  .cell .pick { display:block; width:100%; font:inherit; font-size:clamp(.6rem,1.5vw,.85rem); padding:4px 6px; border-radius:4px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+  body.view .pick:disabled { opacity:1; cursor:default; }
+  #picker { position:fixed; z-index:20; display:flex; flex-direction:column; background:#10151c; border:1px solid #3b4452; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.6); color:var(--ink); }
+  #picker[hidden] { display:none; }
+  #picker .top { display:flex; gap:6px; padding:8px; }
+  #pickerSearch { flex:1; min-width:0; padding:8px 10px; border-radius:6px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); font:inherit; }
+  #pickerClear { padding:6px 10px; font-size:.8rem; background:transparent; color:var(--ink); border:1px solid #4a5361; }
+  #pickerList { list-style:none; margin:0; padding:0 4px 6px; overflow:auto; }
+  #pickerList li { padding:7px 10px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  #pickerList li small { color:var(--muted); white-space:nowrap; }
+  #pickerList li.active, #pickerList li:hover { background:#232b36; }
+  #pickerList li.sel span { color:var(--accent); font-weight:600; }
+  #pickerList li.empty { color:var(--muted); cursor:default; }
+  .info { margin-top:4px; font-size:clamp(.55rem,1.25vw,.75rem); line-height:1.35; min-height:2.7em; color:#d9d6cf; }
+  #hint { padding:0 24px 6px; color:var(--muted); font-size:.78rem; word-break:break-all; }
+  #hint:empty { display:none; }
+  .info b { color:var(--accent); font-weight:600; }
+  .cell.filled .info { color:var(--tx, #14181f); }
+  @media (max-width:700px) {
+    #board { width:640px; max-width:none; margin:0 auto 8px; }
+    #total .row { gap:6px 16px; }
+    #total strong { font-size:1.6rem; }
+    #total .two strong { font-size:1.2rem; }
+    #total small { font-size:.68rem; }
+    header { padding-left:16px; padding-right:16px; }
+    #hint { padding-left:16px; padding-right:16px; }
+  }
+  @media (max-height:700px) { #total { position:static; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Grid</h1>
+  <span id="status">No player database yet. Tap Update Player Database to add your Excel file.</span>
+  <button id="load">Update Player Database</button>
+  <input id="file" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden>
+</header>
+<div id="hint"></div>
+
+<div id="boardWrap">
+<div id="board">
+  <svg viewBox="0 0 1036 877" preserveAspectRatio="none" id="svg"></svg>
+</div>
+</div>
+
+<div id="solveOverlay" hidden>
+  <div class="bar"><button id="solveClose">Close</button><strong>Best lineup</strong></div>
+  <iframe id="solveFrame" title="Best lineup"></iframe>
+</div>
+
+<div id="total">
+  <div class="row">
+    <div class="stat"><span>Talent</span><strong id="talentNum">0</strong><small>from star levels</small></div>
+    <div class="stat"><span>Total chemistry</span><strong id="chemNum">0</strong><small id="chemSub">players 0 + links 0</small></div>
+    <div class="stat draft"><span>Draft total</span><strong id="draftNum">0</strong><small id="draftSub">chemistry + talent</small></div>
+  </div>
+  <div class="row two">
+    <div class="stat"><span>Max Score</span><strong id="maxNum">&ndash;</strong></div>
+    <div class="stat"><span>Accuracy</span><strong id="accNum">&ndash;</strong></div>
+    <button id="solve" disabled>View Solution</button>
+  </div>
+</div>
+
+<script>
+// Hexagon centers (x,y) in a 1036 x 877 grid, matching the layout sketch.
+// When this page is opened with #solution=..., it shows the best lineup read-only.
+let VIEW = null;
+try { const m = location.hash.match(/^#solution=(.+)$/); if (m) { const v = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(v) && v.length === 9) VIEW = v; } } catch (e) {}
+const NODES = [[382,118],[631,116],[131,313],[376,427],[624,426],[922,298],[166,655],[503,743],[855,661]];
+// Links between hexagons (indexes into NODES).
+const LINKS = [[0,1],[0,2],[0,3],[1,4],[1,5],[2,3],[2,6],[3,6],[3,7],[4,5],[4,7],[4,8],[5,8],[6,7],[7,8]];
+const W = 1036, H = 877, HW = 190, HH = 190;
+// Positions allowed in each hexagon (1 to 9, in order). Edit here to change them.
+const ALLOWED = [['RB'],['WR'],['RB','WR','TE'],['QB'],['QB'],['RB','WR','TE'],['WR'],['TE'],['RB']];
+
+const svg = document.getElementById('svg'), board = document.getElementById('board');
+const NS = 'http://www.w3.org/2000/svg';
+// Glossy star-level colors: light highlight, base, dark shade.
+const TIER = {
+  5:{light:'#dcf3ff', base:'#7fd4ff', dark:'#3596cf', text:'#14181f'},  // light blue
+  4:{light:'#ecd0ff', base:'#b36cf5', dark:'#5b20a8', text:'#ffffff'},  // shiny purple
+  3:{light:'#fff3a6', base:'#ffd23a', dark:'#c99400', text:'#14181f'},  // shiny gold
+  2:{light:'#ffffff', base:'#bfd0ea', dark:'#6a85b3', text:'#14181f'},  // shiny blue/silver
+  1:{light:'#ff8f8f', base:'#e53935', dark:'#a31515', text:'#ffffff'}   // red
+};
+svg.innerHTML = '<defs>' + Object.entries(TIER).map(([n,c]) =>
+  `<linearGradient id="g${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.light}"/><stop offset=".4" stop-color="${c.base}"/><stop offset="1" stop-color="${c.dark}"/></linearGradient>`).join('') +
+  '<linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>';
+const lines = [];
+LINKS.forEach(([a,b]) => {
+  const l = document.createElementNS(NS,'line');
+  l.setAttribute('class','edge');
+  l.setAttribute('x1',NODES[a][0]); l.setAttribute('y1',NODES[a][1]);
+  l.setAttribute('x2',NODES[b][0]); l.setAttribute('y2',NODES[b][1]);
+  svg.appendChild(l); lines.push(l);
+});
+const hexes = [], selects = [], infos = [], cells = [], labels = [], shines = [], circles = [], starEls = [], btns = [], lvls = [];
+NODES.forEach(([x,y],i) => {
+  const p = document.createElementNS(NS,'polygon');
+  const C = .29; // corner cut of the octagon
+  const poly = list => list.map(([u,v]) => (x-HW/2+u*HW)+','+(y-HH/2+v*HH)).join(' ');
+  p.setAttribute('points', poly([[C,0],[1-C,0],[1,C],[1,1-C],[1-C,1],[C,1],[0,1-C],[0,C]])); p.setAttribute('class','hex');
+  svg.appendChild(p); hexes.push(p);
+  const sh = document.createElementNS(NS,'polygon');
+  sh.setAttribute('points', poly([[C+.02,.025],[1-C-.02,.025],[.975,C+.01],[.975,.5],[.025,.5],[.025,C+.01]])); sh.setAttribute('class','shine');
+  svg.appendChild(sh); shines.push(sh);
+  const cy = y - HH/2 + 34;
+  const circ = document.createElementNS(NS,'circle');
+  circ.setAttribute('cx',x); circ.setAttribute('cy',cy); circ.setAttribute('r',24); circ.setAttribute('class','chem');
+  circ.appendChild(document.createElementNS(NS,'title'));
+  svg.appendChild(circ); circles.push(circ);
+  const lab = document.createElementNS(NS,'text');
+  lab.setAttribute('x',x); lab.setAttribute('y',y+56);
+  lab.setAttribute('text-anchor','middle'); lab.setAttribute('fill','#9aa0aa');
+  lab.setAttribute('font-size','18'); lab.setAttribute('font-weight','600'); lab.setAttribute('stroke-width','5'); lab.setAttribute('stroke-linejoin','round'); lab.setAttribute('paint-order','stroke');
+  lab.setAttribute('font-family','Trebuchet MS, Segoe UI, Arial, sans-serif');
+  lab.textContent = ['RB','WR','TE'].every(q => ALLOWED[i].includes(q)) ? 'Flex' : ALLOWED[i].join(' / ');
+  svg.appendChild(lab); labels.push(lab);
+  const st = document.createElementNS(NS,'text');
+  st.setAttribute('x',x); st.setAttribute('y',y+84); st.setAttribute('text-anchor','middle');
+  st.setAttribute('fill','#ffd400'); st.setAttribute('font-size','22');
+  st.setAttribute('stroke','#3a2a00'); st.setAttribute('stroke-width','1.4'); st.setAttribute('paint-order','stroke');
+  st.setAttribute('letter-spacing','2');
+  st.setAttribute('font-family','Segoe UI Symbol, Arial, sans-serif'); st.style.pointerEvents = 'none';
+  svg.appendChild(st); starEls.push(st);
+
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.style.left = (x/W*100)+'%'; cell.style.top = (y/H*100)+'%';
+  const sel = document.createElement('select');
+  sel.setAttribute('aria-label','Player '+(i+1));
+  sel.innerHTML = '<option value="">Select player</option>';
+  sel.addEventListener('change', () => fill());
+  const info = document.createElement('div'); info.className = 'info';
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'pick'; btn.textContent = 'Select player';
+  btn.setAttribute('aria-label', 'Choose player ' + (i+1));
+  btn.addEventListener('click', () => togglePicker(i));
+  const lv = document.createElement('select');
+  lv.className = 'lvl'; lv.hidden = true; lv.setAttribute('aria-label', 'Skill level for player ' + (i+1));
+  lv.addEventListener('change', () => { const p = players[selects[i].value]; if (p) { p.level = Number(lv.value); fill(); } });
+  cell.append(btn, sel, info, lv); board.appendChild(cell); btns.push(btn); lvls.push(lv);
+  selects.push(sel); infos.push(info); cells.push(cell);
+});
+
+let players = [];
+const maxLevel = p => Math.max(...p.levels);
+// "4" -> [4]; "4,5" -> [4,5] (a card that can be either). Values are kept between 1 and 5.
+const parseLevels = v => {
+  const out = [];
+  String(v ?? '').split(/[,;|\/]+/).forEach(t => {
+    const n = parseFloat(t.replace(/[^0-9.]/g, ''));
+    if (!isNaN(n)) { const c = Math.min(5, Math.max(1, Math.round(n))); if (!out.includes(c)) out.push(c); }
+  });
+  return out.length ? out.sort((a, b) => a - b) : [1];
+};
+const yearOf = v => { const m = String(v ?? '').match(/(?:^|\D)((?:19|20)\d{2})(?:\D|$)/); return m ? m[1] : String(v ?? '').trim(); };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const stars = p => p.level;  // the level currently chosen for this card
+
+function show(i) {
+  const p = players[selects[i].value];
+  const n = p ? stars(p) : 0;
+  hexes[i].style.fill = p ? `url(#g${n})` : '';
+  hexes[i].style.stroke = p ? TIER[n].light : '';
+  shines[i].style.opacity = p ? 1 : 0;
+  hexes[i].style.cursor = p && !VIEW ? 'grab' : '';
+  cells[i].classList.toggle('filled', !!p);
+  btns[i].textContent = p ? p.name : 'Select player';
+  cells[i].style.setProperty('--tx', p ? TIER[n].text : '#14181f');
+  // Players with several possible levels get a small level dropdown.
+  const multi = !!p && p.levels.length > 1 && !VIEW;
+  lvls[i].hidden = !multi;
+  if (multi) { lvls[i].innerHTML = p.levels.map(v => `<option value="${v}">${v}\u2605</option>`).join(''); lvls[i].value = String(p.level); }
+  cells[i].style.top = ((NODES[i][1] + (multi ? 10 : 0)) / H * 100) + '%';
+  // Position hint: inside the octagon while empty, under it (with a dark outline so it reads over links) once filled.
+  labels[i].setAttribute('y', NODES[i][1] + (p ? HH/2 + 17 : 56));
+  labels[i].setAttribute('fill', p ? '#d5d9e0' : '#9aa0aa');
+  labels[i].setAttribute('stroke', p ? '#07090d' : 'none');
+  starEls[i].textContent = p ? '\u2605'.repeat(n) : '';
+  infos[i].innerHTML = p ? `${esc(p.position)} &middot; ${esc(p.team)}<br>${esc(p.division)} &middot; ${esc(p.draft)}` : '';
+}
+
+// Chemistry: 1 point each for matching division, team, draft year (max 2 per link).
+// 0 = red, 1 = yellow, 2 = green. Links with an empty hexagon stay neutral.
+const same = (x, y) => { const a = String(x).trim().toLowerCase(), b = String(y).trim().toLowerCase(); return a !== '' && a === b; };
+// Player chemistry from the links touching their octagon: 0-1 = 0 (red), 2-3 = 6 (yellow), 4+ = 11 (green).
+// Total chemistry = player chemistry + link points (yellow link 1, green link 2).
+const CHEM = [['#b5524f',0],['#c2ad3f',6],['#5aa064',11]];
+const TALENT = {5:15, 4:11, 3:8, 2:5, 1:3};
+// Best possible Draft total for the 9 chosen players: try every legal arrangement.
+let lastBest = null;
+function bestDraft() {
+  const ps = selects.map(sel => players[sel.value]);
+  if (ps.some(p => !p)) return null;
+  const n = ps.length;
+  const pair = ps.map(p => ps.map(q => Math.min(2, same(p.division,q.division) + same(p.team,q.team) + same(p.draft,q.draft))));
+  const fits = NODES.map((_, i) => ps.map(p => allowed(i, p)));
+  const talent = ps.reduce((t, p) => t + TALENT[stars(p)], 0);
+  const slot = new Array(n).fill(-1), used = new Array(n).fill(false);
+  let best = -1, bestSlots = [];
+  const score = () => {
+    const np = new Array(n).fill(0); let link = 0, pc = 0;
+    for (const [a, b] of LINKS) { const v = pair[slot[a]][slot[b]]; np[a] += v; np[b] += v; link += v; }
+    for (let i = 0; i < n; i++) pc += np[i] >= 4 ? 11 : np[i] >= 2 ? 6 : 0;
+    return pc + link + talent;
+  };
+  const place = i => {
+    if (i === n) { const v = score(); if (v > best) { best = v; bestSlots = slot.slice(); } return; }
+    for (let k = 0; k < n; k++) if (!used[k] && fits[i][k]) { used[k] = true; slot[i] = k; place(i + 1); used[k] = false; }
+  };
+  place(0);
+  return {score:best, lineup:bestSlots.map(k => ps[k])};
+}
+
+function chemistry() {
+  const nodePts = NODES.map(() => 0);
+  let linkTotal = 0;
+  LINKS.forEach(([a,b], n) => {
+    const p = players[selects[a].value], q = players[selects[b].value];
+    lines[n].setAttribute('class', 'edge');
+    if (!p || !q) return;
+    const pts = Math.min(2, same(p.division,q.division) + same(p.team,q.team) + same(p.draft,q.draft));
+    lines[n].setAttribute('class', 'edge c' + pts);
+    nodePts[a] += pts; nodePts[b] += pts; linkTotal += pts;
+  });
+  let playerTotal = 0, talent = 0;
+  selects.forEach((sel, i) => {
+    const p = players[sel.value], circ = circles[i], title = circ.querySelector('title');
+    if (!p) { circ.style.fill = ''; circ.style.stroke = ''; title.textContent = ''; return; }
+    const tier = nodePts[i] >= 4 ? 2 : nodePts[i] >= 2 ? 1 : 0;
+    const [color, earned] = CHEM[tier];
+    circ.style.fill = color; circ.style.stroke = '#fff';
+    title.textContent = 'Link chemistry: ' + nodePts[i] + ' (adds ' + earned + ')';
+    playerTotal += earned;
+    talent += TALENT[stars(p)];
+  });
+  const chem = playerTotal + linkTotal;
+  document.getElementById('chemNum').textContent = chem;
+  document.getElementById('chemSub').textContent = 'players ' + playerTotal + ' + links ' + linkTotal;
+  document.getElementById('talentNum').textContent = talent;
+  document.getElementById('draftNum').textContent = chem + talent;
+  const res = bestDraft();
+  lastBest = res;
+  document.getElementById('solve').disabled = !res;
+  document.getElementById('draftSub').textContent = VIEW && res ? 'best possible lineup' : 'chemistry + talent';
+  document.getElementById('maxNum').textContent = res ? res.score : '\u2013';
+  document.getElementById('accNum').textContent = res ? (Math.round((chem + talent) / res.score * 1000) / 10) + '%' : '\u2013';
+}
+
+const allowed = (i, p) => ALLOWED[i].includes(String(p.position).trim().toUpperCase());
+
+// Rebuild every dropdown: only allowed positions, and no player already used in another hexagon.
+function fill(forced) {
+  const picked = Array.isArray(forced) ? forced : selects.map(sel => sel.value);
+  selects.forEach((sel, i) => {
+    const keep = picked[i];
+    let html = '<option value="">Select player</option>';
+    players.forEach((p, k) => {
+      if (!allowed(i, p)) return;
+      if (String(k) !== keep && picked.includes(String(k))) return;
+      html += `<option value="${k}">${esc(p.name)}</option>`;
+    });
+    sel.innerHTML = html;
+    sel.value = keep && players[keep] ? keep : '';
+    show(i);
+  });
+  chemistry();
+}
+
+// ---- Player database: where it comes from and how it is kept.
+// 1) "Grid Database.xlsx" next to this page (if present) is loaded on every launch.
+// 2) "Update Player Database" lets you pick a newer copy from this device; it is saved and used from then on.
+// 3) The last loaded copy is stored on this device, so the app opens with your players even offline.
+const DB_KEY = 'grid.database.v1', DB_FILE = 'Grid Database.xlsx';
+let dbMeta = {name:'', updated:0, hostedHash:'', source:''};
+const stamp = t => { try { return new Date(t).toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}); } catch (e) { return ''; } };
+function saveDb(name, hostedHash) {
+  dbMeta.name = name; dbMeta.updated = Date.now();
+  dbMeta.source = hostedHash !== undefined ? 'site' : 'device';
+  if (hostedHash !== undefined) dbMeta.hostedHash = hostedHash;
+  try { localStorage.setItem(DB_KEY, JSON.stringify(Object.assign({}, dbMeta, {players}))); } catch (e) {}
+}
+function dbStatus(extra, saved) {
+  const src = saved ? 'saved copy on this device' : dbMeta.source === 'site' ? 'shared file from this site' : 'file added on this device';
+  document.getElementById('status').textContent = dbMeta.name + ' · ' + players.length + ' players · ' + src + ' · updated ' + stamp(dbMeta.updated) + (extra ? ' · ' + extra : '');
+}
+function loadDb() {
+  try {
+    const c = JSON.parse(localStorage.getItem(DB_KEY) || 'null');
+    if (!c || !Array.isArray(c.players)) return;
+    const list = c.players.filter(p => p && Array.isArray(p.levels) && p.levels.length);
+    if (!list.length) return;
+    players = list; players.forEach(p => { p.level = maxLevel(p); });
+    dbMeta = {name:c.name || DB_FILE, updated:c.updated || 0, hostedHash:c.hostedHash || '', source:c.source || ''};
+    selects.forEach(sel => sel.value = ''); fill();
+    dbStatus('', true);
+  } catch (e) {}
+}
+
+const keyOf = p => String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase();
+function parse(buf, name, hostedHash) {
+  const wb = XLSX.read(buf, {type:'array'});
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:'', raw:false, dateNF:'yyyy-mm-dd'});
+  const get = (r, key) => { const k = Object.keys(r).find(c => c.trim().toLowerCase() === key); return k ? r[k] : ''; };
+  const next = rows.map(r => ({
+    levels:parseLevels(get(r,'skill level')), name:get(r,'name'), position:get(r,'position'),
+    team:get(r,'team'), division:get(r,'division'), draft:yearOf(get(r,'draft year'))
+  })).filter(p => String(p.name).trim());
+  // A file with no players never replaces the database you already have.
+  if (!next.length) {
+    document.getElementById('status').textContent = name + ': no players found, so your current database was kept. Check the column names.';
+    return;
+  }
+  next.forEach(p => p.level = maxLevel(p));
+  next.sort((a,b) => String(a.name).localeCompare(String(b.name)));
+  // Keep the current lineup: match each placed player to the new file by name and position.
+  const kept = selects.map(sel => { const p = players[sel.value]; return p ? {key:keyOf(p), level:p.level} : null; });
+  players = next;
+  const used = new Set();
+  const picks = kept.map((k, i) => {
+    if (!k) return '';
+    const idx = players.findIndex((p, n) => !used.has(n) && keyOf(p) === k.key && allowed(i, p));
+    if (idx < 0) return '';
+    used.add(idx);
+    if (players[idx].levels.includes(k.level)) players[idx].level = k.level;
+    return String(idx);
+  });
+  const cleared = kept.filter(Boolean).length - picks.filter(Boolean).length;
+  fill(picks);
+  saveDb(name, hostedHash);
+  dbStatus(cleared ? cleared + ' lineup spot' + (cleared > 1 ? 's' : '') + ' cleared (player not in the new file)' : '');
+}
+
+async function readFile(file) {
+  if (typeof XLSX === 'undefined') { document.getElementById('status').textContent = 'The Excel reader has not loaded yet. Connect to the internet once, reopen the app, and try again.'; return; }
+  try { parse(await file.arrayBuffer(), file.name); }
+  catch (e) { document.getElementById('status').textContent = 'Could not read that file, so your current database was kept. Use an .xlsx file with the six columns.'; }
+}
+
+// Load the shared player database that sits beside this page when the app is hosted (same file for everyone with the link).
+// Common spellings of the file name are tried, and a clear message explains it if nothing is found.
+const DB_NAMES = [DB_FILE, 'Grid database.xlsx', 'grid database.xlsx', 'GridDatabase.xlsx', 'Grid_Database.xlsx', 'Grid-Database.xlsx', 'grid-database.xlsx'];
+async function loadHosted() {
+  if (!/^https?:$/.test(location.protocol)) return;
+  const st = document.getElementById('status'), hint = document.getElementById('hint');
+  if (typeof XLSX === 'undefined') { if (!players.length) st.textContent = 'The Excel reader has not loaded yet. Connect to the internet once, reopen the app, and try again.'; return; }
+  if (!players.length) st.textContent = 'Looking for the player database…';
+  let problem = '';
+  for (const name of DB_NAMES) {
+    try {
+      const res = await fetch(encodeURI(name), {cache:'no-cache'});
+      if (res.status === 404) continue;
+      if (!res.ok) { problem = 'The site answered with error ' + res.status + ' when asked for ' + name + '.'; continue; }
+      const buf = await res.arrayBuffer(), u = new Uint8Array(buf);
+      if (u.length < 4 || u[0] !== 0x50 || u[1] !== 0x4B) { problem = name + ' is on the site but is not a real .xlsx file. Open it in Excel and save it again as .xlsx.'; continue; }
+      let h = 2166136261; for (let i = 0; i < u.length; i++) { h ^= u[i]; h = Math.imul(h, 16777619); }
+      const hash = (h >>> 0).toString(16) + ':' + u.length;
+      if (hash !== dbMeta.hostedHash) parse(buf, name, hash);
+      else dbStatus();
+      hint.textContent = '';
+      return;
+    } catch (e) {
+      problem = 'Could not reach the site to check for the player database. Check your connection.';
+      break;
+    }
+  }
+  hint.textContent = 'This page is ' + location.href.split('#')[0] + ' — looked for ' + new URL(encodeURI(DB_FILE), location.href).href + ' and it is not on the site.';
+  if (!players.length) st.textContent = problem || 'No player database was found on this site. Put "' + DB_FILE + '" in the same folder as index.html and upload the folder again, or tap Update Player Database to add a file on this device.';
+}
+
+// Remember the file (Chrome/Edge) so it reloads without picking it each time.
+const db = () => new Promise((res,rej) => { const r = indexedDB.open('grid',1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = rej; });
+async function saveHandle(h) { try { const d = await db(); d.transaction('h','readwrite').objectStore('h').put(h,'file'); } catch(e){} }
+async function getHandle() { try { const d = await db(); return await new Promise(res => { const q = d.transaction('h').objectStore('h').get('file'); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); } catch(e){ return null; } }
+
+document.getElementById('load').addEventListener('click', async () => {
+  if (window.showOpenFilePicker) {
+    try {
+      const [h] = await showOpenFilePicker({types:[{description:'Excel', accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx'],'application/vnd.ms-excel':['.xls'],'text/csv':['.csv']}}]});
+      await saveHandle(h); readFile(await h.getFile());
+    } catch(e) {}
+  } else document.getElementById('file').click();
+});
+document.getElementById('file').addEventListener('change', e => e.target.files[0] && readFile(e.target.files[0]));
+
+if (!VIEW) loadDb();
+if (!VIEW && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+if (!VIEW) (async () => {
+  await loadHosted();
+  const h = await getHandle();
+  if (!h) return;
+  if (!players.length) document.getElementById('status').textContent = 'Click "Update Player Database" to reconnect your file.';
+  try { if ((await h.queryPermission({mode:'read'})) === 'granted') await readFile(await h.getFile()); } catch(e){}
+})();
+// ---- Drag a player onto another octagon to swap (or move into an empty one).
+let drag = null, flashT = null;
+function octAt(cx, cy) {
+  const r = board.getBoundingClientRect();
+  const vx = (cx - r.left) / r.width * W, vy = (cy - r.top) / r.height * H;
+  let best = -1, bd = Infinity;
+  NODES.forEach(([x,y], k) => {
+    const d = Math.hypot(vx - x, vy - y);
+    if (Math.abs(vx - x) <= HW/2 && Math.abs(vy - y) <= HH/2 && d < bd) { best = k; bd = d; }
+  });
+  return best;
+}
+// A swap is allowed only if both players fit the position rules of their new octagons.
+function canSwap(i, j) {
+  if (i === j) return false;
+  const a = players[selects[i].value], b = players[selects[j].value];
+  return !!a && allowed(j, a) && (!b || allowed(i, b));
+}
+function mark(i, j) {
+  hexes.forEach(h => h.classList.remove('ok', 'bad'));
+  if (j < 0 || j === i) return;
+  hexes[j].classList.add(canSwap(i, j) ? 'ok' : 'bad');
+}
+function flash(msg) {
+  const st = document.getElementById('status');
+  if (flashT) clearTimeout(flashT); else st.dataset.keep = st.textContent;
+  st.textContent = msg;
+  flashT = setTimeout(() => { st.textContent = st.dataset.keep; flashT = null; }, 3000);
+}
+function startDrag(i, e) {
+  if (VIEW) return;
+  if (e.target.closest('button, select') || e.button > 0 || !selects[i].value) return;
+  drag = {i, x:e.clientX, y:e.clientY, on:false, ghost:null};
+}
+document.addEventListener('pointermove', e => {
+  if (!drag) return;
+  if (!drag.on) {
+    if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
+    drag.on = true;
+    drag.ghost = document.createElement('div');
+    drag.ghost.className = 'ghost';
+    drag.ghost.textContent = players[selects[drag.i].value].name;
+    document.body.appendChild(drag.ghost);
+    document.body.classList.add('dragging');
+  }
+  drag.ghost.style.left = e.clientX + 'px'; drag.ghost.style.top = e.clientY + 'px';
+  mark(drag.i, octAt(e.clientX, e.clientY));
+});
+function endDrag(e, drop) {
+  if (!drag) return;
+  const d = drag; drag = null;
+  if (!d.on) return;
+  d.ghost.remove(); document.body.classList.remove('dragging'); mark(d.i, -1);
+  if (!drop) return;
+  const j = octAt(e.clientX, e.clientY);
+  if (j < 0 || j === d.i) return;
+  if (!canSwap(d.i, j)) { flash('That swap would break a position rule.'); return; }
+  const picked = selects.map(sel => sel.value);
+  [picked[d.i], picked[j]] = [picked[j], picked[d.i]];
+  fill(picked);
+}
+document.addEventListener('pointerup', e => endDrag(e, true));
+document.addEventListener('pointercancel', e => endDrag(e, false));
+NODES.forEach((_, i) => [hexes[i], circles[i], labels[i], cells[i]].forEach(el => el.addEventListener('pointerdown', e => startDrag(i, e))));
+
+// ---- Searchable player picker: opens under the octagon's button; type to filter by name.
+const picker = document.createElement('div');
+picker.id = 'picker'; picker.hidden = true;
+const pTop = document.createElement('div'); pTop.className = 'top';
+const pSearch = document.createElement('input');
+pSearch.type = 'search'; pSearch.id = 'pickerSearch'; pSearch.placeholder = 'Search players by name'; pSearch.autocomplete = 'off';
+pSearch.setAttribute('aria-label', 'Search players');
+const pClear = document.createElement('button');
+pClear.type = 'button'; pClear.id = 'pickerClear'; pClear.textContent = 'Clear';
+pTop.append(pSearch, pClear);
+const pList = document.createElement('ul'); pList.id = 'pickerList';
+picker.append(pTop, pList);
+document.body.appendChild(picker);
+let pickerFor = -1, pickerItems = [], pickerActive = 0;
+
+// Players this octagon can take: right position, and not already used elsewhere.
+function availableFor(i) {
+  const picked = selects.map(sel => sel.value);
+  return players.map((p, k) => k).filter(k => allowed(i, players[k]) && (String(k) === picked[i] || !picked.includes(String(k))));
+}
+function setActive(n) {
+  pickerActive = n;
+  Array.from(pList.children).forEach((li, k) => {
+    li.classList.toggle('active', k === n);
+    if (k === n && li.scrollIntoView) li.scrollIntoView({block:'nearest'});
+  });
+}
+function renderPicker() {
+  const i = pickerFor, cur = selects[i].value;
+  const tokens = pSearch.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  pickerItems = availableFor(i).filter(k => { const nm = String(players[k].name).toLowerCase(); return tokens.every(t => nm.includes(t)); }).slice(0, 200);
+  pList.innerHTML = pickerItems.length
+    ? pickerItems.map(k => `<li data-v="${k}"${String(k) === cur ? ' class="sel"' : ''}><span>${esc(players[k].name)}</span><small>${esc(players[k].position)} &middot; ${esc(players[k].team)} &middot; ${players[k].levels.join('/')}\u2605</small></li>`).join('')
+    : '<li class="empty">No matching players</li>';
+  pClear.hidden = cur === '';
+  setActive(0);
+}
+function openPicker(i) {
+  pickerFor = i; pSearch.value = '';
+  picker.hidden = false;
+  renderPicker();
+  const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  const r = btns[i].getBoundingClientRect(), w = Math.min(coarse ? 340 : 280, window.innerWidth - 16);
+  picker.style.width = w + 'px';
+  picker.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+  const below = window.innerHeight - r.bottom - 12, above = r.top - 12;
+  if (coarse) {
+    picker.style.left = Math.max(8, (window.innerWidth - w) / 2) + 'px';
+    picker.style.bottom = 'auto'; picker.style.top = 'calc(10px + env(safe-area-inset-top))'; picker.style.maxHeight = Math.min(340, window.innerHeight * 0.45) + 'px';
+  } else if (below < 220 && above > below) {
+    picker.style.top = 'auto'; picker.style.bottom = (window.innerHeight - r.top + 4) + 'px'; picker.style.maxHeight = Math.min(340, above) + 'px';
+  } else {
+    picker.style.bottom = 'auto'; picker.style.top = (r.bottom + 4) + 'px'; picker.style.maxHeight = Math.min(340, below) + 'px';
+  }
+  pSearch.focus();
+}
+function closePicker(refocus) {
+  const i = pickerFor; picker.hidden = true; pickerFor = -1;
+  if (refocus && i >= 0 && btns[i].focus) btns[i].focus();
+}
+function togglePicker(i) { if (!picker.hidden && pickerFor === i) closePicker(true); else openPicker(i); }
+function choose(v) {
+  const i = pickerFor; if (i < 0) return;
+  selects[i].value = v; closePicker(true); fill();
+}
+pSearch.addEventListener('input', renderPicker);
+pSearch.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown') { setActive(Math.min(pickerItems.length - 1, pickerActive + 1)); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { setActive(Math.max(0, pickerActive - 1)); e.preventDefault(); }
+  else if (e.key === 'Enter') { if (pickerItems.length) choose(String(pickerItems[pickerActive])); e.preventDefault(); }
+  else if (e.key === 'Escape') closePicker(true);
+});
+pList.addEventListener('click', e => { const li = e.target.closest('li[data-v]'); if (li) choose(li.dataset.v); });
+pClear.addEventListener('click', () => choose(''));
+document.addEventListener('pointerdown', e => { if (!picker.hidden && !picker.contains(e.target) && !e.target.closest('.pick')) closePicker(false); });
+let lastW = window.innerWidth;
+window.addEventListener('resize', () => { if (window.innerWidth !== lastW) { lastW = window.innerWidth; closePicker(false); } });
+if (!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) window.addEventListener('scroll', () => closePicker(false));
+
+document.getElementById('solve').addEventListener('click', () => {
+  if (!lastBest) return;
+  const url = location.href.split('#')[0] + '#solution=' + encodeURIComponent(JSON.stringify(lastBest.lineup));
+  const standalone = (window.navigator && window.navigator.standalone) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  if (standalone) { document.getElementById('solveFrame').src = url; document.getElementById('solveOverlay').hidden = false; }
+  else window.open(url, '_blank');
+});
+
+document.getElementById('solveClose').addEventListener('click', () => {
+  document.getElementById('solveOverlay').hidden = true; document.getElementById('solveFrame').src = 'about:blank';
+});
+if (VIEW) {
+  players = VIEW;
+  selects.forEach((sel, i) => {
+    sel.innerHTML = `<option value="${i}">${esc(VIEW[i].name)}</option>`;
+    sel.value = String(i); sel.disabled = true; btns[i].disabled = true; show(i);
+  });
+  document.body.classList.add('view');
+  document.title = 'Grid - Best lineup';
+  document.querySelector('h1').textContent = 'Best lineup';
+  document.getElementById('status').textContent = 'Read-only: the highest Draft total for the 9 players you picked.';
+  document.getElementById('load').hidden = true;
+  document.getElementById('solve').hidden = true;
+}
+chemistry();
+(function () { const w = document.getElementById('boardWrap'); w.scrollLeft = (w.scrollWidth - w.clientWidth) / 2; })();
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !VIEW) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
