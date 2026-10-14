@@ -14,61 +14,93 @@
 <title>Grid</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root { --bg:#07090d; --ink:#eceae4; --muted:#9aa0aa; --edge:#4f5866; --accent:#2fbf8f; --field:#1b212a; --fieldtext:#f3f1ec; }
+  :root { --bg:#07090d; --ink:#eceae4; --muted:#9aa0aa; --edge:#4f5866; --accent:#2fbf8f; --field:#1b212a; --fieldtext:#f3f1ec; --line:#1d232c; }
   * { box-sizing:border-box; }
-  html { touch-action:manipulation; -webkit-text-size-adjust:100%; background:var(--bg); }
-  .cell, #board svg { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
-  .cell.filled { touch-action:none; }
-  #boardWrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  #pickerSearch { font-size:16px; }
-  #solveOverlay { position:fixed; inset:0; z-index:50; background:var(--bg); display:flex; flex-direction:column; }
-  #solveOverlay[hidden] { display:none; }
-  #solveOverlay .bar { display:flex; align-items:center; gap:12px; padding:calc(10px + env(safe-area-inset-top)) 16px 10px; }
-  #solveFrame { flex:1; border:0; width:100%; background:var(--bg); }
-  @media (pointer:coarse) { .cell .lvl { font-size:16px; transform:scale(.62); transform-origin:center top; margin-bottom:-8px; } }
-  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif; }
-  header { padding-top:calc(16px + env(safe-area-inset-top)) !important; display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; justify-content:space-between; padding:16px 24px; }
-  h1 { margin:0; font-size:1.4rem; letter-spacing:.02em; }
-  #status { color:var(--muted); font-size:.9rem; }
+  html { background:var(--bg); -webkit-text-size-adjust:100%; touch-action:manipulation; }
+  body { margin:0; height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column; background:var(--bg); color:var(--ink); font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif; }
   button { font:inherit; padding:9px 16px; border-radius:6px; border:2px solid var(--ink); background:var(--ink); color:var(--bg); cursor:pointer; }
-  button:focus-visible, select:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
-  #board { position:relative; width:min(100%,1000px); margin:0 auto 8px; aspect-ratio:1036/877; }
-  #board svg { position:absolute; inset:0; width:100%; height:100%; }
-  .edge { stroke:var(--edge); stroke-width:2.5; transition:stroke .2s; }
-  .edge.c0 { stroke:#b5524f; stroke-width:4; }
-  .edge.c1 { stroke:#c2ad3f; stroke-width:4; }
-  .edge.c2 { stroke:#5aa064; stroke-width:4; }
-  .hex { fill:#151a22; stroke:#4a5361; stroke-width:2; }
-  .shine { fill:url(#shine); pointer-events:none; opacity:0; }
-  .chem { fill:#222833; stroke:#4a5361; stroke-width:2; }
-  #total { position:sticky; bottom:0; padding-bottom:calc(14px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 12px 14px; background:linear-gradient(transparent, var(--bg) 35%); color:var(--muted); text-align:center; }
-  #total .row { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px 40px; }
-  #total .two strong { font-size:1.35rem; }
-  #total .stat { display:flex; flex-direction:column; align-items:center; }
-  #total strong { font-size:2rem; line-height:1.1; color:var(--ink); }
-  #total small { font-size:.75rem; min-height:1em; }
-  #total .draft strong { color:var(--accent); }
-  .hex.ok { stroke:#5aa064 !important; stroke-width:6; }
-  .hex.bad { stroke:#b5524f !important; stroke-width:6; }
-  .hex, .chem { touch-action:none; }
+  button.quiet { background:transparent; color:var(--ink); border:1px solid #4a5361; }
   button:disabled { opacity:.4; cursor:not-allowed; }
-  #solve { align-self:center; }
-  .cell.filled { cursor:grab; }
-  body.view .cell.filled { cursor:default; }
-  .cell.filled .pick { cursor:pointer; }
-  .info { user-select:none; }
-  body.dragging { cursor:grabbing; user-select:none; }
-  .ghost { position:fixed; transform:translate(-50%,-130%); padding:6px 12px; border-radius:6px; background:#eceae4; color:#07090d; font-weight:600; pointer-events:none; z-index:10; box-shadow:0 4px 14px rgba(0,0,0,.5); }
-  .cell { position:absolute; width:15.5%; transform:translate(-50%,-50%); text-align:center; color:#f3f1ec; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  [hidden] { display:none !important; }
+
+  /* ---- page frame: top line, content, bottom tabs ---- */
+  #top { flex:none; padding:calc(8px + env(safe-area-inset-top)) 12px 6px; text-align:center; font-size:12px; line-height:1.3; color:var(--muted); }
+  #top b { color:var(--ink); font-weight:600; }
+  main { flex:1; min-height:0; position:relative; }
+  .view { position:absolute; inset:0; display:flex; flex-direction:column; min-height:0; }
+  #tabs { flex:none; display:flex; border-top:1px solid var(--line); background:#0b0e13; padding-bottom:env(safe-area-inset-bottom); }
+  #tabs button { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 4px 6px; border:0; border-radius:0; background:transparent; color:var(--muted); font-size:11px; }
+  #tabs button svg { width:22px; height:22px; }
+  #tabs button[aria-selected="true"] { color:var(--accent); }
+  body.view #tabs { display:none; }
+
+  /* ---- Sandbox: the board is drawn at a fixed size and scaled to fit the space ---- */
+  #stage { position:relative; flex:1; min-height:0; display:flex; overflow:auto; }
+  #boardBox { position:relative; flex:none; margin:auto; }
+  #board { position:absolute; left:0; top:0; width:400px; height:640px; transform-origin:0 0; }
+  #board svg { position:absolute; inset:0; width:100%; height:100%; }
+  .cell, #board svg { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  .edge { stroke:var(--edge); stroke-width:2; transition:stroke .2s; }
+  .edge.c0 { stroke:#b5524f; stroke-width:3.2; }
+  .edge.c1 { stroke:#c2ad3f; stroke-width:3.2; }
+  .edge.c2 { stroke:#5aa064; stroke-width:3.2; }
+  .hex { fill:#151a22; stroke:#4a5361; stroke-width:1.6; }
+  .hex.ok { stroke:#5aa064 !important; stroke-width:4; }
+  .hex.bad { stroke:#b5524f !important; stroke-width:4; }
+  .shine { fill:url(#shine); pointer-events:none; opacity:0; }
+  .chem { fill:#222833; stroke:#4a5361; stroke-width:1.6; }
+  .hex, .chem { touch-action:none; }
+  .cell { position:absolute; width:82px; transform:translate(-50%,-50%); text-align:center; color:#f3f1ec; }
+  .cell.filled { cursor:grab; touch-action:none; }
   .cell select:not(.lvl) { display:none; }
-  .cell .lvl { display:block; margin:3px auto 0; font:inherit; font-size:clamp(.55rem,1.2vw,.75rem); padding:1px 4px; border-radius:4px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); cursor:pointer; }
-  .cell .lvl[hidden] { display:none; }
-  .cell .pick { display:block; width:100%; font:inherit; font-size:clamp(.6rem,1.5vw,.85rem); padding:4px 6px; border-radius:4px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+  .pick { display:block; width:100%; font:inherit; font-size:10.5px; padding:3px 4px; border-radius:4px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+  .info { margin-top:2px; font-size:9px; line-height:1.28; min-height:2.5em; color:#d9d6cf; user-select:none; }
+  .cell.filled .info { color:var(--tx, #14181f); }
+  .cell .lvl { display:block; margin:2px auto 0; font:inherit; font-size:9px; padding:0 3px; height:15px; border-radius:4px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); cursor:pointer; }
+  /* Phones zoom into form fields under 16px, so the level menu is 16px and shrunk with a transform. */
+  @media (pointer:coarse) { .cell .lvl { font-size:16px; height:22px; transform:scale(.56); transform-origin:center top; margin:2px auto -9px; } }
+  body.view .cell.filled { cursor:default; }
   body.view .pick:disabled { opacity:1; cursor:default; }
+  body.dragging { cursor:grabbing; user-select:none; }
+  .ghost { position:fixed; transform:translate(-50%,-130%); padding:6px 12px; border-radius:6px; background:#eceae4; color:#07090d; font-weight:600; pointer-events:none; z-index:30; box-shadow:0 4px 14px rgba(0,0,0,.5); }
+  #toast { position:absolute; bottom:4px; left:50%; transform:translateX(-50%); z-index:5; padding:6px 12px; border-radius:6px; background:#eceae4; color:#07090d; font-size:12px; font-weight:600; pointer-events:none; opacity:0; transition:opacity .15s; white-space:nowrap; }
+  #toast.show { opacity:1; }
+
+  /* ---- totals ---- */
+  #total { flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 10px 8px; color:var(--muted); text-align:center; border-top:1px solid var(--line); }
+  #total .row { display:flex; justify-content:center; align-items:flex-end; gap:6px 22px; flex-wrap:wrap; }
+  #total .stat { display:flex; flex-direction:column; align-items:center; }
+  #total .stat > span { font-size:11px; }
+  #total strong { font-size:22px; line-height:1.1; color:var(--ink); }
+  #total small { font-size:9px; min-height:1em; }
+  #total .two strong { font-size:18px; }
+  #total .draft strong { color:var(--accent); }
+  #total button { padding:7px 14px; font-size:13px; }
+  @media (orientation:landscape) and (max-height:520px) {
+    #viewSandbox { flex-direction:row; }
+    #total { width:200px; border-top:0; border-left:1px solid var(--line); justify-content:center; }
+  }
+
+  /* ---- Admin ---- */
+  .pane { width:100%; max-width:440px; margin:0 auto; padding:22px 20px; overflow:auto; }
+  .pane h2 { margin:0 0 6px; font-size:1.3rem; }
+  .pane p { margin:6px 0; color:var(--muted); font-size:.9rem; line-height:1.4; }
+  .field { display:flex; gap:8px; margin:14px 0 10px; }
+  .field input { flex:1; min-width:0; font:inherit; font-size:16px; padding:10px 12px; border-radius:6px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); }
+  .check { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:.85rem; }
+  .err { color:#e58a87; min-height:1.3em; font-size:.85rem; }
+  dl.db { display:grid; grid-template-columns:auto 1fr; gap:6px 14px; margin:18px 0 10px; font-size:.85rem; }
+  dl.db dt { color:var(--muted); }
+  dl.db dd { margin:0; word-break:break-word; }
+  #hint { font-size:.78rem; word-break:break-all; }
+  #hint:empty { display:none; }
+  #adminOut { margin-top:22px; }
+
+  /* ---- player picker ---- */
   #picker { position:fixed; z-index:20; display:flex; flex-direction:column; background:#10151c; border:1px solid #3b4452; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.6); color:var(--ink); }
-  #picker[hidden] { display:none; }
   #picker .top { display:flex; gap:6px; padding:8px; }
-  #pickerSearch { flex:1; min-width:0; padding:8px 10px; border-radius:6px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); font:inherit; }
+  #pickerSearch { flex:1; min-width:0; padding:8px 10px; border-radius:6px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); font:inherit; font-size:16px; }
   #pickerClear { padding:6px 10px; font-size:.8rem; background:transparent; color:var(--ink); border:1px solid #4a5361; }
   #pickerList { list-style:none; margin:0; padding:0 4px 6px; overflow:auto; }
   #pickerList li { padding:7px 10px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
@@ -76,69 +108,106 @@
   #pickerList li.active, #pickerList li:hover { background:#232b36; }
   #pickerList li.sel span { color:var(--accent); font-weight:600; }
   #pickerList li.empty { color:var(--muted); cursor:default; }
-  .info { margin-top:4px; font-size:clamp(.55rem,1.25vw,.75rem); line-height:1.35; min-height:2.7em; color:#d9d6cf; }
-  #hint { padding:0 24px 6px; color:var(--muted); font-size:.78rem; word-break:break-all; }
-  #hint:empty { display:none; }
-  .info b { color:var(--accent); font-weight:600; }
-  .cell.filled .info { color:var(--tx, #14181f); }
-  @media (max-width:700px) {
-    #board { width:640px; max-width:none; margin:0 auto 8px; }
-    #total .row { gap:6px 16px; }
-    #total strong { font-size:1.6rem; }
-    #total .two strong { font-size:1.2rem; }
-    #total small { font-size:.68rem; }
-    header { padding-left:16px; padding-right:16px; }
-    #hint { padding-left:16px; padding-right:16px; }
-  }
-  @media (max-height:700px) { #total { position:static; } }
+
+  /* ---- best-lineup panel (installed app) ---- */
+  #solveOverlay { position:fixed; inset:0; z-index:50; background:var(--bg); display:flex; flex-direction:column; }
+  #solveOverlay .bar { display:flex; align-items:center; gap:12px; padding:calc(10px + env(safe-area-inset-top)) 16px 10px; }
+  #solveFrame { flex:1; border:0; width:100%; background:var(--bg); }
 </style>
 </head>
 <body>
-<header>
-  <h1>Grid</h1>
-  <span id="status">No player database yet. Tap Update Player Database to add your Excel file.</span>
-  <button id="load">Update Player Database</button>
-  <input id="file" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden>
-</header>
-<div id="hint"></div>
+<div id="top"><span id="updated">No player database loaded yet</span></div>
 
-<div id="boardWrap">
-<div id="board">
-  <svg viewBox="0 0 1036 877" preserveAspectRatio="none" id="svg"></svg>
-</div>
-</div>
+<main>
+  <section id="viewSandbox" class="view" role="tabpanel" aria-labelledby="tabSandbox">
+    <div id="stage">
+      <div id="toast" role="status"></div>
+      <div id="boardBox">
+        <div id="board">
+          <svg viewBox="0 0 400 640" preserveAspectRatio="none" id="svg"></svg>
+        </div>
+      </div>
+    </div>
+    <div id="total">
+      <div class="row">
+        <div class="stat"><span>Talent</span><strong id="talentNum">0</strong><small>from star levels</small></div>
+        <div class="stat"><span>Total chemistry</span><strong id="chemNum">0</strong><small id="chemSub">players 0 + links 0</small></div>
+        <div class="stat draft"><span>Draft total</span><strong id="draftNum">0</strong><small id="draftSub">chemistry + talent</small></div>
+      </div>
+      <div class="row two">
+        <div class="stat"><span>Max Score</span><strong id="maxNum">&ndash;</strong></div>
+        <div class="stat"><span>Accuracy</span><strong id="accNum">&ndash;</strong></div>
+        <button id="solve" disabled>View Solution</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="viewAdmin" class="view" role="tabpanel" aria-labelledby="tabAdmin" hidden>
+    <div class="pane">
+      <h2>Admin</h2>
+      <div id="adminLockBox">
+        <p>Enter the admin password to manage the player database.</p>
+        <form id="adminForm" class="field" autocomplete="off">
+          <input id="adminPw" type="password" placeholder="Password" aria-label="Admin password" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="current-password">
+          <button type="submit">Unlock</button>
+        </form>
+        <label class="check"><input type="checkbox" id="adminRemember" checked> Keep Admin unlocked on this device</label>
+        <p id="adminErr" class="err" role="alert"></p>
+      </div>
+      <div id="adminPanel" hidden>
+        <p>Add a newer <b>Grid Database</b> Excel file to this device. The site's shared file replaces it the next time that file changes.</p>
+        <button id="load">Update Player Database</button>
+        <input id="file" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden>
+        <dl class="db" id="dbInfo"></dl>
+        <p id="status"></p>
+        <p id="hint"></p>
+        <div id="adminOut"><button id="adminLockBtn" class="quiet">Lock Admin</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav id="tabs" role="tablist" aria-label="Sections">
+  <button id="tabSandbox" role="tab" aria-selected="true" aria-controls="viewSandbox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6.5 6.5h11l3.5 5.5H3l3.5-5.5z"/>
+      <path d="M3 12v6a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18v-6"/>
+      <path d="M8 10.6c1-2.8 7-2.8 8 0"/>
+    </svg>
+    <span>Sandbox</span>
+  </button>
+  <button id="tabAdmin" role="tab" aria-selected="false" aria-controls="viewAdmin">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 13v-1a8 8 0 0 1 16 0v1"/>
+      <rect x="3" y="12" width="4" height="6" rx="1.6"/>
+      <rect x="17" y="12" width="4" height="6" rx="1.6"/>
+      <path d="M19 18v.5a2.5 2.5 0 0 1-2.5 2.5H14"/>
+      <rect x="11" y="19.6" width="3.4" height="2.8" rx="1.4"/>
+    </svg>
+    <span>Admin</span>
+  </button>
+</nav>
 
 <div id="solveOverlay" hidden>
   <div class="bar"><button id="solveClose">Close</button><strong>Best lineup</strong></div>
   <iframe id="solveFrame" title="Best lineup"></iframe>
 </div>
 
-<div id="total">
-  <div class="row">
-    <div class="stat"><span>Talent</span><strong id="talentNum">0</strong><small>from star levels</small></div>
-    <div class="stat"><span>Total chemistry</span><strong id="chemNum">0</strong><small id="chemSub">players 0 + links 0</small></div>
-    <div class="stat draft"><span>Draft total</span><strong id="draftNum">0</strong><small id="draftSub">chemistry + talent</small></div>
-  </div>
-  <div class="row two">
-    <div class="stat"><span>Max Score</span><strong id="maxNum">&ndash;</strong></div>
-    <div class="stat"><span>Accuracy</span><strong id="accNum">&ndash;</strong></div>
-    <button id="solve" disabled>View Solution</button>
-  </div>
-</div>
-
 <script>
-// Hexagon centers (x,y) in a 1036 x 877 grid, matching the layout sketch.
+const $ = id => document.getElementById(id);
 // When this page is opened with #solution=..., it shows the best lineup read-only.
 let VIEW = null;
 try { const m = location.hash.match(/^#solution=(.+)$/); if (m) { const v = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(v) && v.length === 9) VIEW = v; } } catch (e) {}
-const NODES = [[382,118],[631,116],[131,313],[376,427],[624,426],[922,298],[166,655],[503,743],[855,661]];
-// Links between hexagons (indexes into NODES).
+
+// Octagon centers (x,y) on a compact 400 x 640 board that is scaled to fit the screen.
+const NODES = [[134,56],[266,56],[54,182],[134,308],[266,308],[346,182],[54,434],[200,560],[346,434]];
+// Links between octagons (indexes into NODES).
 const LINKS = [[0,1],[0,2],[0,3],[1,4],[1,5],[2,3],[2,6],[3,6],[3,7],[4,5],[4,7],[4,8],[5,8],[6,7],[7,8]];
-const W = 1036, H = 877, HW = 190, HH = 190;
-// Positions allowed in each hexagon (1 to 9, in order). Edit here to change them.
+const W = 400, H = 640, HW = 96, HH = 104;
+// Positions allowed in each octagon (1 to 9, in order). Edit here to change them.
 const ALLOWED = [['RB'],['WR'],['RB','WR','TE'],['QB'],['QB'],['RB','WR','TE'],['WR'],['TE'],['RB']];
 
-const svg = document.getElementById('svg'), board = document.getElementById('board');
+const svg = $('svg'), board = $('board');
 const NS = 'http://www.w3.org/2000/svg';
 // Glossy star-level colors: light highlight, base, dark shade.
 const TIER = {
@@ -169,29 +238,29 @@ NODES.forEach(([x,y],i) => {
   const sh = document.createElementNS(NS,'polygon');
   sh.setAttribute('points', poly([[C+.02,.025],[1-C-.02,.025],[.975,C+.01],[.975,.5],[.025,.5],[.025,C+.01]])); sh.setAttribute('class','shine');
   svg.appendChild(sh); shines.push(sh);
-  const cy = y - HH/2 + 34;
+  const cy = y - HH/2 + 16;
   const circ = document.createElementNS(NS,'circle');
-  circ.setAttribute('cx',x); circ.setAttribute('cy',cy); circ.setAttribute('r',24); circ.setAttribute('class','chem');
+  circ.setAttribute('cx',x); circ.setAttribute('cy',cy); circ.setAttribute('r',11); circ.setAttribute('class','chem');
   circ.appendChild(document.createElementNS(NS,'title'));
   svg.appendChild(circ); circles.push(circ);
   const lab = document.createElementNS(NS,'text');
-  lab.setAttribute('x',x); lab.setAttribute('y',y+56);
+  lab.setAttribute('x',x); lab.setAttribute('y',y+34);
   lab.setAttribute('text-anchor','middle'); lab.setAttribute('fill','#9aa0aa');
-  lab.setAttribute('font-size','18'); lab.setAttribute('font-weight','600'); lab.setAttribute('stroke-width','5'); lab.setAttribute('stroke-linejoin','round'); lab.setAttribute('paint-order','stroke');
+  lab.setAttribute('font-size','10.5'); lab.setAttribute('font-weight','600'); lab.setAttribute('stroke-width','4'); lab.setAttribute('stroke-linejoin','round'); lab.setAttribute('paint-order','stroke');
   lab.setAttribute('font-family','Trebuchet MS, Segoe UI, Arial, sans-serif');
   lab.textContent = ['RB','WR','TE'].every(q => ALLOWED[i].includes(q)) ? 'Flex' : ALLOWED[i].join(' / ');
   svg.appendChild(lab); labels.push(lab);
   const st = document.createElementNS(NS,'text');
-  st.setAttribute('x',x); st.setAttribute('y',y+84); st.setAttribute('text-anchor','middle');
-  st.setAttribute('fill','#ffd400'); st.setAttribute('font-size','22');
-  st.setAttribute('stroke','#3a2a00'); st.setAttribute('stroke-width','1.4'); st.setAttribute('paint-order','stroke');
-  st.setAttribute('letter-spacing','2');
+  st.setAttribute('x',x); st.setAttribute('y',y+HH/2-5); st.setAttribute('text-anchor','middle');
+  st.setAttribute('fill','#ffd400'); st.setAttribute('font-size','11.5');
+  st.setAttribute('stroke','#3a2a00'); st.setAttribute('stroke-width','1'); st.setAttribute('paint-order','stroke');
+  st.setAttribute('letter-spacing','1');
   st.setAttribute('font-family','Segoe UI Symbol, Arial, sans-serif'); st.style.pointerEvents = 'none';
   svg.appendChild(st); starEls.push(st);
 
   const cell = document.createElement('div');
   cell.className = 'cell';
-  cell.style.left = (x/W*100)+'%'; cell.style.top = (y/H*100)+'%';
+  cell.style.left = x + 'px'; cell.style.top = y + 'px';
   const sel = document.createElement('select');
   sel.setAttribute('aria-label','Player '+(i+1));
   sel.innerHTML = '<option value="">Select player</option>';
@@ -207,6 +276,19 @@ NODES.forEach(([x,y],i) => {
   cell.append(btn, sel, info, lv); board.appendChild(cell); btns.push(btn); lvls.push(lv);
   selects.push(sel); infos.push(info); cells.push(cell);
 });
+
+// Scale the board so all 9 octagons fit on screen without scrolling.
+function fit() {
+  const stage = $('stage'), aw = stage.clientWidth, ah = stage.clientHeight;
+  if (!aw || !ah) return;
+  const s = Math.min(1.6, Math.max(0.72, Math.min(aw / W, ah / H)));
+  $('boardBox').style.width = (W * s) + 'px'; $('boardBox').style.height = (H * s) + 'px';
+  board.style.transform = 'scale(' + s + ')';
+}
+if (window.ResizeObserver) new ResizeObserver(fit).observe($('stage'));
+window.addEventListener('resize', fit);
+window.addEventListener('orientationchange', () => setTimeout(fit, 150));
+fit();
 
 let players = [];
 const maxLevel = p => Math.max(...p.levels);
@@ -237,18 +319,18 @@ function show(i) {
   // Players with several possible levels get a small level dropdown.
   const multi = !!p && p.levels.length > 1 && !VIEW;
   lvls[i].hidden = !multi;
-  if (multi) { lvls[i].innerHTML = p.levels.map(v => `<option value="${v}">${v}\u2605</option>`).join(''); lvls[i].value = String(p.level); }
-  cells[i].style.top = ((NODES[i][1] + (multi ? 10 : 0)) / H * 100) + '%';
+  if (multi) { lvls[i].innerHTML = p.levels.map(v => `<option value="${v}">${v}★</option>`).join(''); lvls[i].value = String(p.level); }
+  cells[i].style.top = (NODES[i][1] + (multi ? 3 : 0)) + 'px';
   // Position hint: inside the octagon while empty, under it (with a dark outline so it reads over links) once filled.
-  labels[i].setAttribute('y', NODES[i][1] + (p ? HH/2 + 17 : 56));
+  labels[i].setAttribute('y', NODES[i][1] + (p ? HH/2 + 13 : 34));
   labels[i].setAttribute('fill', p ? '#d5d9e0' : '#9aa0aa');
   labels[i].setAttribute('stroke', p ? '#07090d' : 'none');
-  starEls[i].textContent = p ? '\u2605'.repeat(n) : '';
+  starEls[i].textContent = p ? '★'.repeat(n) : '';
   infos[i].innerHTML = p ? `${esc(p.position)} &middot; ${esc(p.team)}<br>${esc(p.division)} &middot; ${esc(p.draft)}` : '';
 }
 
 // Chemistry: 1 point each for matching division, team, draft year (max 2 per link).
-// 0 = red, 1 = yellow, 2 = green. Links with an empty hexagon stay neutral.
+// 0 = red, 1 = yellow, 2 = green. Links with an empty octagon stay neutral.
 const same = (x, y) => { const a = String(x).trim().toLowerCase(), b = String(y).trim().toLowerCase(); return a !== '' && a === b; };
 // Player chemistry from the links touching their octagon: 0-1 = 0 (red), 2-3 = 6 (yellow), 4+ = 11 (green).
 // Total chemistry = player chemistry + link points (yellow link 1, green link 2).
@@ -302,21 +384,21 @@ function chemistry() {
     talent += TALENT[stars(p)];
   });
   const chem = playerTotal + linkTotal;
-  document.getElementById('chemNum').textContent = chem;
-  document.getElementById('chemSub').textContent = 'players ' + playerTotal + ' + links ' + linkTotal;
-  document.getElementById('talentNum').textContent = talent;
-  document.getElementById('draftNum').textContent = chem + talent;
+  $('chemNum').textContent = chem;
+  $('chemSub').textContent = 'players ' + playerTotal + ' + links ' + linkTotal;
+  $('talentNum').textContent = talent;
+  $('draftNum').textContent = chem + talent;
   const res = bestDraft();
   lastBest = res;
-  document.getElementById('solve').disabled = !res;
-  document.getElementById('draftSub').textContent = VIEW && res ? 'best possible lineup' : 'chemistry + talent';
-  document.getElementById('maxNum').textContent = res ? res.score : '\u2013';
-  document.getElementById('accNum').textContent = res ? (Math.round((chem + talent) / res.score * 1000) / 10) + '%' : '\u2013';
+  $('solve').disabled = !res;
+  $('draftSub').textContent = VIEW && res ? 'best possible lineup' : 'chemistry + talent';
+  $('maxNum').textContent = res ? res.score : '–';
+  $('accNum').textContent = res ? (Math.round((chem + talent) / res.score * 1000) / 10) + '%' : '–';
 }
 
 const allowed = (i, p) => ALLOWED[i].includes(String(p.position).trim().toUpperCase());
 
-// Rebuild every dropdown: only allowed positions, and no player already used in another hexagon.
+// Rebuild every dropdown: only allowed positions, and no player already used in another octagon.
 function fill(forced) {
   const picked = Array.isArray(forced) ? forced : selects.map(sel => sel.value);
   selects.forEach((sel, i) => {
@@ -336,20 +418,61 @@ function fill(forced) {
 
 // ---- Player database: where it comes from and how it is kept.
 // 1) "Grid Database.xlsx" next to this page (if present) is loaded on every launch.
-// 2) "Update Player Database" lets you pick a newer copy from this device; it is saved and used from then on.
+// 2) Admin > "Update Player Database" lets you pick a newer copy from this device; it is saved and used from then on.
 // 3) The last loaded copy is stored on this device, so the app opens with your players even offline.
 const DB_KEY = 'grid.database.v1', DB_FILE = 'Grid Database.xlsx';
-let dbMeta = {name:'', updated:0, hostedHash:'', source:''};
-const stamp = t => { try { return new Date(t).toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}); } catch (e) { return ''; } };
-function saveDb(name, hostedHash) {
+let dbMeta = {name:'', updated:0, dataTime:0, hostedHash:'', source:''};
+const fmt = t => { try { return new Date(t).toLocaleString([], {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'}); } catch (e) { return ''; } };
+
+// The time the Excel file was last saved is kept inside the file itself (docProps/core.xml).
+async function xlsxSavedTime(buf) {
+  try {
+    const dv = new DataView(buf), u = new Uint8Array(buf);
+    let e = -1;
+    for (let i = u.length - 22; i >= Math.max(0, u.length - 66000); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+    if (e < 0) return 0;
+    const count = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
+    for (let n = 0; n < count; n++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+      const nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+      const off = dv.getUint32(p + 42, true);
+      const name = new TextDecoder().decode(u.subarray(p + 46, p + 46 + nlen));
+      if (name === 'docProps/core.xml') {
+        const start = off + 30 + dv.getUint16(off + 26, true) + dv.getUint16(off + 28, true);
+        const data = u.subarray(start, start + csize);
+        let xml;
+        if (method === 0) xml = new TextDecoder().decode(data);
+        else if (method === 8 && typeof DecompressionStream !== 'undefined') xml = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+        else return 0;
+        const m = xml.match(/<dcterms:modified[^>]*>([^<]+)</);
+        const t = m ? Date.parse(m[1]) : NaN;
+        return isNaN(t) || t < 946684800000 || t > Date.now() + 864e5 ? 0 : t;
+      }
+      p += 46 + nlen + elen + clen;
+    }
+  } catch (e) {}
+  return 0;
+}
+
+function saveDb(name, hostedHash, dataTime) {
   dbMeta.name = name; dbMeta.updated = Date.now();
   dbMeta.source = hostedHash !== undefined ? 'site' : 'device';
   if (hostedHash !== undefined) dbMeta.hostedHash = hostedHash;
+  if (dataTime) dbMeta.dataTime = dataTime;
   try { localStorage.setItem(DB_KEY, JSON.stringify(Object.assign({}, dbMeta, {players}))); } catch (e) {}
 }
+function refreshTop() {
+  if (VIEW) return;
+  $('updated').innerHTML = players.length ? 'Player Database last updated <b>' + esc(fmt(dbMeta.dataTime || dbMeta.updated)) + '</b>' : 'No player database loaded yet';
+}
 function dbStatus(extra, saved) {
-  const src = saved ? 'saved copy on this device' : dbMeta.source === 'site' ? 'shared file from this site' : 'file added on this device';
-  document.getElementById('status').textContent = dbMeta.name + ' · ' + players.length + ' players · ' + src + ' · updated ' + stamp(dbMeta.updated) + (extra ? ' · ' + extra : '');
+  const src = saved ? 'Saved copy on this device' : dbMeta.source === 'site' ? 'Shared file from this site' : 'File added on this device';
+  $('dbInfo').innerHTML = players.length
+    ? `<dt>Source</dt><dd>${esc(src)}</dd><dt>File</dt><dd>${esc(dbMeta.name)}</dd><dt>Players</dt><dd>${players.length}</dd><dt>File last saved</dt><dd>${esc(fmt(dbMeta.dataTime || dbMeta.updated))}</dd><dt>Loaded here</dt><dd>${esc(fmt(dbMeta.updated))}</dd>`
+    : '';
+  $('status').textContent = extra || '';
+  refreshTop();
 }
 function loadDb() {
   try {
@@ -358,14 +481,14 @@ function loadDb() {
     const list = c.players.filter(p => p && Array.isArray(p.levels) && p.levels.length);
     if (!list.length) return;
     players = list; players.forEach(p => { p.level = maxLevel(p); });
-    dbMeta = {name:c.name || DB_FILE, updated:c.updated || 0, hostedHash:c.hostedHash || '', source:c.source || ''};
+    dbMeta = {name:c.name || DB_FILE, updated:c.updated || 0, dataTime:c.dataTime || 0, hostedHash:c.hostedHash || '', source:c.source || ''};
     selects.forEach(sel => sel.value = ''); fill();
     dbStatus('', true);
   } catch (e) {}
 }
 
 const keyOf = p => String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase();
-function parse(buf, name, hostedHash) {
+async function parse(buf, name, hostedHash, lastMod) {
   const wb = XLSX.read(buf, {type:'array'});
   const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:'', raw:false, dateNF:'yyyy-mm-dd'});
   const get = (r, key) => { const k = Object.keys(r).find(c => c.trim().toLowerCase() === key); return k ? r[k] : ''; };
@@ -375,9 +498,10 @@ function parse(buf, name, hostedHash) {
   })).filter(p => String(p.name).trim());
   // A file with no players never replaces the database you already have.
   if (!next.length) {
-    document.getElementById('status').textContent = name + ': no players found, so your current database was kept. Check the column names.';
+    $('status').textContent = name + ': no players found, so your current database was kept. Check the column names.';
     return;
   }
+  const dataTime = (await xlsxSavedTime(buf)) || lastMod || Date.now();
   next.forEach(p => p.level = maxLevel(p));
   next.sort((a,b) => String(a.name).localeCompare(String(b.name)));
   // Keep the current lineup: match each placed player to the new file by name and position.
@@ -394,14 +518,14 @@ function parse(buf, name, hostedHash) {
   });
   const cleared = kept.filter(Boolean).length - picks.filter(Boolean).length;
   fill(picks);
-  saveDb(name, hostedHash);
-  dbStatus(cleared ? cleared + ' lineup spot' + (cleared > 1 ? 's' : '') + ' cleared (player not in the new file)' : '');
+  saveDb(name, hostedHash, dataTime);
+  dbStatus(cleared ? cleared + ' lineup spot' + (cleared > 1 ? 's' : '') + ' cleared (player not in the new file)' : 'Player database updated.');
 }
 
 async function readFile(file) {
-  if (typeof XLSX === 'undefined') { document.getElementById('status').textContent = 'The Excel reader has not loaded yet. Connect to the internet once, reopen the app, and try again.'; return; }
-  try { parse(await file.arrayBuffer(), file.name); }
-  catch (e) { document.getElementById('status').textContent = 'Could not read that file, so your current database was kept. Use an .xlsx file with the six columns.'; }
+  if (typeof XLSX === 'undefined') { $('status').textContent = 'The Excel reader has not loaded yet. Connect to the internet once, reopen the app, and try again.'; return; }
+  try { await parse(await file.arrayBuffer(), file.name); }
+  catch (e) { $('status').textContent = 'Could not read that file, so your current database was kept. Use an .xlsx file with the six columns.'; }
 }
 
 // Load the shared player database that sits beside this page when the app is hosted (same file for everyone with the link).
@@ -409,9 +533,8 @@ async function readFile(file) {
 const DB_NAMES = [DB_FILE, 'Grid database.xlsx', 'grid database.xlsx', 'GridDatabase.xlsx', 'Grid_Database.xlsx', 'Grid-Database.xlsx', 'grid-database.xlsx'];
 async function loadHosted() {
   if (!/^https?:$/.test(location.protocol)) return;
-  const st = document.getElementById('status'), hint = document.getElementById('hint');
+  const st = $('status'), hint = $('hint');
   if (typeof XLSX === 'undefined') { if (!players.length) st.textContent = 'The Excel reader has not loaded yet. Connect to the internet once, reopen the app, and try again.'; return; }
-  if (!players.length) st.textContent = 'Looking for the player database…';
   let problem = '';
   for (const name of DB_NAMES) {
     try {
@@ -422,7 +545,8 @@ async function loadHosted() {
       if (u.length < 4 || u[0] !== 0x50 || u[1] !== 0x4B) { problem = name + ' is on the site but is not a real .xlsx file. Open it in Excel and save it again as .xlsx.'; continue; }
       let h = 2166136261; for (let i = 0; i < u.length; i++) { h ^= u[i]; h = Math.imul(h, 16777619); }
       const hash = (h >>> 0).toString(16) + ':' + u.length;
-      if (hash !== dbMeta.hostedHash) parse(buf, name, hash);
+      const lm = Date.parse(res.headers.get('last-modified') || '') || 0;
+      if (hash !== dbMeta.hostedHash || !dbMeta.dataTime) await parse(buf, name, hash, lm);
       else dbStatus();
       hint.textContent = '';
       return;
@@ -432,33 +556,57 @@ async function loadHosted() {
     }
   }
   hint.textContent = 'This page is ' + location.href.split('#')[0] + ' — looked for ' + new URL(encodeURI(DB_FILE), location.href).href + ' and it is not on the site.';
-  if (!players.length) st.textContent = problem || 'No player database was found on this site. Put "' + DB_FILE + '" in the same folder as index.html and upload the folder again, or tap Update Player Database to add a file on this device.';
+  if (!players.length) st.textContent = problem || 'No player database was found on this site. Put "' + DB_FILE + '" in the same folder as index.html and upload it again.';
 }
 
-// Remember the file (Chrome/Edge) so it reloads without picking it each time.
-const db = () => new Promise((res,rej) => { const r = indexedDB.open('grid',1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = rej; });
-async function saveHandle(h) { try { const d = await db(); d.transaction('h','readwrite').objectStore('h').put(h,'file'); } catch(e){} }
-async function getHandle() { try { const d = await db(); return await new Promise(res => { const q = d.transaction('h').objectStore('h').get('file'); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); } catch(e){ return null; } }
-
-document.getElementById('load').addEventListener('click', async () => {
-  if (window.showOpenFilePicker) {
-    try {
-      const [h] = await showOpenFilePicker({types:[{description:'Excel', accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx'],'application/vnd.ms-excel':['.xls'],'text/csv':['.csv']}}]});
-      await saveHandle(h); readFile(await h.getFile());
-    } catch(e) {}
-  } else document.getElementById('file').click();
-});
-document.getElementById('file').addEventListener('change', e => e.target.files[0] && readFile(e.target.files[0]));
+$('load').addEventListener('click', () => $('file').click());
+$('file').addEventListener('change', async e => { const f = e.target.files[0]; if (f) await readFile(f); e.target.value = ''; });
 
 if (!VIEW) loadDb();
 if (!VIEW && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-if (!VIEW) (async () => {
-  await loadHosted();
-  const h = await getHandle();
-  if (!h) return;
-  if (!players.length) document.getElementById('status').textContent = 'Click "Update Player Database" to reconnect your file.';
-  try { if ((await h.queryPermission({mode:'read'})) === 'granted') await readFile(await h.getFile()); } catch(e){}
-})();
+if (!VIEW) loadHosted().then(refreshTop);
+
+// ---- Tabs: Sandbox and Admin.
+function showTab(name) {
+  const admin = name === 'admin';
+  $('viewSandbox').hidden = admin; $('viewAdmin').hidden = !admin;
+  $('tabSandbox').setAttribute('aria-selected', String(!admin));
+  $('tabAdmin').setAttribute('aria-selected', String(admin));
+  closePicker(false);
+  if (admin) renderAdmin(); else fit();
+}
+$('tabSandbox').addEventListener('click', () => showTab('sandbox'));
+$('tabAdmin').addEventListener('click', () => showTab('admin'));
+
+// ---- Admin lock: password "Admin" (case-sensitive), or already unlocked on this device.
+const PW_HASH = 'c1c224b03cd9bc7b6a86d77f5dace40191766c485cd55dc48caf9ac873335d6f', ADMIN_KEY = 'grid.admin.v1';
+let adminOpen = false;
+try { adminOpen = localStorage.getItem(ADMIN_KEY) === PW_HASH; } catch (e) {}
+async function sha256(t) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+  return Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, '0')).join('');
+}
+function renderAdmin() {
+  $('adminLockBox').hidden = adminOpen; $('adminPanel').hidden = !adminOpen;
+  if (!adminOpen) { $('adminPw').value = ''; $('adminErr').textContent = ''; }
+  else if (!$('dbInfo').innerHTML && players.length) dbStatus($('status').textContent);
+}
+$('adminForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  let ok = false;
+  try { ok = (await sha256($('adminPw').value)) === PW_HASH; }
+  catch (err) { $('adminErr').textContent = 'This browser cannot check the password.'; return; }
+  if (!ok) { $('adminErr').textContent = 'Incorrect password. It is case-sensitive.'; $('adminPw').select(); return; }
+  adminOpen = true;
+  try { if ($('adminRemember').checked) localStorage.setItem(ADMIN_KEY, PW_HASH); } catch (err) {}
+  renderAdmin();
+});
+$('adminLockBtn').addEventListener('click', () => {
+  adminOpen = false;
+  try { localStorage.removeItem(ADMIN_KEY); } catch (e) {}
+  renderAdmin();
+});
+
 // ---- Drag a player onto another octagon to swap (or move into an empty one).
 let drag = null, flashT = null;
 function octAt(cx, cy) {
@@ -483,10 +631,10 @@ function mark(i, j) {
   hexes[j].classList.add(canSwap(i, j) ? 'ok' : 'bad');
 }
 function flash(msg) {
-  const st = document.getElementById('status');
-  if (flashT) clearTimeout(flashT); else st.dataset.keep = st.textContent;
-  st.textContent = msg;
-  flashT = setTimeout(() => { st.textContent = st.dataset.keep; flashT = null; }, 3000);
+  const t = $('toast');
+  t.textContent = msg; t.classList.add('show');
+  if (flashT) clearTimeout(flashT);
+  flashT = setTimeout(() => { t.classList.remove('show'); flashT = null; }, 2500);
 }
 function startDrag(i, e) {
   if (VIEW) return;
@@ -524,7 +672,7 @@ document.addEventListener('pointerup', e => endDrag(e, true));
 document.addEventListener('pointercancel', e => endDrag(e, false));
 NODES.forEach((_, i) => [hexes[i], circles[i], labels[i], cells[i]].forEach(el => el.addEventListener('pointerdown', e => startDrag(i, e))));
 
-// ---- Searchable player picker: opens under the octagon's button; type to filter by name.
+// ---- Searchable player picker: opens near the octagon's button; type to filter by name.
 const picker = document.createElement('div');
 picker.id = 'picker'; picker.hidden = true;
 const pTop = document.createElement('div'); pTop.className = 'top';
@@ -556,7 +704,7 @@ function renderPicker() {
   const tokens = pSearch.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   pickerItems = availableFor(i).filter(k => { const nm = String(players[k].name).toLowerCase(); return tokens.every(t => nm.includes(t)); }).slice(0, 200);
   pList.innerHTML = pickerItems.length
-    ? pickerItems.map(k => `<li data-v="${k}"${String(k) === cur ? ' class="sel"' : ''}><span>${esc(players[k].name)}</span><small>${esc(players[k].position)} &middot; ${esc(players[k].team)} &middot; ${players[k].levels.join('/')}\u2605</small></li>`).join('')
+    ? pickerItems.map(k => `<li data-v="${k}"${String(k) === cur ? ' class="sel"' : ''}><span>${esc(players[k].name)}</span><small>${esc(players[k].position)} &middot; ${esc(players[k].team)} &middot; ${players[k].levels.join('/')}★</small></li>`).join('')
     : '<li class="empty">No matching players</li>';
   pClear.hidden = cur === '';
   setActive(0);
@@ -601,19 +749,18 @@ pClear.addEventListener('click', () => choose(''));
 document.addEventListener('pointerdown', e => { if (!picker.hidden && !picker.contains(e.target) && !e.target.closest('.pick')) closePicker(false); });
 let lastW = window.innerWidth;
 window.addEventListener('resize', () => { if (window.innerWidth !== lastW) { lastW = window.innerWidth; closePicker(false); } });
-if (!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) window.addEventListener('scroll', () => closePicker(false));
+if (!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) $('stage').addEventListener('scroll', () => closePicker(false));
 
-document.getElementById('solve').addEventListener('click', () => {
+// ---- View Solution: a read-only copy of this page showing the best lineup.
+$('solve').addEventListener('click', () => {
   if (!lastBest) return;
   const url = location.href.split('#')[0] + '#solution=' + encodeURIComponent(JSON.stringify(lastBest.lineup));
   const standalone = (window.navigator && window.navigator.standalone) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-  if (standalone) { document.getElementById('solveFrame').src = url; document.getElementById('solveOverlay').hidden = false; }
+  if (standalone) { $('solveFrame').src = url; $('solveOverlay').hidden = false; }
   else window.open(url, '_blank');
 });
+$('solveClose').addEventListener('click', () => { $('solveOverlay').hidden = true; $('solveFrame').src = 'about:blank'; });
 
-document.getElementById('solveClose').addEventListener('click', () => {
-  document.getElementById('solveOverlay').hidden = true; document.getElementById('solveFrame').src = 'about:blank';
-});
 if (VIEW) {
   players = VIEW;
   selects.forEach((sel, i) => {
@@ -622,13 +769,10 @@ if (VIEW) {
   });
   document.body.classList.add('view');
   document.title = 'Grid - Best lineup';
-  document.querySelector('h1').textContent = 'Best lineup';
-  document.getElementById('status').textContent = 'Read-only: the highest Draft total for the 9 players you picked.';
-  document.getElementById('load').hidden = true;
-  document.getElementById('solve').hidden = true;
+  $('updated').innerHTML = '<b>Best lineup</b> · highest Draft total for the 9 players you picked';
+  $('solve').hidden = true;
 }
 chemistry();
-(function () { const w = document.getElementById('boardWrap'); w.scrollLeft = (w.scrollWidth - w.clientWidth) / 2; })();
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !VIEW) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
