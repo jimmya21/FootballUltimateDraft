@@ -2,7 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" id="vp" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+// In a normal browser tab, Safari manages its own toolbars (and would hide our tab bar under them if the page
+// extended to the screen edges). Only the installed app draws edge to edge.
+(function () {
+  var inApp = navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  if (!inApp) document.getElementById('vp').setAttribute('content', 'width=device-width, initial-scale=1');
+})();
+</script>
 <meta name="theme-color" content="#07090d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -17,7 +25,7 @@
   :root { --bg:#07090d; --ink:#eceae4; --muted:#9aa0aa; --edge:#4f5866; --accent:#2fbf8f; --field:#1b212a; --fieldtext:#f3f1ec; --line:#1d232c; }
   * { box-sizing:border-box; }
   html { background:var(--bg); -webkit-text-size-adjust:100%; touch-action:manipulation; }
-  body { margin:0; height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column; background:var(--bg); color:var(--ink); font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif; }
+  body { margin:0; height:100vh; height:100dvh; height:var(--app-h, 100vh); overflow:hidden; display:flex; flex-direction:column; background:var(--bg); color:var(--ink); font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif; }
   button { font:inherit; padding:9px 16px; border-radius:6px; border:2px solid var(--ink); background:var(--ink); color:var(--bg); cursor:pointer; }
   button.quiet { background:transparent; color:var(--ink); border:1px solid #4a5361; }
   button:disabled { opacity:.4; cursor:not-allowed; }
@@ -97,6 +105,22 @@
   #hint:empty { display:none; }
   #adminOut { margin-top:22px; }
 
+  /* ---- app updates, account, sign-up ---- */
+  #updateBar { margin-top:4px; color:var(--ink); font-size:12px; }
+  #updateBar button { padding:3px 10px; font-size:12px; margin-left:6px; }
+  .sect { margin-top:26px; padding-top:16px; border-top:1px solid var(--line); }
+  .sect h3 { margin:0 0 4px; font-size:1rem; }
+  #refreshMsg { min-height:1.2em; }
+  #signup { position:fixed; inset:0; z-index:60; background:var(--bg); display:flex; align-items:center; justify-content:center; overflow:auto; padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); }
+  .su { width:100%; max-width:380px; margin:auto; }
+  .su h2 { margin:0 0 6px; font-size:1.5rem; }
+  .su p { color:var(--muted); font-size:.9rem; line-height:1.4; margin:6px 0 4px; }
+  .su label { display:block; margin:16px 0 6px; font-size:.85rem; color:var(--muted); }
+  .su input { width:100%; font:inherit; font-size:16px; padding:11px 12px; border-radius:8px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); }
+  .su .row { display:flex; gap:10px; margin-top:18px; }
+  .su .row button { flex:1; padding:12px 16px; }
+  .su .fine { font-size:.78rem; margin-top:14px; }
+
   /* ---- player picker ---- */
   #picker { position:fixed; z-index:20; display:flex; flex-direction:column; background:#10151c; border:1px solid #3b4452; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.6); color:var(--ink); }
   #picker .top { display:flex; gap:6px; padding:8px; }
@@ -116,7 +140,7 @@
 </style>
 </head>
 <body>
-<div id="top"><span id="updated">No player database loaded yet</span></div>
+<div id="top"><span id="updated">No player database loaded yet</span><div id="updateBar" hidden>A new version is ready. <button id="updateNow" class="quiet">Update now</button></div></div>
 
 <main>
   <section id="viewSandbox" class="view" role="tabpanel" aria-labelledby="tabSandbox">
@@ -163,6 +187,17 @@
         <p id="hint"></p>
         <div id="adminOut"><button id="adminLockBtn" class="quiet">Lock Admin</button></div>
       </div>
+      <div id="account" class="sect" hidden>
+        <h3>Your account</h3>
+        <dl class="db"><dt>Username</dt><dd id="acUser"></dd><dt>Phone</dt><dd id="acPhone"></dd></dl>
+        <button id="acEdit" class="quiet">Change username or phone</button>
+      </div>
+      <div class="sect">
+        <h3>App</h3>
+        <dl class="db"><dt>Version</dt><dd id="appVer"></dd></dl>
+        <button id="refreshApp" class="quiet">Get latest version</button>
+        <p id="refreshMsg" role="status"></p>
+      </div>
     </div>
   </section>
 </main>
@@ -189,6 +224,20 @@
   </button>
 </nav>
 
+<div id="signup" hidden role="dialog" aria-modal="true" aria-labelledby="suTitle">
+  <form id="signupForm" class="su" novalidate>
+    <h2 id="suTitle">Sign up</h2>
+    <p id="suIntro">Pick a username and add your phone number to get started.</p>
+    <label for="suUser">Username</label>
+    <input id="suUser" type="text" maxlength="20" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Letters and numbers only">
+    <label for="suPhone">Phone number</label>
+    <input id="suPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(212) 555-0123">
+    <p id="suErr" class="err" role="alert"></p>
+    <div class="row"><button type="button" id="suCancel" class="quiet" hidden>Cancel</button><button type="submit" id="suGo">Sign up</button></div>
+    <p class="fine">Your username and phone number are saved on this device.</p>
+  </form>
+</div>
+
 <div id="solveOverlay" hidden>
   <div class="bar"><button id="solveClose">Close</button><strong>Best lineup</strong></div>
   <iframe id="solveFrame" title="Best lineup"></iframe>
@@ -196,6 +245,13 @@
 
 <script>
 const $ = id => document.getElementById(id);
+const APP_VERSION = '2026-10-14.4';
+// Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
+function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
+setAppH();
+window.addEventListener('resize', setAppH);
+window.addEventListener('orientationchange', () => setTimeout(setAppH, 150));
+if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppH);
 // When this page is opened with #solution=..., it shows the best lineup read-only.
 let VIEW = null;
 try { const m = location.hash.match(/^#solution=(.+)$/); if (m) { const v = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(v) && v.length === 9) VIEW = v; } } catch (e) {}
@@ -774,7 +830,80 @@ if (VIEW) {
   $('solve').hidden = true;
 }
 chemistry();
-if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !VIEW) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+// ---- Installed app: first-launch sign-up (username + phone), saved on this device.
+const USER_KEY = 'grid.user.v1';
+const isInstalled = () => navigator.standalone === true || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+let user = null;
+try { user = JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch (e) {}
+if (user && !(user.username && user.phone)) user = null;
+
+// US numbers: 10 digits (optional leading 1). Other countries: start with + and the country code.
+function normPhone(raw) {
+  const s = String(raw).trim(), d = s.replace(/\D/g, '');
+  if (s.startsWith('+')) return d.length >= 8 && d.length <= 15 ? {e164:'+' + d, shown:'+' + d} : null;
+  const n = d.length === 11 && d[0] === '1' ? d.slice(1) : d;
+  if (n.length !== 10 || !/[2-9]/.test(n[0]) || !/[2-9]/.test(n[3])) return null;
+  return {e164:'+1' + n, shown:'(' + n.slice(0, 3) + ') ' + n.slice(3, 6) + '-' + n.slice(6)};
+}
+function renderAccount() {
+  $('account').hidden = !user;
+  if (user) { $('acUser').textContent = user.username; $('acPhone').textContent = user.phoneShown || user.phone; }
+}
+function openSignup(edit) {
+  $('suTitle').textContent = edit ? 'Change your details' : 'Sign up';
+  $('suIntro').textContent = edit ? 'Update your username or phone number.' : 'Pick a username and add your phone number to get started.';
+  $('suGo').textContent = edit ? 'Save' : 'Sign up';
+  $('suCancel').hidden = !edit;
+  $('suUser').value = edit && user ? user.username : '';
+  $('suPhone').value = edit && user ? (user.phoneShown || user.phone) : '';
+  $('suErr').textContent = '';
+  $('signup').hidden = false;
+  setTimeout(() => $('suUser').focus(), 60);
+}
+$('suUser').addEventListener('input', () => { const v = $('suUser').value, c = v.replace(/[^A-Za-z0-9]/g, ''); if (v !== c) $('suUser').value = c; });
+$('signupForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('suUser').value.trim(), ph = normPhone($('suPhone').value);
+  if (!/^[A-Za-z0-9]{3,20}$/.test(name)) { $('suErr').textContent = 'Username must be 3 to 20 letters and numbers, with no spaces or symbols.'; $('suUser').focus(); return; }
+  if (!ph) { $('suErr').textContent = 'Enter a valid phone number, like (212) 555-0123. For a number outside the US, start with + and the country code.'; $('suPhone').focus(); return; }
+  user = {username:name, phone:ph.e164, phoneShown:ph.shown, created:(user && user.created) || Date.now()};
+  try { localStorage.setItem(USER_KEY, JSON.stringify(user)); } catch (err) {}
+  $('signup').hidden = true; renderAccount();
+});
+$('suCancel').addEventListener('click', () => { $('signup').hidden = true; });
+$('acEdit').addEventListener('click', () => openSignup(true));
+if (!VIEW) { renderAccount(); if (isInstalled() && !user) openSignup(false); }
+
+// ---- Getting new versions of the app without re-adding it to the Home Screen.
+async function refreshApp() {
+  if (navigator.onLine === false) { $('refreshMsg').textContent = 'You are offline. Connect to the internet and try again.'; return; }
+  $('refreshMsg').textContent = 'Updating…';
+  try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r => r.unregister())); } catch (e) {}
+  try { const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); } catch (e) {}
+  location.reload();
+}
+async function checkNewVersion() {
+  if (VIEW || !/^https?:$/.test(location.protocol)) return;
+  try {
+    const res = await fetch('index.html', {cache:'no-store'});
+    if (!res.ok) return;
+    const m = (await res.text()).match(/const APP_VERSION = '([^']+)'/);
+    if (m && m[1] !== APP_VERSION) $('updateBar').hidden = false;
+  } catch (e) {}
+}
+$('refreshApp').addEventListener('click', refreshApp);
+$('updateNow').addEventListener('click', refreshApp);
+if (!VIEW) {
+  $('appVer').textContent = APP_VERSION;
+  setTimeout(checkNewVersion, 2500);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewVersion(); });
+}
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !VIEW) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+  }).catch(() => {});
+}
 </script>
 </body>
 </html>

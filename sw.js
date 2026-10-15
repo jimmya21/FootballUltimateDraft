@@ -1,12 +1,12 @@
-// Caches the app so it opens offline. The page itself is fetched from the network first,
-// so a new version shows up right away; the saved copy is used only when offline or slow.
-const CACHE = 'grid-v3';
+// Caches the app so it opens offline. The page is always checked against the server first (so a new version
+// shows up right away); the saved copy is used only when offline or slow.
+const CACHE = 'grid-v4';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(async c => {
-    await c.addAll(ASSETS);
+    await c.addAll(ASSETS.map(a => new Request(a, {cache: 'reload'})));
     try { await c.put(XLSX_URL, await fetch(XLSX_URL, {mode: 'no-cors'})); } catch (err) {}
     self.skipWaiting();
   }));
@@ -23,9 +23,11 @@ self.addEventListener('fetch', e => {
   // The player database is always fetched fresh.
   if (/\.xlsx?$/i.test(decodeURIComponent(url.pathname))) return;
 
-  const isPage = req.mode === 'navigate' || (url.origin === location.origin && /(^|\/)(index\.html)?$/.test(url.pathname));
+  const sameOrigin = url.origin === location.origin;
+  const isPage = req.mode === 'navigate' || (sameOrigin && /(^|\/)(index\.html)?$/.test(url.pathname));
   if (isPage) {
-    const fresh = fetch(req).then(res => {
+    // "no-cache" makes the browser check with the server instead of trusting a copy it kept for a few minutes.
+    const fresh = fetch(req.url, {cache: 'no-cache'}).then(res => {
       if (res && res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
       return res;
     });
@@ -36,7 +38,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Everything else: saved copy first, refreshed in the background.
+  // Everything else (icons, manifest, the Excel reader): saved copy first, refreshed in the background.
   e.respondWith(caches.open(CACHE).then(async c => {
     const hit = await c.match(req, {ignoreSearch: true});
     const net = fetch(req).then(res => { if (res && (res.ok || res.type === 'opaque')) c.put(req, res.clone()); return res; }).catch(() => hit);
