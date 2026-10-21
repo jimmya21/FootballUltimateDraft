@@ -61,7 +61,7 @@
   .shine { fill:url(#shine); pointer-events:none; opacity:0; }
   .ring { fill:none; stroke:none; stroke-width:10; stroke-linejoin:miter; pointer-events:none; }
   .hex { touch-action:none; }
-  .cell { position:absolute; width:82px; transform:translate(-50%,-50%); text-align:center; color:#f3f1ec; }
+  .cell { position:absolute; width:82px; transform:translateX(-50%); text-align:center; color:#f3f1ec; }
   .cell.filled { cursor:grab; touch-action:none; }
   .cell select:not(.lvl) { display:none; }
   .pick { display:block; width:100%; font:inherit; font-size:10.5px; padding:3px 4px; border-radius:4px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
@@ -79,7 +79,21 @@
 
   /* ---- totals ---- */
   #total { flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 10px 8px; color:var(--muted); text-align:center; border-top:1px solid var(--line); }
-  #total .clearRow { align-self:flex-end; margin-bottom:2px; }
+  #total .clearRow { align-self:flex-end; margin-bottom:2px; display:flex; gap:8px; }
+  #draftBanner { width:100%; }
+  #draftBanner .dt { font-size:12px; color:var(--ink); margin:2px 0 7px; line-height:1.3; }
+  #draftOpts { display:flex; gap:8px; justify-content:center; }
+  #total .opt { --cut:16px; position:relative; flex:0 1 104px; height:112px; padding:0; border:0; border-radius:0; background:#7a8494; cursor:pointer; color:var(--tx);
+    clip-path:polygon(var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)), 0 var(--cut)); }
+  .opt .in { --c2:calc(var(--cut) - 3px); position:absolute; inset:3px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:0 6px; text-align:center;
+    background:linear-gradient(180deg,var(--l),var(--b) 40%,var(--d));
+    clip-path:polygon(var(--c2) 0, calc(100% - var(--c2)) 0, 100% var(--c2), 100% calc(100% - var(--c2)), calc(100% - var(--c2)) 100%, var(--c2) 100%, 0 calc(100% - var(--c2)), 0 var(--c2)); }
+  .opt b { font-size:11px; line-height:1.15; font-weight:700; }
+  .opt i { font-style:normal; font-size:9px; line-height:1.25; }
+  .opt em { font-style:normal; color:#ffd400; font-size:11px; letter-spacing:1px; text-shadow:0 0 2px #3a2a00; }
+  #total .opt:disabled { opacity:1; }
+  #total .opt.sel { background:#fff; }
+  #total .opt.off { opacity:.3; cursor:default; }
   #total .clearRow button { padding:5px 14px; font-size:12px; }
   #total .row { display:flex; justify-content:center; align-items:flex-end; gap:6px 22px; flex-wrap:wrap; }
   #total .stat { display:flex; flex-direction:column; align-items:center; }
@@ -89,9 +103,14 @@
   #total .two strong { font-size:18px; }
   #total .draft strong { color:var(--accent); }
   #total button { padding:7px 14px; font-size:13px; }
+  #total .opt { padding:0; }
   @media (orientation:landscape) and (max-height:520px) {
     #viewSandbox { flex-direction:row; }
-    #total { width:200px; border-top:0; border-left:1px solid var(--line); justify-content:center; }
+    #total { width:200px; border-top:0; border-left:1px solid var(--line); justify-content:center; overflow:auto; }
+    body.drafting #total { justify-content:flex-start; }
+    #draftOpts { flex-direction:column; gap:5px; }
+    #total .opt { --cut:10px; flex:none; width:100%; height:44px; }
+    .opt .in { flex-direction:row; flex-wrap:wrap; gap:0 6px; padding:2px 12px; }
   }
 
   /* ---- Admin ---- */
@@ -180,13 +199,21 @@
       </div>
     </div>
     <div id="total">
-      <div class="clearRow"><button id="clearAll" class="quiet" disabled>Clear</button></div>
+      <div id="draftBanner" hidden>
+        <div class="dt" id="draftTitle"></div>
+        <div id="draftOpts"></div>
+      </div>
+      <div class="clearRow">
+        <button id="draftNew" class="quiet" hidden>New Draft</button>
+        <button id="draftNext" hidden disabled>Next</button>
+        <button id="clearAll" class="quiet" disabled>Clear</button>
+      </div>
       <div class="row">
         <div class="stat"><span>Talent</span><strong id="talentNum">0</strong><small>from star levels</small></div>
         <div class="stat"><span>Total chemistry</span><strong id="chemNum">0</strong><small id="chemSub">players 0 + links 0</small></div>
         <div class="stat draft"><span>Draft total</span><strong id="draftNum">0</strong><small id="draftSub">chemistry + talent</small></div>
       </div>
-      <div class="row two">
+      <div class="row two" id="scoreRow">
         <div class="stat"><span>Max Score</span><strong id="maxNum">&ndash;</strong></div>
         <div class="stat"><span>Accuracy</span><strong id="accNum">&ndash;</strong></div>
         <button id="solve" disabled>View Solution</button>
@@ -247,6 +274,15 @@
     </svg>
     <span>Sandbox</span>
   </button>
+  <button id="tabDraft" role="tab" aria-selected="false" aria-controls="viewSandbox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="4.6" r="2.2"/><path d="M8.8 11.4a3.2 3.2 0 0 1 6.4 0"/>
+      <circle cx="4.6" cy="14.6" r="2.2"/><path d="M1.4 21.4a3.2 3.2 0 0 1 6.4 0"/>
+      <circle cx="19.4" cy="14.6" r="2.2"/><path d="M16.2 21.4a3.2 3.2 0 0 1 6.4 0"/>
+      <path d="M9.6 7.6 6.2 12.2M14.4 7.6l3.4 4.6M8.6 17.6h6.8" stroke-dasharray="1.2 1.8"/>
+    </svg>
+    <span>Draft</span>
+  </button>
   <button id="tabAccount" role="tab" aria-selected="false" aria-controls="viewAccount">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="12" cy="8" r="4"/>
@@ -290,7 +326,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-21.2';
+const APP_VERSION = '2026-10-21.3';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -355,7 +391,7 @@ NODES.forEach(([x,y],i) => {
   lab.textContent = ['RB','WR','TE'].every(q => ALLOWED[i].includes(q)) ? 'Flex' : ALLOWED[i].join(' / ');
   svg.appendChild(lab); labels.push(lab);
   const st = document.createElementNS(NS,'text');
-  st.setAttribute('x',x); st.setAttribute('y',y+HH/2-5); st.setAttribute('text-anchor','middle');
+  st.setAttribute('x',x); st.setAttribute('y',y+HH/2-3); st.setAttribute('text-anchor','middle');
   st.setAttribute('fill','#ffd400'); st.setAttribute('font-size','11.5');
   st.setAttribute('stroke','#3a2a00'); st.setAttribute('stroke-width','1'); st.setAttribute('paint-order','stroke');
   st.setAttribute('letter-spacing','1');
@@ -395,6 +431,7 @@ window.addEventListener('orientationchange', () => setTimeout(fit, 150));
 fit();
 
 let players = [];
+let mode = 'sandbox', draft = null, sandboxSnap = null;   // 'sandbox' or 'draft' (both use the same board)
 const maxLevel = p => Math.max(...p.levels);
 // "4" -> [4]; "4,5" -> [4,5] (a card that can be either). Values are kept between 1 and 5.
 const parseLevels = v => {
@@ -417,13 +454,13 @@ function show(i) {
   shines[i].style.opacity = p ? 1 : 0;
   hexes[i].style.cursor = p && !VIEW ? 'grab' : '';
   cells[i].classList.toggle('filled', !!p);
-  btns[i].textContent = p ? p.name : 'Select player';
+  btns[i].textContent = p ? p.name : (mode === 'draft' ? 'Open spot' : 'Select player');
   cells[i].style.setProperty('--tx', p ? TIER[n].text : '#14181f');
   // Players with several possible levels get a small level dropdown.
-  const multi = !!p && p.levels.length > 1 && !VIEW;
+  const multi = !!p && p.levels.length > 1 && !VIEW && mode !== 'draft';
   lvls[i].hidden = !multi;
   if (multi) { lvls[i].innerHTML = p.levels.map(v => `<option value="${v}">${v}★</option>`).join(''); lvls[i].value = String(p.level); }
-  cells[i].style.top = (NODES[i][1] + (multi ? 3 : 0)) + 'px';
+  cells[i].style.top = NODES[i][1] + 'px';   // the top of the name box sits on the octagon's centre line
   // Position hint: inside the octagon while empty, under it (with a dark outline so it reads over links) once filled.
   labels[i].setAttribute('y', NODES[i][1] + (p ? HH/2 + 13 : 34));
   labels[i].setAttribute('fill', p ? '#d5d9e0' : '#9aa0aa');
@@ -566,6 +603,7 @@ function saveDb(name, hostedHash, dataTime) {
 }
 function refreshTop() {
   if (VIEW) return;
+  if (mode === 'draft') renderDraft();
   $('dbUpdated').textContent = players.length ? 'Last updated ' + fmt(dbMeta.dataTime || dbMeta.updated) : 'No player database loaded yet';
 }
 function dbStatus(extra) {
@@ -659,19 +697,142 @@ if (!VIEW) loadDb();
 if (!VIEW && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 if (!VIEW) loadHosted().then(() => { refreshTop(); runNote(); });
 
-// ---- Tabs: Sandbox, Account and (owner only) Admin.
-const TABS = {sandbox:['tabSandbox','viewSandbox'], account:['tabAccount','viewAccount'], admin:['tabAdmin','viewAdmin']};
+// ---- Draft mode: 9 rounds of "pick 1 of 3". It uses the same board as the Sandbox tab.
+const DRAFT_KEY = 'fud.draft.v1', DLQ_KEY = 'fud.draftlog.v1';
+const snapshot = () => selects.map(sel => { const p = players[sel.value]; return p ? {key:keyOf(p), level:p.level} : null; });
+function restore(snap) {
+  players.forEach(p => { p.level = maxLevel(p); });
+  const used = new Set();
+  fill(Array.from({length:9}, (_, i) => {
+    const k = snap && snap[i]; if (!k) return '';
+    const idx = players.findIndex((p, n) => !used.has(n) && keyOf(p) === k.key);
+    if (idx < 0) return '';
+    used.add(idx); if (players[idx].levels.includes(k.level)) players[idx].level = k.level;
+    return String(idx);
+  }));
+}
+const filledCount = () => selects.filter(sel => sel.value !== '').length;
+const byKey = key => players.find(p => keyOf(p) === key);
+function saveDraft() { if (draft) try { localStorage.setItem(DRAFT_KEY, JSON.stringify(Object.assign({}, draft, {snap:snapshot()}))); } catch (e) {} }
+function loadDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) draft = d;
+  } catch (e) {}
+}
+function newDraft() {
+  draft = {phase:'picking', opts:[], chosen:null, seen:[], id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
+  restore([]); dealRound(); saveDraft();
+}
+// Three random players that fit at least one open spot, each with a random level when the card has several.
+function dealRound() {
+  draft.chosen = null; draft.opts = [];
+  const spots = selects.map((sel, i) => sel.value === '' ? i : -1).filter(i => i >= 0);
+  if (!spots.length) return;
+  const placed = new Set(snapshot().filter(Boolean).map(x => x.key));
+  let pool = players.filter(p => !placed.has(keyOf(p)) && spots.some(i => allowed(i, p)));
+  const fresh = pool.filter(p => !draft.seen.includes(keyOf(p)));
+  if (fresh.length >= 3) pool = fresh;
+  while (draft.opts.length < 3 && pool.length) {
+    const p = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+    draft.opts.push({key:keyOf(p), level:p.levels[Math.floor(Math.random() * p.levels.length)]});
+    draft.seen.push(keyOf(p));
+  }
+}
+function pickOption(n) {
+  if (!draft || draft.phase !== 'picking' || draft.chosen) return;
+  const o = draft.opts[n], p = o && byKey(o.key);
+  if (!p) return;
+  // Most restrictive open spot first, so Flex spots stay free for whoever needs them.
+  const open = selects.map((sel, i) => i).filter(i => selects[i].value === '' && allowed(i, p)).sort((a, b) => ALLOWED[a].length - ALLOWED[b].length || a - b);
+  if (!open.length) return;
+  p.level = o.level;
+  const picked = selects.map(sel => sel.value);
+  picked[open[0]] = String(players.indexOf(p));
+  fill(picked);
+  draft.chosen = o.key; saveDraft(); renderDraft();
+}
+function draftAction() {
+  if (!draft) return;
+  if (draft.phase === 'submitted') { sandboxSnap = snapshot(); showTab('sandbox'); return; }
+  if (!draft.chosen) return;
+  if (filledCount() >= 9) { submitDraft(); return; }
+  dealRound(); saveDraft(); renderDraft();
+}
+function submitDraft() {
+  draft.phase = 'submitted'; draft.opts = draft.opts.filter(o => o.key === draft.chosen);
+  draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent)};
+  saveDraft(); renderDraft();
+  logDraft(Object.assign({id:draft.id}, draft.result));
+}
+async function logDraft(rec) {
+  if (!SIGNUP_URL || !user) return;
+  let q = []; try { q = JSON.parse(localStorage.getItem(DLQ_KEY) || '[]'); } catch (e) {}
+  if (rec) q.push(rec);
+  q = q.slice(-20);
+  const left = [];
+  if (user.status === 'approved') {
+    for (const r of q) {
+      try { const x = await api('draft', user.phone, r); if (!x.ok && (x.error === 'busy' || x.error === 'server')) left.push(r); }
+      catch (e) { left.push(r); }
+    }
+  } else left.push(...q);
+  try { left.length ? localStorage.setItem(DLQ_KEY, JSON.stringify(left)) : localStorage.removeItem(DLQ_KEY); } catch (e) {}
+}
+function renderDraft() {
+  const on = mode === 'draft' && !!draft;
+  document.body.classList.toggle('drafting', mode === 'draft');
+  $('clearAll').hidden = mode === 'draft';
+  $('draftNext').hidden = !on; $('draftNew').hidden = !(on && draft.phase === 'submitted');
+  $('scoreRow').hidden = on && draft.phase !== 'submitted';
+  $('draftBanner').hidden = !(on && draft.phase === 'picking');
+  if (!on) return;
+  if (draft.phase === 'picking' && !draft.opts.length && !draft.chosen && players.length && filledCount() < 9) { dealRound(); saveDraft(); }
+  const n = filledCount(), done = draft.phase === 'submitted';
+  $('draftNext').textContent = done ? 'See in Sandbox' : (draft.chosen && n >= 9 ? 'Submit' : 'Next');
+  $('draftNext').disabled = !done && !draft.chosen;
+  if (done) return;
+  const chosen = draft.chosen && byKey(draft.chosen);
+  $('draftTitle').textContent = !players.length ? 'No players loaded yet. Connect to the internet once so the player database can load.'
+    : !draft.opts.length ? 'No eligible players are left in the database for the open spots.'
+    : chosen ? 'Round ' + n + ' of 9: ' + chosen.name + ' added. ' + (n >= 9 ? 'Move players if you like, then press Submit.' : 'Press Next for the next three.')
+    : 'Round ' + (n + 1) + ' of 9: choose one player';
+  $('draftOpts').innerHTML = draft.opts.map((o, k) => {
+    const p = byKey(o.key); if (!p) return '';
+    const t = TIER[o.level];
+    return `<button type="button" class="opt${draft.chosen ? (draft.chosen === o.key ? ' sel' : ' off') : ''}" data-n="${k}" style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"${draft.chosen ? ' disabled' : ''}>` +
+      `<span class="in"><b>${esc(p.name)}</b><i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i><em>${'★'.repeat(o.level)}</em></span></button>`;
+  }).join('');
+}
+$('draftOpts').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && !b.disabled) pickOption(Number(b.dataset.n)); });
+$('draftNext').addEventListener('click', draftAction);
+$('draftNew').addEventListener('click', () => { newDraft(); renderDraft(); });
+function enterMode(m) {
+  if (m === mode) return;
+  if (mode === 'draft') saveDraft(); else sandboxSnap = snapshot();
+  closePicker(false);
+  mode = m;
+  if (m === 'draft') { if (!draft) loadDraft(); if (draft) restore(draft.snap); else newDraft(); }
+  else restore(sandboxSnap);
+  renderDraft();
+}
+
+// ---- Tabs: Sandbox, Draft, Account and (owner only) Admin.
+const TABS = {sandbox:'tabSandbox', draft:'tabDraft', account:'tabAccount', admin:'tabAdmin'};
+const VIEWOF = {sandbox:'viewSandbox', draft:'viewSandbox', account:'viewAccount', admin:'viewAdmin'};
 let curTab = 'sandbox';
 function showTab(name) {
   if (name === 'admin' && !isAdmin()) name = 'sandbox';
   curTab = name;
-  for (const k in TABS) { const on = k === name; $(TABS[k][1]).hidden = !on; $(TABS[k][0]).setAttribute('aria-selected', String(on)); }
+  if (name === 'sandbox' || name === 'draft') enterMode(name);
+  for (const k in TABS) $(TABS[k]).setAttribute('aria-selected', String(k === name));
+  ['viewSandbox', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
   closePicker(false);
   if (name === 'admin') pollRequests();
   else if (name === 'account') renderAccount();
   else fit();
 }
-Object.keys(TABS).forEach(k => $(TABS[k][0]).addEventListener('click', () => showTab(k)));
+Object.keys(TABS).forEach(k => $(TABS[k]).addEventListener('click', () => showTab(k)));
 
 // ---- Drag a player onto another octagon to swap (or move into an empty one).
 let drag = null, flashT = null;
@@ -703,8 +864,8 @@ function flash(msg) {
   flashT = setTimeout(() => { t.classList.remove('show'); flashT = null; }, 2500);
 }
 function startDrag(i, e) {
-  if (VIEW) return;
-  if (e.target.closest('button, select') || e.button > 0 || !selects[i].value) return;
+  if (VIEW || (mode === 'draft' && draft && draft.phase === 'submitted')) return;
+  if (e.target.closest(mode === 'draft' ? '.lvl' : 'button, select') || e.button > 0 || !selects[i].value) return;
   drag = {i, x:e.clientX, y:e.clientY, on:false, ghost:null};
 }
 document.addEventListener('pointermove', e => {
@@ -798,7 +959,8 @@ function closePicker(refocus) {
   const i = pickerFor; picker.hidden = true; pickerFor = -1;
   if (refocus && i >= 0 && btns[i].focus) btns[i].focus();
 }
-function togglePicker(i) { if (!picker.hidden && pickerFor === i) closePicker(true); else openPicker(i); }
+function togglePicker(i) { if (mode === 'draft') return;
+  if (!picker.hidden && pickerFor === i) closePicker(true); else openPicker(i); }
 function choose(v) {
   const i = pickerFor; if (i < 0) return;
   selects[i].value = v; closePicker(true); fill();
@@ -1060,6 +1222,7 @@ async function syncAccount() {
       const was = isAdmin(), wasBlocked = user.status === 'blocked';
       user.status = 'approved'; user.username = r.username || user.username; user.admin = !!r.admin; saveUser(); renderAccount();
       if (wasBlocked) applyBlocked(); else if (was !== isAdmin()) applyAccess();
+      logDraft();
     } else { user = null; saveUser(); renderAccount(); applyBlocked(); if (isInstalled()) openSignup(false); }
   } catch (e) {}
 }
