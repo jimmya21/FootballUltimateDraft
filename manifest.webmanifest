@@ -1,7 +1,7 @@
 {
-  "name": "Grid",
-  "short_name": "Grid",
-  "description": "Build a 9-player grid and score its talent and chemistry.",
+  "name": "FUD",
+  "short_name": "FUD",
+  "description": "Football Ultimate Draft: build a 9-player lineup and score its talent and chemistry.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

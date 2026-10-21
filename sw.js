@@ -1,6 +1,6 @@
 // Caches the app so it opens offline. The page is always checked against the server first (so a new version
 // shows up right away); the saved copy is used only when offline or slow.
-const CACHE = 'grid-v4';
+const CACHE = 'fud-v1';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 

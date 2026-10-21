@@ -15,11 +15,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Grid">
+<meta name="apple-mobile-web-app-title" content="FUD">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
-<title>Grid</title>
+<title>FUD</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root { --bg:#07090d; --ink:#eceae4; --muted:#9aa0aa; --edge:#4f5866; --accent:#2fbf8f; --field:#1b212a; --fieldtext:#f3f1ec; --line:#1d232c; }
@@ -46,7 +46,7 @@
   /* ---- Sandbox: the board is drawn at a fixed size and scaled to fit the space ---- */
   #stage { position:relative; flex:1; min-height:0; display:flex; overflow:auto; }
   #boardBox { position:relative; flex:none; margin:auto; }
-  #board { position:absolute; left:0; top:0; width:400px; height:640px; transform-origin:0 0; }
+  #board { position:absolute; left:0; top:0; width:464px; height:412px; transform-origin:0 0; }
   #board svg { position:absolute; inset:0; width:100%; height:100%; }
   .cell, #board svg { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
   .edge { stroke:var(--edge); stroke-width:2; transition:stroke .2s; }
@@ -106,6 +106,21 @@
   #adminOut { margin-top:22px; }
 
   /* ---- app updates, account, sign-up ---- */
+  #tabs button[hidden] { display:none; }
+  #tabs button { position:relative; }
+  #reqBadge { position:absolute; top:3px; left:calc(50% + 6px); min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:#e5484d; color:#fff; font:700 10px/16px system-ui,sans-serif; font-style:normal; text-align:center; }
+  #reqBadge[hidden] { display:none; }
+  .sect.first { margin-top:14px; padding-top:0; border-top:0; }
+  #reqList { list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  #reqList li { border:1px solid #6b5a22; background:#1c1808; border-radius:10px; padding:12px; font-size:.88rem; line-height:1.4; }
+  #reqList li small { display:block; color:var(--muted); margin-top:4px; }
+  #reqList .btns { display:flex; gap:8px; margin-top:10px; }
+  #reqList .btns button { flex:1; padding:9px 12px; }
+  #reqList .btns .deny { background:transparent; color:#e58a87; border:1px solid #7a3b3a; }
+  #acForm { flex-wrap:wrap; }
+  #acForm input { flex:1 1 100%; }
+  .su.waiting label, .su.waiting input, .su.waiting #suGo, .su.waiting #suFine, .su.waiting #suIntro { display:none; }
+  .ok { color:#7fd49a; }
   #updateBar { margin-top:4px; color:var(--ink); font-size:12px; }
   #updateBar button { padding:3px 10px; font-size:12px; margin-left:6px; }
   .sect { margin-top:26px; padding-top:16px; border-top:1px solid var(--line); }
@@ -148,7 +163,7 @@
       <div id="toast" role="status"></div>
       <div id="boardBox">
         <div id="board">
-          <svg viewBox="0 0 400 640" preserveAspectRatio="none" id="svg"></svg>
+          <svg viewBox="0 0 464 412" preserveAspectRatio="none" id="svg"></svg>
         </div>
       </div>
     </div>
@@ -166,37 +181,50 @@
     </div>
   </section>
 
-  <section id="viewAdmin" class="view" role="tabpanel" aria-labelledby="tabAdmin" hidden>
+  <section id="viewAccount" class="view" role="tabpanel" aria-labelledby="tabAccount" hidden>
     <div class="pane">
-      <h2>Admin</h2>
-      <div id="adminLockBox">
-        <p>Enter the admin password to manage the player database.</p>
-        <form id="adminForm" class="field" autocomplete="off">
-          <input id="adminPw" type="password" placeholder="Password" aria-label="Admin password" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="current-password">
-          <button type="submit">Unlock</button>
-        </form>
-        <label class="check"><input type="checkbox" id="adminRemember" checked> Keep Admin unlocked on this device</label>
-        <p id="adminErr" class="err" role="alert"></p>
-      </div>
-      <div id="adminPanel" hidden>
-        <p>Add a newer <b>Grid Database</b> Excel file to this device. The site's shared file replaces it the next time that file changes.</p>
-        <button id="load">Update Player Database</button>
-        <input id="file" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden>
-        <dl class="db" id="dbInfo"></dl>
-        <p id="status"></p>
-        <p id="hint"></p>
-        <div id="adminOut"><button id="adminLockBtn" class="quiet">Lock Admin</button></div>
-      </div>
-      <div id="account" class="sect" hidden>
-        <h3>Your account</h3>
+      <h2>Account</h2>
+      <div id="acIn" hidden>
         <dl class="db"><dt>Username</dt><dd id="acUser"></dd><dt>Phone</dt><dd id="acPhone"></dd></dl>
-        <button id="acEdit" class="quiet">Change username or phone</button>
+        <button id="acEdit" class="quiet">Change username</button>
+        <form id="acForm" class="field" hidden autocomplete="off">
+          <input id="acNew" type="text" maxlength="20" placeholder="New username" aria-label="New username" autocapitalize="none" autocorrect="off" spellcheck="false">
+          <button type="submit" id="acSave">Save</button>
+          <button type="button" id="acCancel" class="quiet">Cancel</button>
+        </form>
+        <p id="acMsg" class="err" role="alert"></p>
+        <p>Your phone number is tied to this account and cannot be changed.</p>
+      </div>
+      <div id="acOut">
+        <p>You are not signed up on this device yet.</p>
+        <button id="acSignup">Sign up</button>
       </div>
       <div class="sect">
         <h3>App</h3>
         <dl class="db"><dt>Version</dt><dd id="appVer"></dd></dl>
         <button id="refreshApp" class="quiet">Get latest version</button>
         <p id="refreshMsg" role="status"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="viewAdmin" class="view" role="tabpanel" aria-labelledby="tabAdmin" hidden>
+    <div class="pane">
+      <h2>Admin</h2>
+      <div class="sect first">
+        <h3>Device requests</h3>
+        <p id="reqNone">No requests right now.</p>
+        <ul id="reqList"></ul>
+        <p id="reqMsg" class="err" role="alert"></p>
+      </div>
+      <div class="sect">
+        <h3>Player database</h3>
+        <p>Add a newer <b>FUD Database</b> Excel file to this device. The site's shared file replaces it the next time that file changes.</p>
+        <button id="load">Update Player Database</button>
+        <input id="file" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden>
+        <dl class="db" id="dbInfo"></dl>
+        <p id="status"></p>
+        <p id="hint"></p>
       </div>
     </div>
   </section>
@@ -212,7 +240,14 @@
     </svg>
     <span>Sandbox</span>
   </button>
-  <button id="tabAdmin" role="tab" aria-selected="false" aria-controls="viewAdmin">
+  <button id="tabAccount" role="tab" aria-selected="false" aria-controls="viewAccount">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4.5 21c.6-4.2 3.6-6.5 7.5-6.5s6.9 2.3 7.5 6.5"/>
+    </svg>
+    <span>Account</span>
+  </button>
+  <button id="tabAdmin" role="tab" aria-selected="false" aria-controls="viewAdmin" hidden>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M4 13v-1a8 8 0 0 1 16 0v1"/>
       <rect x="3" y="12" width="4" height="6" rx="1.6"/>
@@ -220,7 +255,7 @@
       <path d="M19 18v.5a2.5 2.5 0 0 1-2.5 2.5H14"/>
       <rect x="11" y="19.6" width="3.4" height="2.8" rx="1.4"/>
     </svg>
-    <span>Admin</span>
+    <span>Admin</span><em id="reqBadge" hidden>0</em>
   </button>
 </nav>
 
@@ -234,7 +269,8 @@
     <input id="suPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(212) 555-0123">
     <p id="suErr" class="err" role="alert"></p>
     <div class="row"><button type="button" id="suCancel" class="quiet" hidden>Cancel</button><button type="submit" id="suGo">Sign up</button></div>
-    <p class="fine">Your username and phone number are saved on this device.</p>
+    <p id="suWait" hidden></p>
+    <p class="fine" id="suFine">Your phone number stays private. Your username is how you appear in FUD.</p>
   </form>
 </div>
 
@@ -245,7 +281,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-14.4';
+const APP_VERSION = '2026-10-20.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -256,11 +292,11 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', setA
 let VIEW = null;
 try { const m = location.hash.match(/^#solution=(.+)$/); if (m) { const v = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(v) && v.length === 9) VIEW = v; } } catch (e) {}
 
-// Octagon centers (x,y) on a compact 400 x 640 board that is scaled to fit the screen.
-const NODES = [[134,56],[266,56],[54,182],[134,308],[266,308],[346,182],[54,434],[200,560],[346,434]];
+// Octagon centers (x,y) on a compact 464 x 412 board that is scaled to fit the screen.
+const NODES = [[162,58],[302,58],[55,157],[177,198],[287,198],[409,157],[93,304],[232,339],[371,304]];
 // Links between octagons (indexes into NODES).
 const LINKS = [[0,1],[0,2],[0,3],[1,4],[1,5],[2,3],[2,6],[3,6],[3,7],[4,5],[4,7],[4,8],[5,8],[6,7],[7,8]];
-const W = 400, H = 640, HW = 96, HH = 104;
+const W = 464, H = 412, HW = 96, HH = 104;
 // Positions allowed in each octagon (1 to 9, in order). Edit here to change them.
 const ALLOWED = [['RB'],['WR'],['RB','WR','TE'],['QB'],['QB'],['RB','WR','TE'],['WR'],['TE'],['RB']];
 
@@ -474,10 +510,10 @@ function fill(forced) {
 }
 
 // ---- Player database: where it comes from and how it is kept.
-// 1) "Grid Database.xlsx" next to this page (if present) is loaded on every launch.
+// 1) "FUD Database.xlsx" next to this page (if present) is loaded on every launch.
 // 2) Admin > "Update Player Database" lets you pick a newer copy from this device; it is saved and used from then on.
 // 3) The last loaded copy is stored on this device, so the app opens with your players even offline.
-const DB_KEY = 'grid.database.v1', DB_FILE = 'Grid Database.xlsx';
+const DB_KEY = 'fud.database.v1', DB_FILE = 'FUD Database.xlsx';
 let dbMeta = {name:'', updated:0, dataTime:0, hostedHash:'', source:''};
 const fmt = t => { try { return new Date(t).toLocaleString([], {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'}); } catch (e) { return ''; } };
 
@@ -587,7 +623,7 @@ async function readFile(file) {
 
 // Load the shared player database that sits beside this page when the app is hosted (same file for everyone with the link).
 // Common spellings of the file name are tried, and a clear message explains it if nothing is found.
-const DB_NAMES = [DB_FILE, 'Grid database.xlsx', 'grid database.xlsx', 'GridDatabase.xlsx', 'Grid_Database.xlsx', 'Grid-Database.xlsx', 'grid-database.xlsx'];
+const DB_NAMES = [DB_FILE, 'FUD database.xlsx', 'fud database.xlsx', 'FUDDatabase.xlsx', 'FUD_Database.xlsx', 'FUD-Database.xlsx', 'fud-database.xlsx', 'Grid Database.xlsx'];
 async function loadHosted() {
   if (!/^https?:$/.test(location.protocol)) return;
   const st = $('status'), hint = $('hint');
@@ -623,46 +659,22 @@ if (!VIEW) loadDb();
 if (!VIEW && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 if (!VIEW) loadHosted().then(refreshTop);
 
-// ---- Tabs: Sandbox and Admin.
+// ---- Tabs: Sandbox, Account and (owner only) Admin.
+const TABS = {sandbox:['tabSandbox','viewSandbox'], account:['tabAccount','viewAccount'], admin:['tabAdmin','viewAdmin']};
+let curTab = 'sandbox';
 function showTab(name) {
-  const admin = name === 'admin';
-  $('viewSandbox').hidden = admin; $('viewAdmin').hidden = !admin;
-  $('tabSandbox').setAttribute('aria-selected', String(!admin));
-  $('tabAdmin').setAttribute('aria-selected', String(admin));
+  if (name === 'admin' && !isAdmin()) name = 'sandbox';
+  curTab = name;
+  for (const k in TABS) { const on = k === name; $(TABS[k][1]).hidden = !on; $(TABS[k][0]).setAttribute('aria-selected', String(on)); }
   closePicker(false);
-  if (admin) renderAdmin(); else fit();
+  if (name === 'admin') { renderAdmin(); pollRequests(); }
+  else if (name === 'account') renderAccount();
+  else fit();
 }
-$('tabSandbox').addEventListener('click', () => showTab('sandbox'));
-$('tabAdmin').addEventListener('click', () => showTab('admin'));
-
-// ---- Admin lock: password "Admin" (case-sensitive), or already unlocked on this device.
-const PW_HASH = 'c1c224b03cd9bc7b6a86d77f5dace40191766c485cd55dc48caf9ac873335d6f', ADMIN_KEY = 'grid.admin.v1';
-let adminOpen = false;
-try { adminOpen = localStorage.getItem(ADMIN_KEY) === PW_HASH; } catch (e) {}
-async function sha256(t) {
-  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
-  return Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, '0')).join('');
-}
+Object.keys(TABS).forEach(k => $(TABS[k][0]).addEventListener('click', () => showTab(k)));
 function renderAdmin() {
-  $('adminLockBox').hidden = adminOpen; $('adminPanel').hidden = !adminOpen;
-  if (!adminOpen) { $('adminPw').value = ''; $('adminErr').textContent = ''; }
-  else if (!$('dbInfo').innerHTML && players.length) dbStatus($('status').textContent);
+  if (!$('dbInfo').innerHTML && players.length) dbStatus($('status').textContent);
 }
-$('adminForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  let ok = false;
-  try { ok = (await sha256($('adminPw').value)) === PW_HASH; }
-  catch (err) { $('adminErr').textContent = 'This browser cannot check the password.'; return; }
-  if (!ok) { $('adminErr').textContent = 'Incorrect password. It is case-sensitive.'; $('adminPw').select(); return; }
-  adminOpen = true;
-  try { if ($('adminRemember').checked) localStorage.setItem(ADMIN_KEY, PW_HASH); } catch (err) {}
-  renderAdmin();
-});
-$('adminLockBtn').addEventListener('click', () => {
-  adminOpen = false;
-  try { localStorage.removeItem(ADMIN_KEY); } catch (e) {}
-  renderAdmin();
-});
 
 // ---- Drag a player onto another octagon to swap (or move into an empty one).
 let drag = null, flashT = null;
@@ -825,18 +837,54 @@ if (VIEW) {
     sel.value = String(i); sel.disabled = true; btns[i].disabled = true; show(i);
   });
   document.body.classList.add('view');
-  document.title = 'Grid - Best lineup';
+  document.title = 'FUD - Best lineup';
   $('updated').innerHTML = '<b>Best lineup</b> · highest Draft total for the 9 players you picked';
   $('solve').hidden = true;
 }
 chemistry();
 
-// ---- Installed app: first-launch sign-up (username + phone), saved on this device.
-const USER_KEY = 'grid.user.v1';
+// ---- Accounts. Sign-ups are recorded in a Google Sheet through a small Apps Script web app (see FUD-signup-script.gs).
+// Paste the web app URL between the quotes. Left empty, the app still works but sign-ups stay on the device
+// and nobody gets the Admin tab.
+const SIGNUP_URL = '';
+const USER_KEY = 'fud.user.v1', DEVICE_KEY = 'fud.device.v1';
 const isInstalled = () => navigator.standalone === true || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 let user = null;
 try { user = JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch (e) {}
 if (user && !(user.username && user.phone)) user = null;
+if (user && !user.status) user.status = 'approved';
+const isAdmin = () => !!(SIGNUP_URL && user && user.status === 'approved' && user.admin);
+function saveUser() { try { if (user) localStorage.setItem(USER_KEY, JSON.stringify(user)); else localStorage.removeItem(USER_KEY); } catch (e) {} }
+
+let _dev = '';
+function deviceId() {
+  if (_dev) return _dev;
+  try { _dev = localStorage.getItem(DEVICE_KEY) || ''; } catch (e) {}
+  if (!/^[0-9a-f]{32}$/.test(_dev)) {
+    const a = new Uint8Array(16); crypto.getRandomValues(a);
+    _dev = Array.from(a, x => x.toString(16).padStart(2, '0')).join('');
+    try { localStorage.setItem(DEVICE_KEY, _dev); } catch (e) {}
+  }
+  return _dev;
+}
+function deviceInfo() {
+  const m = /iPhone|iPad|Android|Macintosh|Windows|Linux/.exec(navigator.userAgent);
+  return (m ? m[0] : 'Device') + (isInstalled() ? ' app' : ' browser');
+}
+async function api(action, phone, extra) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+  try {
+    const r = await fetch(SIGNUP_URL, {method:'POST', redirect:'follow', signal:ctl.signal, headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(Object.assign({action, phone, device:deviceId()}, extra || {}))});
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+const ERR = {
+  username_taken:'That username is already taken. Try another.', bad_username:'Username must be 3 to 20 letters and numbers, with no spaces or symbols.',
+  bad_phone:'Enter a valid phone number.', busy:'The server is busy. Try again in a moment.', not_approved:'This device is not approved for the account.',
+  server:'Something went wrong on the server. Try again.'
+};
+const OFFLINE = 'Could not reach the sign-up server. Check your connection and try again.';
 
 // US numbers: 10 digits (optional leading 1). Other countries: start with + and the country code.
 function normPhone(raw) {
@@ -846,34 +894,169 @@ function normPhone(raw) {
   if (n.length !== 10 || !/[2-9]/.test(n[0]) || !/[2-9]/.test(n[3])) return null;
   return {e164:'+1' + n, shown:'(' + n.slice(0, 3) + ') ' + n.slice(3, 6) + '-' + n.slice(6)};
 }
-function renderAccount() {
-  $('account').hidden = !user;
-  if (user) { $('acUser').textContent = user.username; $('acPhone').textContent = user.phoneShown || user.phone; }
+function applyAccess() {
+  $('tabAdmin').hidden = !isAdmin();
+  if (!isAdmin() && curTab === 'admin') showTab('sandbox');
+  startPolling();
 }
-function openSignup(edit) {
-  $('suTitle').textContent = edit ? 'Change your details' : 'Sign up';
-  $('suIntro').textContent = edit ? 'Update your username or phone number.' : 'Pick a username and add your phone number to get started.';
-  $('suGo').textContent = edit ? 'Save' : 'Sign up';
-  $('suCancel').hidden = !edit;
-  $('suUser').value = edit && user ? user.username : '';
-  $('suPhone').value = edit && user ? (user.phoneShown || user.phone) : '';
-  $('suErr').textContent = '';
+function renderAccount() {
+  const on = !!(user && user.status === 'approved');
+  $('acIn').hidden = !on; $('acOut').hidden = on;
+  if (on) { $('acUser').textContent = user.username; $('acPhone').textContent = user.phoneShown || user.phone; }
+  else $('acForm').hidden = true;
+}
+
+// -- sign-up dialog
+let waitT = null, fromAccount = false;
+function stopWait() { clearInterval(waitT); waitT = null; }
+function setWaiting(on, msg) {
+  $('signupForm').classList.toggle('waiting', on);
+  $('suWait').hidden = !on; if (on) $('suWait').textContent = msg;
+  $('suTitle').textContent = on ? 'Waiting for approval' : 'Sign up';
+  $('suCancel').hidden = !on && !fromAccount; $('suCancel').textContent = on ? 'Use a different number' : 'Cancel';
+}
+function openSignup(fromAcct) {
+  fromAccount = !!fromAcct; stopWait();
+  $('suIntro').textContent = 'Pick a username and add your phone number to get started.';
+  $('suUser').value = ''; $('suPhone').value = ''; $('suErr').textContent = '';
+  setWaiting(false);
+  if (user && user.status === 'pending') waitForApproval(); else setTimeout(() => $('suUser').focus(), 60);
   $('signup').hidden = false;
-  setTimeout(() => $('suUser').focus(), 60);
+}
+function finishSignup() { stopWait(); $('signup').hidden = true; setWaiting(false); renderAccount(); applyAccess(); }
+function waitForApproval() {
+  setWaiting(true, 'This phone number already has an FUD account. The account owner has been asked to approve this device. This page updates by itself once they decide.');
+  stopWait();
+  const check = async () => {
+    if (!user || user.status !== 'pending') return stopWait();
+    try {
+      const r = await api('status', user.phone);
+      if (!r.ok) return;
+      if (r.status === 'approved') { user.status = 'approved'; user.username = r.username; user.admin = !!r.admin; saveUser(); finishSignup(); }
+      else if (r.status === 'denied' || r.status === 'unknown') {
+        user = null; saveUser(); stopWait(); setWaiting(false); applyAccess();
+        $('suErr').textContent = r.status === 'denied' ? 'The account owner did not approve this device.' : 'That request is no longer active. You can sign up again.';
+      }
+    } catch (e) {}
+  };
+  waitT = setInterval(check, 4000); check();
 }
 $('suUser').addEventListener('input', () => { const v = $('suUser').value, c = v.replace(/[^A-Za-z0-9]/g, ''); if (v !== c) $('suUser').value = c; });
-$('signupForm').addEventListener('submit', e => {
+$('signupForm').addEventListener('submit', async e => {
   e.preventDefault();
+  if ($('signupForm').classList.contains('waiting')) return;
   const name = $('suUser').value.trim(), ph = normPhone($('suPhone').value);
-  if (!/^[A-Za-z0-9]{3,20}$/.test(name)) { $('suErr').textContent = 'Username must be 3 to 20 letters and numbers, with no spaces or symbols.'; $('suUser').focus(); return; }
+  if (!/^[A-Za-z0-9]{3,20}$/.test(name)) { $('suErr').textContent = ERR.bad_username; $('suUser').focus(); return; }
   if (!ph) { $('suErr').textContent = 'Enter a valid phone number, like (212) 555-0123. For a number outside the US, start with + and the country code.'; $('suPhone').focus(); return; }
-  user = {username:name, phone:ph.e164, phoneShown:ph.shown, created:(user && user.created) || Date.now()};
-  try { localStorage.setItem(USER_KEY, JSON.stringify(user)); } catch (err) {}
-  $('signup').hidden = true; renderAccount();
+  const base = {phone:ph.e164, phoneShown:ph.shown, created:Date.now()};
+  if (!SIGNUP_URL) { user = Object.assign({username:name, status:'approved', admin:false}, base); saveUser(); finishSignup(); return; }
+  $('suGo').disabled = true; $('suErr').textContent = '';
+  try {
+    const r = await api('signup', ph.e164, {username:name, info:deviceInfo()});
+    if (!r.ok) { $('suErr').textContent = ERR[r.error] || ERR.server; }
+    else if (r.status === 'denied') { $('suErr').textContent = 'The account owner did not approve this device.'; }
+    else {
+      user = Object.assign({username:r.username || name, status:r.status === 'approved' ? 'approved' : 'pending', admin:!!r.admin}, base); saveUser();
+      if (user.status === 'approved') finishSignup(); else waitForApproval();
+    }
+  } catch (err) { $('suErr').textContent = OFFLINE; }
+  $('suGo').disabled = false;
 });
-$('suCancel').addEventListener('click', () => { $('signup').hidden = true; });
-$('acEdit').addEventListener('click', () => openSignup(true));
-if (!VIEW) { renderAccount(); if (isInstalled() && !user) openSignup(false); }
+$('suCancel').addEventListener('click', () => {
+  if ($('signupForm').classList.contains('waiting')) { user = null; saveUser(); applyAccess(); }
+  stopWait(); setWaiting(false);
+  if (fromAccount || $('suCancel').textContent === 'Cancel') { if (fromAccount) $('signup').hidden = true; }
+  $('suErr').textContent = '';
+});
+$('acSignup').addEventListener('click', () => openSignup(true));
+
+// -- change username (the phone number cannot be changed)
+$('acEdit').addEventListener('click', () => { $('acForm').hidden = false; $('acEdit').hidden = true; $('acNew').value = user.username; $('acMsg').textContent = ''; $('acNew').focus(); $('acNew').select(); });
+$('acCancel').addEventListener('click', () => { $('acForm').hidden = true; $('acEdit').hidden = false; $('acMsg').textContent = ''; });
+$('acNew').addEventListener('input', () => { const v = $('acNew').value, c = v.replace(/[^A-Za-z0-9]/g, ''); if (v !== c) $('acNew').value = c; });
+$('acForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('acNew').value.trim(), msg = $('acMsg'); msg.className = 'err';
+  if (!/^[A-Za-z0-9]{3,20}$/.test(name)) { msg.textContent = ERR.bad_username; return; }
+  if (name === user.username) { $('acCancel').click(); return; }
+  $('acSave').disabled = true; msg.textContent = '';
+  try {
+    if (SIGNUP_URL) {
+      const r = await api('rename', user.phone, {username:name});
+      if (!r.ok) { msg.textContent = ERR[r.error] || ERR.server; $('acSave').disabled = false; return; }
+      user.username = r.username;
+    } else user.username = name;
+    saveUser(); renderAccount();
+    $('acForm').hidden = true; $('acEdit').hidden = false;
+    msg.className = 'err ok'; msg.textContent = 'Username updated.';
+  } catch (err) { msg.textContent = OFFLINE; }
+  $('acSave').disabled = false;
+});
+
+// -- owner only: approve or deny a second device that signs up with an existing number
+let pollT = null;
+function setBadge(n) { $('reqBadge').textContent = n; $('reqBadge').hidden = !n; }
+function renderRequests(list) {
+  setBadge(list.length);
+  $('reqNone').hidden = list.length > 0;
+  const ul = $('reqList'); ul.innerHTML = '';
+  list.forEach(q => {
+    const li = document.createElement('li'), t = document.createElement('div');
+    const b = document.createElement('b'); b.textContent = q.account;
+    t.append('Duplicate sign-up for the account ', b, ' (' + q.phone + '). Someone on another device is asking for access to it.');
+    const sm = document.createElement('small');
+    sm.textContent = (q.info ? q.info + ' · ' : '') + (q.requested ? new Date(q.requested).toLocaleString() : '');
+    const bt = document.createElement('div'); bt.className = 'btns';
+    const ok = document.createElement('button'), no = document.createElement('button');
+    ok.textContent = 'Confirm'; no.textContent = 'Deny'; no.className = 'deny';
+    ok.addEventListener('click', () => decide(q.id, 'approve', li));
+    no.addEventListener('click', () => decide(q.id, 'deny', li));
+    bt.append(ok, no); li.append(t, sm, bt); ul.append(li);
+  });
+}
+async function decide(id, decision, li) {
+  li.querySelectorAll('button').forEach(b => b.disabled = true);
+  try {
+    const r = await api('resolve', user.phone, {request:id, decision});
+    if (!r.ok && r.error !== 'not_found') { $('reqMsg').textContent = ERR[r.error] || 'Could not save that decision.'; li.querySelectorAll('button').forEach(b => b.disabled = false); return; }
+    $('reqMsg').textContent = '';
+  } catch (e) { $('reqMsg').textContent = OFFLINE; li.querySelectorAll('button').forEach(b => b.disabled = false); return; }
+  pollRequests();
+}
+async function pollRequests() {
+  if (!isAdmin()) return;
+  try {
+    const r = await api('pending', user.phone);
+    if (r.ok) { $('reqMsg').textContent = ''; renderRequests(r.requests || []); }
+    else if (r.error === 'forbidden') { user.admin = false; saveUser(); applyAccess(); }
+  } catch (e) { $('reqMsg').textContent = 'Could not reach the sign-up sheet. Retrying…'; }
+}
+function startPolling() {
+  clearInterval(pollT); pollT = null;
+  if (!isAdmin()) { setBadge(0); return; }
+  pollT = setInterval(() => { if (!document.hidden) pollRequests(); }, 12000);
+  pollRequests();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { pollRequests(); syncAccount(); } });
+
+// -- on launch (and whenever the app comes back): refresh username / admin status from the sheet
+async function syncAccount() {
+  if (!SIGNUP_URL || !user || user.status !== 'approved') return;
+  try {
+    const r = await api('status', user.phone);
+    if (!r.ok) return;
+    if (r.status === 'approved') {
+      const was = isAdmin(); user.username = r.username || user.username; user.admin = !!r.admin; saveUser(); renderAccount();
+      if (was !== isAdmin()) applyAccess();
+    } else { user = null; saveUser(); renderAccount(); applyAccess(); if (isInstalled()) openSignup(false); }
+  } catch (e) {}
+}
+if (!VIEW) {
+  renderAccount(); applyAccess();
+  if (user && user.status === 'pending') openSignup(false);
+  else if (isInstalled() && !user) openSignup(false);
+  else syncAccount();
+}
 
 // ---- Getting new versions of the app without re-adding it to the Home Screen.
 async function refreshApp() {
