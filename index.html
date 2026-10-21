@@ -35,6 +35,8 @@
   /* ---- page frame: top line, content, bottom tabs ---- */
   #top { flex:none; padding:calc(8px + env(safe-area-inset-top)) 12px 6px; text-align:center; font-size:12px; line-height:1.3; color:var(--muted); }
   #top b { color:var(--ink); font-weight:600; }
+  #updated { display:none; }
+  body.view #updated { display:block; }
   main { flex:1; min-height:0; position:relative; }
   .view { position:absolute; inset:0; display:flex; flex-direction:column; min-height:0; }
   #tabs { flex:none; display:flex; border-top:1px solid var(--line); background:#0b0e13; padding-bottom:env(safe-area-inset-bottom); }
@@ -46,7 +48,7 @@
   /* ---- Sandbox: the board is drawn at a fixed size and scaled to fit the space ---- */
   #stage { position:relative; flex:1; min-height:0; display:flex; overflow:auto; }
   #boardBox { position:relative; flex:none; margin:auto; }
-  #board { position:absolute; left:0; top:0; width:464px; height:412px; transform-origin:0 0; }
+  #board { position:absolute; left:0; top:0; width:464px; height:532px; transform-origin:0 0; }
   #board svg { position:absolute; inset:0; width:100%; height:100%; }
   .cell, #board svg { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
   .edge { stroke:var(--edge); stroke-width:2; transition:stroke .2s; }
@@ -57,7 +59,7 @@
   .hex.ok { stroke:#5aa064 !important; stroke-width:4; }
   .hex.bad { stroke:#b5524f !important; stroke-width:4; }
   .shine { fill:url(#shine); pointer-events:none; opacity:0; }
-  .ring { fill:none; stroke:none; stroke-width:5; stroke-linejoin:round; pointer-events:none; }
+  .ring { fill:none; stroke:none; stroke-width:10; stroke-linejoin:miter; pointer-events:none; }
   .hex { touch-action:none; }
   .cell { position:absolute; width:82px; transform:translate(-50%,-50%); text-align:center; color:#f3f1ec; }
   .cell.filled { cursor:grab; touch-action:none; }
@@ -77,6 +79,8 @@
 
   /* ---- totals ---- */
   #total { flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 10px 8px; color:var(--muted); text-align:center; border-top:1px solid var(--line); }
+  #total .clearRow { align-self:flex-end; margin-bottom:2px; }
+  #total .clearRow button { padding:5px 14px; font-size:12px; }
   #total .row { display:flex; justify-content:center; align-items:flex-end; gap:6px 22px; flex-wrap:wrap; }
   #total .stat { display:flex; flex-direction:column; align-items:center; }
   #total .stat > span { font-size:11px; }
@@ -107,6 +111,10 @@
 
   /* ---- app updates, account, sign-up ---- */
   #tabs button[hidden] { display:none; }
+  #blocked { position:fixed; inset:0; z-index:100; background:var(--bg); display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; }
+  #blocked h2 { margin:0 0 8px; font-size:1.4rem; }
+  #blocked p { margin:0 auto; max-width:320px; color:var(--muted); line-height:1.45; }
+  body.blocked #tabs, body.blocked main, body.blocked #top, body.blocked #signup, body.blocked #solveOverlay { display:none !important; }
   #tabs button { position:relative; }
   #reqBadge { position:absolute; top:3px; left:calc(50% + 6px); min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:#e5484d; color:#fff; font:700 10px/16px system-ui,sans-serif; font-style:normal; text-align:center; }
   #reqBadge[hidden] { display:none; }
@@ -126,6 +134,10 @@
   .sect { margin-top:26px; padding-top:16px; border-top:1px solid var(--line); }
   .sect h3 { margin:0 0 4px; font-size:1rem; }
   #refreshMsg { min-height:1.2em; }
+  #upNote { min-height:1.3em; font-weight:600; }
+  #upNote.ok { color:#7fd49a; }
+  #upNote.need { color:#f0b84a; }
+  #hint { font-size:.78rem; word-break:break-all; }
   #signup { position:fixed; inset:0; z-index:60; background:var(--bg); display:flex; align-items:center; justify-content:center; overflow:auto; padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); }
   .su { width:100%; max-width:380px; margin:auto; }
   .su h2 { margin:0 0 6px; font-size:1.5rem; }
@@ -155,7 +167,7 @@
 </style>
 </head>
 <body>
-<div id="top"><span id="updated">No player database loaded yet</span><div id="updateBar" hidden>A new version is ready. <button id="updateNow" class="quiet">Update now</button></div></div>
+<div id="top"><span id="updated"></span><div id="updateBar" hidden>A new version is ready. <button id="updateNow" class="quiet">Update now</button></div></div>
 
 <main>
   <section id="viewSandbox" class="view" role="tabpanel" aria-labelledby="tabSandbox">
@@ -163,11 +175,12 @@
       <div id="toast" role="status"></div>
       <div id="boardBox">
         <div id="board">
-          <svg viewBox="0 0 464 412" preserveAspectRatio="none" id="svg"></svg>
+          <svg viewBox="0 0 464 532" preserveAspectRatio="none" id="svg"></svg>
         </div>
       </div>
     </div>
     <div id="total">
+      <div class="clearRow"><button id="clearAll" class="quiet" disabled>Clear</button></div>
       <div class="row">
         <div class="stat"><span>Talent</span><strong id="talentNum">0</strong><small>from star levels</small></div>
         <div class="stat"><span>Total chemistry</span><strong id="chemNum">0</strong><small id="chemSub">players 0 + links 0</small></div>
@@ -201,9 +214,12 @@
       </div>
       <div class="sect">
         <h3>App</h3>
-        <dl class="db"><dt>Version</dt><dd id="appVer"></dd></dl>
+        <dl class="db"><dt>Version</dt><dd id="appVer"></dd><dt>Player database</dt><dd id="dbUpdated">No player database loaded yet</dd></dl>
         <button id="refreshApp" class="quiet">Get latest version</button>
         <p id="refreshMsg" role="status"></p>
+        <p id="upNote" role="status"></p>
+        <p id="status"></p>
+        <p id="hint"></p>
       </div>
     </div>
   </section>
@@ -216,15 +232,6 @@
         <p id="reqNone">No requests right now.</p>
         <ul id="reqList"></ul>
         <p id="reqMsg" class="err" role="alert"></p>
-      </div>
-      <div class="sect">
-        <h3>Player database</h3>
-        <p>Add a newer <b>FUD Database</b> Excel file to this device. The site's shared file replaces it the next time that file changes.</p>
-        <button id="load">Update Player Database</button>
-        <input id="file" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden>
-        <dl class="db" id="dbInfo"></dl>
-        <p id="status"></p>
-        <p id="hint"></p>
       </div>
     </div>
   </section>
@@ -274,6 +281,8 @@
   </form>
 </div>
 
+<div id="blocked" hidden role="alert"><div><h2>Access removed</h2><p>Your access to FUD has been turned off. If you think this is a mistake, contact the person who invited you.</p></div></div>
+
 <div id="solveOverlay" hidden>
   <div class="bar"><button id="solveClose">Close</button><strong>Best lineup</strong></div>
   <iframe id="solveFrame" title="Best lineup"></iframe>
@@ -281,7 +290,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-21.1';
+const APP_VERSION = '2026-10-21.2';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -292,11 +301,11 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', setA
 let VIEW = null;
 try { const m = location.hash.match(/^#solution=(.+)$/); if (m) { const v = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(v) && v.length === 9) VIEW = v; } } catch (e) {}
 
-// Octagon centers (x,y) on a compact 464 x 412 board that is scaled to fit the screen.
-const NODES = [[162,58],[302,58],[55,157],[177,198],[287,198],[409,157],[93,304],[232,339],[371,304]];
+// Octagon centers (x,y) on a compact 464 x 532 board that is scaled to fit the screen.
+const NODES = [[162,78],[302,78],[55,216],[177,258],[287,258],[409,216],[93,404],[232,437],[371,404]];
 // Links between octagons (indexes into NODES).
 const LINKS = [[0,1],[0,2],[0,3],[1,4],[1,5],[2,3],[2,6],[3,6],[3,7],[4,5],[4,7],[4,8],[5,8],[6,7],[7,8]];
-const W = 464, H = 412, HW = 96, HH = 104;
+const W = 464, H = 532, HW = 96, HH = 144;
 // Positions allowed in each octagon (1 to 9, in order). Edit here to change them.
 const ALLOWED = [['RB'],['WR'],['RB','WR','TE'],['QB'],['QB'],['RB','WR','TE'],['WR'],['TE'],['RB']];
 
@@ -324,17 +333,19 @@ LINKS.forEach(([a,b]) => {
 const hexes = [], selects = [], infos = [], cells = [], labels = [], shines = [], circles = [], starEls = [], btns = [], lvls = [];
 NODES.forEach(([x,y],i) => {
   const p = document.createElementNS(NS,'polygon');
-  const C = .29; // corner cut of the octagon
+  const C = .29, CY = 30 / HH; // corner cuts of the octagon (sideways, and up/down)
+  const OCT = [[C,0],[1-C,0],[1,CY],[1,1-CY],[1-C,1],[C,1],[0,1-CY],[0,CY]];
   const poly = list => list.map(([u,v]) => (x-HW/2+u*HW)+','+(y-HH/2+v*HH)).join(' ');
-  p.setAttribute('points', poly([[C,0],[1-C,0],[1,C],[1,1-C],[1-C,1],[C,1],[0,1-C],[0,C]])); p.setAttribute('class','hex');
+  p.setAttribute('points', poly(OCT)); p.setAttribute('class','hex');
   svg.appendChild(p); hexes.push(p);
   const sh = document.createElementNS(NS,'polygon');
-  sh.setAttribute('points', poly([[C+.02,.025],[1-C-.02,.025],[.975,C+.01],[.975,.5],[.025,.5],[.025,C+.01]])); sh.setAttribute('class','shine');
+  sh.setAttribute('points', poly([[C+.02,.02],[1-C-.02,.02],[.975,CY+.01],[.975,.42],[.025,.42],[.025,CY+.01]])); sh.setAttribute('class','shine');
   svg.appendChild(sh); shines.push(sh);
-  // Bold chemistry outline, drawn just inside the octagon's edge.
+  // Bold chemistry border: the octagon's own outline, clipped to the octagon, so it runs right to the edge.
+  const clip = document.createElementNS(NS,'clipPath'); clip.setAttribute('id','clip'+i);
+  const cp = document.createElementNS(NS,'polygon'); cp.setAttribute('points', poly(OCT)); clip.appendChild(cp); svg.appendChild(clip);
   const ring = document.createElementNS(NS,'polygon');
-  const IN = 3.5, ip = list => list.map(([u,v]) => (x-HW/2+IN+u*(HW-2*IN))+','+(y-HH/2+IN+v*(HH-2*IN))).join(' ');
-  ring.setAttribute('points', ip([[C,0],[1-C,0],[1,C],[1,1-C],[1-C,1],[C,1],[0,1-C],[0,C]])); ring.setAttribute('class','ring');
+  ring.setAttribute('points', poly(OCT)); ring.setAttribute('class','ring'); ring.setAttribute('clip-path','url(#clip'+i+')');
   svg.appendChild(ring); circles.push(ring);
   const lab = document.createElementNS(NS,'text');
   lab.setAttribute('x',x); lab.setAttribute('y',y+34);
@@ -403,7 +414,6 @@ function show(i) {
   const p = players[selects[i].value];
   const n = p ? stars(p) : 0;
   hexes[i].style.fill = p ? `url(#g${n})` : '';
-  hexes[i].style.stroke = p ? TIER[n].light : '';
   shines[i].style.opacity = p ? 1 : 0;
   hexes[i].style.cursor = p && !VIEW ? 'grab' : '';
   cells[i].classList.toggle('filled', !!p);
@@ -468,14 +478,14 @@ function chemistry() {
   let playerTotal = 0, talent = 0;
   selects.forEach((sel, i) => {
     const p = players[sel.value], ring = circles[i];
-    if (!p) { ring.style.stroke = 'none'; hexes[i].removeAttribute('data-chem'); return; }
+    if (!p) { ring.style.stroke = 'none'; hexes[i].style.stroke = ''; return; }
     const tier = nodePts[i] >= 4 ? 2 : nodePts[i] >= 2 ? 1 : 0;
     const [color, earned] = CHEM[tier];
-    ring.style.stroke = color;
-    hexes[i].setAttribute('data-chem', 'Link chemistry: ' + nodePts[i] + ' (adds ' + earned + ')');
+    ring.style.stroke = color; hexes[i].style.stroke = color;
     playerTotal += earned;
     talent += TALENT[stars(p)];
   });
+  $('clearAll').disabled = !selects.some(sel => sel.value !== '');
   const chem = playerTotal + linkTotal;
   $('chemNum').textContent = chem;
   $('chemSub').textContent = 'players ' + playerTotal + ' + links ' + linkTotal;
@@ -511,8 +521,7 @@ function fill(forced) {
 
 // ---- Player database: where it comes from and how it is kept.
 // 1) "FUD Database.xlsx" next to this page (if present) is loaded on every launch.
-// 2) Admin > "Update Player Database" lets you pick a newer copy from this device; it is saved and used from then on.
-// 3) The last loaded copy is stored on this device, so the app opens with your players even offline.
+// 2) The last loaded copy is stored on this device, so the app opens with your players even offline.
 const DB_KEY = 'fud.database.v1', DB_FILE = 'FUD Database.xlsx';
 let dbMeta = {name:'', updated:0, dataTime:0, hostedHash:'', source:''};
 const fmt = t => { try { return new Date(t).toLocaleString([], {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'}); } catch (e) { return ''; } };
@@ -557,13 +566,9 @@ function saveDb(name, hostedHash, dataTime) {
 }
 function refreshTop() {
   if (VIEW) return;
-  $('updated').innerHTML = players.length ? 'Player Database last updated <b>' + esc(fmt(dbMeta.dataTime || dbMeta.updated)) + '</b>' : 'No player database loaded yet';
+  $('dbUpdated').textContent = players.length ? 'Last updated ' + fmt(dbMeta.dataTime || dbMeta.updated) : 'No player database loaded yet';
 }
-function dbStatus(extra, saved) {
-  const src = saved ? 'Saved copy on this device' : dbMeta.source === 'site' ? 'Shared file from this site' : 'File added on this device';
-  $('dbInfo').innerHTML = players.length
-    ? `<dt>Source</dt><dd>${esc(src)}</dd><dt>File</dt><dd>${esc(dbMeta.name)}</dd><dt>Players</dt><dd>${players.length}</dd><dt>File last saved</dt><dd>${esc(fmt(dbMeta.dataTime || dbMeta.updated))}</dd><dt>Loaded here</dt><dd>${esc(fmt(dbMeta.updated))}</dd>`
-    : '';
+function dbStatus(extra) {
   $('status').textContent = extra || '';
   refreshTop();
 }
@@ -615,15 +620,13 @@ async function parse(buf, name, hostedHash, lastMod) {
   dbStatus(cleared ? cleared + ' lineup spot' + (cleared > 1 ? 's' : '') + ' cleared (player not in the new file)' : 'Player database updated.');
 }
 
-async function readFile(file) {
-  if (typeof XLSX === 'undefined') { $('status').textContent = 'The Excel reader has not loaded yet. Connect to the internet once, reopen the app, and try again.'; return; }
-  try { await parse(await file.arrayBuffer(), file.name); }
-  catch (e) { $('status').textContent = 'Could not read that file, so your current database was kept. Use an .xlsx file with the six columns.'; }
-}
-
 // Load the shared player database that sits beside this page when the app is hosted (same file for everyone with the link).
 // Common spellings of the file name are tried, and a clear message explains it if nothing is found.
 const DB_NAMES = [DB_FILE, 'FUD database.xlsx', 'fud database.xlsx', 'FUDDatabase.xlsx', 'FUD_Database.xlsx', 'FUD-Database.xlsx', 'fud-database.xlsx', 'Grid Database.xlsx'];
+function hashBytes(u) {
+  let h = 2166136261; for (let i = 0; i < u.length; i++) { h ^= u[i]; h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(16) + ':' + u.length;
+}
 async function loadHosted() {
   if (!/^https?:$/.test(location.protocol)) return;
   const st = $('status'), hint = $('hint');
@@ -636,8 +639,7 @@ async function loadHosted() {
       if (!res.ok) { problem = 'The site answered with error ' + res.status + ' when asked for ' + name + '.'; continue; }
       const buf = await res.arrayBuffer(), u = new Uint8Array(buf);
       if (u.length < 4 || u[0] !== 0x50 || u[1] !== 0x4B) { problem = name + ' is on the site but is not a real .xlsx file. Open it in Excel and save it again as .xlsx.'; continue; }
-      let h = 2166136261; for (let i = 0; i < u.length; i++) { h ^= u[i]; h = Math.imul(h, 16777619); }
-      const hash = (h >>> 0).toString(16) + ':' + u.length;
+      const hash = hashBytes(u);
       const lm = Date.parse(res.headers.get('last-modified') || '') || 0;
       if (hash !== dbMeta.hostedHash || !dbMeta.dataTime) await parse(buf, name, hash, lm);
       else dbStatus();
@@ -652,12 +654,10 @@ async function loadHosted() {
   if (!players.length) st.textContent = problem || 'No player database was found on this site. Put "' + DB_FILE + '" in the same folder as index.html and upload it again.';
 }
 
-$('load').addEventListener('click', () => $('file').click());
-$('file').addEventListener('change', async e => { const f = e.target.files[0]; if (f) await readFile(f); e.target.value = ''; });
 
 if (!VIEW) loadDb();
 if (!VIEW && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-if (!VIEW) loadHosted().then(refreshTop);
+if (!VIEW) loadHosted().then(() => { refreshTop(); runNote(); });
 
 // ---- Tabs: Sandbox, Account and (owner only) Admin.
 const TABS = {sandbox:['tabSandbox','viewSandbox'], account:['tabAccount','viewAccount'], admin:['tabAdmin','viewAdmin']};
@@ -667,14 +667,11 @@ function showTab(name) {
   curTab = name;
   for (const k in TABS) { const on = k === name; $(TABS[k][1]).hidden = !on; $(TABS[k][0]).setAttribute('aria-selected', String(on)); }
   closePicker(false);
-  if (name === 'admin') { renderAdmin(); pollRequests(); }
+  if (name === 'admin') pollRequests();
   else if (name === 'account') renderAccount();
   else fit();
 }
 Object.keys(TABS).forEach(k => $(TABS[k][0]).addEventListener('click', () => showTab(k)));
-function renderAdmin() {
-  if (!$('dbInfo').innerHTML && players.length) dbStatus($('status').textContent);
-}
 
 // ---- Drag a player onto another octagon to swap (or move into an empty one).
 let drag = null, flashT = null;
@@ -828,6 +825,10 @@ $('solve').addEventListener('click', () => {
   if (standalone) { $('solveFrame').src = url; $('solveOverlay').hidden = false; }
   else window.open(url, '_blank');
 });
+$('clearAll').addEventListener('click', () => {
+  players.forEach(p => { p.level = maxLevel(p); });
+  fill(selects.map(() => ''));
+});
 $('solveClose').addEventListener('click', () => { $('solveOverlay').hidden = true; $('solveFrame').src = 'about:blank'; });
 
 if (VIEW) {
@@ -877,7 +878,9 @@ async function api(action, phone, extra) {
   try {
     const r = await fetch(SIGNUP_URL, {method:'POST', redirect:'follow', signal:ctl.signal, headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify(Object.assign({action, phone, device:deviceId()}, extra || {}))});
-    return await r.json();
+    const j = await r.json();
+    if (j && j.status === 'blocked' && user && user.status !== 'blocked') { user.status = 'blocked'; user.admin = false; saveUser(); applyBlocked(); }
+    return j;
   } finally { clearTimeout(t); }
 }
 const ERR = {
@@ -894,6 +897,12 @@ function normPhone(raw) {
   if (d.length === 11 && d[0] === '1') d = d.slice(1);
   if (d.length !== 10 || !/[2-9]/.test(d[0]) || !/[2-9]/.test(d[3])) return null;
   return {e164:d, shown:fmtPhone(d)};
+}
+function applyBlocked() {
+  const b = !!(user && user.status === 'blocked');
+  document.body.classList.toggle('blocked', b); $('blocked').hidden = !b;
+  if (b) { closePicker(false); stopWait(); }
+  applyAccess();
 }
 function applyAccess() {
   $('tabAdmin').hidden = !isAdmin();
@@ -956,6 +965,7 @@ $('signupForm').addEventListener('submit', async e => {
     const r = await api('signup', ph.e164, {username:name, info:deviceInfo()});
     if (!r.ok) { $('suErr').textContent = ERR[r.error] || ERR.server; }
     else if (r.status === 'denied') { $('suErr').textContent = 'The account owner did not approve this device.'; }
+    else if (r.status === 'blocked') { user = Object.assign({username:name, status:'blocked', admin:false}, base); saveUser(); applyBlocked(); }
     else {
       user = Object.assign({username:r.username || name, status:r.status === 'approved' ? 'approved' : 'pending', admin:!!r.admin}, base); saveUser();
       if (user.status === 'approved') finishSignup(); else waitForApproval();
@@ -1042,25 +1052,57 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { po
 
 // -- on launch (and whenever the app comes back): refresh username / admin status from the sheet
 async function syncAccount() {
-  if (!SIGNUP_URL || !user || user.status !== 'approved') return;
+  if (!SIGNUP_URL || !user || document.hidden || (user.status !== 'approved' && user.status !== 'blocked')) return;
   try {
     const r = await api('status', user.phone);
-    if (!r.ok) return;
+    if (!r.ok || r.status === 'blocked') return;       // blocked: api() has already switched to the blocked screen
     if (r.status === 'approved') {
-      const was = isAdmin(); user.username = r.username || user.username; user.admin = !!r.admin; saveUser(); renderAccount();
-      if (was !== isAdmin()) applyAccess();
-    } else { user = null; saveUser(); renderAccount(); applyAccess(); if (isInstalled()) openSignup(false); }
+      const was = isAdmin(), wasBlocked = user.status === 'blocked';
+      user.status = 'approved'; user.username = r.username || user.username; user.admin = !!r.admin; saveUser(); renderAccount();
+      if (wasBlocked) applyBlocked(); else if (was !== isAdmin()) applyAccess();
+    } else { user = null; saveUser(); renderAccount(); applyBlocked(); if (isInstalled()) openSignup(false); }
   } catch (e) {}
 }
+setInterval(syncAccount, 45000);
 if (!VIEW) {
-  renderAccount(); applyAccess();
+  renderAccount(); applyBlocked();
   if (user && user.status === 'pending') openSignup(false);
   else if (isInstalled() && !user) openSignup(false);
   else syncAccount();
 }
 
 // ---- Getting new versions of the app without re-adding it to the Home Screen.
+const CHECK_KEY = 'fud.checked.v1';
+async function latestState() {
+  if (!/^https?:$/.test(location.protocol)) return 'unknown';
+  let any = false, stale = false;
+  try {
+    const res = await fetch('index.html', {cache:'no-store'});
+    if (res.ok) { any = true; const m = (await res.text()).match(/const APP_VERSION = '([^']+)'/); if (m && m[1] !== APP_VERSION) stale = true; }
+  } catch (e) {}
+  for (const name of DB_NAMES) {
+    try {
+      const res = await fetch(encodeURI(name), {cache:'no-cache'});
+      if (res.status === 404) continue;
+      if (!res.ok) break;
+      any = true;
+      if (dbMeta.hostedHash && hashBytes(new Uint8Array(await res.arrayBuffer())) !== dbMeta.hostedHash) stale = true;
+      break;
+    } catch (e) { break; }
+  }
+  return !any ? 'unknown' : stale ? 'update' : 'ok';
+}
+async function runNote() {
+  let on = false; try { on = localStorage.getItem(CHECK_KEY) === '1'; } catch (e) {}
+  if (VIEW || !on) return;
+  const n = $('upNote'); n.className = ''; n.textContent = 'Checking…';
+  const st = await latestState();
+  if (st === 'ok') { n.className = 'ok'; n.textContent = '✓ Up to date'; }
+  else if (st === 'update') { n.className = 'need'; n.textContent = 'Update Required'; }
+  else n.textContent = 'Could not check. Connect to the internet and try again.';
+}
 async function refreshApp() {
+  try { localStorage.setItem(CHECK_KEY, '1'); } catch (e) {}
   if (navigator.onLine === false) { $('refreshMsg').textContent = 'You are offline. Connect to the internet and try again.'; return; }
   $('refreshMsg').textContent = 'Updating…';
   try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r => r.unregister())); } catch (e) {}
@@ -1073,7 +1115,7 @@ async function checkNewVersion() {
     const res = await fetch('index.html', {cache:'no-store'});
     if (!res.ok) return;
     const m = (await res.text()).match(/const APP_VERSION = '([^']+)'/);
-    if (m && m[1] !== APP_VERSION) $('updateBar').hidden = false;
+    if (m && m[1] !== APP_VERSION) { $('updateBar').hidden = false; runNote(); }
   } catch (e) {}
 }
 $('refreshApp').addEventListener('click', refreshApp);
