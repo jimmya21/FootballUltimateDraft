@@ -57,8 +57,8 @@
   .hex.ok { stroke:#5aa064 !important; stroke-width:4; }
   .hex.bad { stroke:#b5524f !important; stroke-width:4; }
   .shine { fill:url(#shine); pointer-events:none; opacity:0; }
-  .chem { fill:#222833; stroke:#4a5361; stroke-width:1.6; }
-  .hex, .chem { touch-action:none; }
+  .ring { fill:none; stroke:none; stroke-width:5; stroke-linejoin:round; pointer-events:none; }
+  .hex { touch-action:none; }
   .cell { position:absolute; width:82px; transform:translate(-50%,-50%); text-align:center; color:#f3f1ec; }
   .cell.filled { cursor:grab; touch-action:none; }
   .cell select:not(.lvl) { display:none; }
@@ -266,7 +266,7 @@
     <label for="suUser">Username</label>
     <input id="suUser" type="text" maxlength="20" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Letters and numbers only">
     <label for="suPhone">Phone number</label>
-    <input id="suPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(212) 555-0123">
+    <input id="suPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(212) 555-0123" maxlength="20">
     <p id="suErr" class="err" role="alert"></p>
     <div class="row"><button type="button" id="suCancel" class="quiet" hidden>Cancel</button><button type="submit" id="suGo">Sign up</button></div>
     <p id="suWait" hidden></p>
@@ -281,7 +281,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-20.1';
+const APP_VERSION = '2026-10-21.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -331,11 +331,11 @@ NODES.forEach(([x,y],i) => {
   const sh = document.createElementNS(NS,'polygon');
   sh.setAttribute('points', poly([[C+.02,.025],[1-C-.02,.025],[.975,C+.01],[.975,.5],[.025,.5],[.025,C+.01]])); sh.setAttribute('class','shine');
   svg.appendChild(sh); shines.push(sh);
-  const cy = y - HH/2 + 16;
-  const circ = document.createElementNS(NS,'circle');
-  circ.setAttribute('cx',x); circ.setAttribute('cy',cy); circ.setAttribute('r',11); circ.setAttribute('class','chem');
-  circ.appendChild(document.createElementNS(NS,'title'));
-  svg.appendChild(circ); circles.push(circ);
+  // Bold chemistry outline, drawn just inside the octagon's edge.
+  const ring = document.createElementNS(NS,'polygon');
+  const IN = 3.5, ip = list => list.map(([u,v]) => (x-HW/2+IN+u*(HW-2*IN))+','+(y-HH/2+IN+v*(HH-2*IN))).join(' ');
+  ring.setAttribute('points', ip([[C,0],[1-C,0],[1,C],[1,1-C],[1-C,1],[C,1],[0,1-C],[0,C]])); ring.setAttribute('class','ring');
+  svg.appendChild(ring); circles.push(ring);
   const lab = document.createElementNS(NS,'text');
   lab.setAttribute('x',x); lab.setAttribute('y',y+34);
   lab.setAttribute('text-anchor','middle'); lab.setAttribute('fill','#9aa0aa');
@@ -467,12 +467,12 @@ function chemistry() {
   });
   let playerTotal = 0, talent = 0;
   selects.forEach((sel, i) => {
-    const p = players[sel.value], circ = circles[i], title = circ.querySelector('title');
-    if (!p) { circ.style.fill = ''; circ.style.stroke = ''; title.textContent = ''; return; }
+    const p = players[sel.value], ring = circles[i];
+    if (!p) { ring.style.stroke = 'none'; hexes[i].removeAttribute('data-chem'); return; }
     const tier = nodePts[i] >= 4 ? 2 : nodePts[i] >= 2 ? 1 : 0;
     const [color, earned] = CHEM[tier];
-    circ.style.fill = color; circ.style.stroke = '#fff';
-    title.textContent = 'Link chemistry: ' + nodePts[i] + ' (adds ' + earned + ')';
+    ring.style.stroke = color;
+    hexes[i].setAttribute('data-chem', 'Link chemistry: ' + nodePts[i] + ' (adds ' + earned + ')');
     playerTotal += earned;
     talent += TALENT[stars(p)];
   });
@@ -739,7 +739,7 @@ function endDrag(e, drop) {
 }
 document.addEventListener('pointerup', e => endDrag(e, true));
 document.addEventListener('pointercancel', e => endDrag(e, false));
-NODES.forEach((_, i) => [hexes[i], circles[i], labels[i], cells[i]].forEach(el => el.addEventListener('pointerdown', e => startDrag(i, e))));
+NODES.forEach((_, i) => [hexes[i], labels[i], cells[i]].forEach(el => el.addEventListener('pointerdown', e => startDrag(i, e))));
 
 // ---- Searchable player picker: opens near the octagon's button; type to filter by name.
 const picker = document.createElement('div');
@@ -846,12 +846,13 @@ chemistry();
 // ---- Accounts. Sign-ups are recorded in a Google Sheet through a small Apps Script web app (see FUD-signup-script.gs).
 // Paste the web app URL between the quotes. Left empty, the app still works but sign-ups stay on the device
 // and nobody gets the Admin tab.
-const SIGNUP_URL = '';
+const SIGNUP_URL = 'https://script.google.com/macros/s/AKfycbxrv12VTMeQIDxB_rMShRGEDdhFYTbBO1ZnT9UiKWOpN_RdLyhhfCtpFmQLByzjPmZQcA/exec';
 const USER_KEY = 'fud.user.v1', DEVICE_KEY = 'fud.device.v1';
 const isInstalled = () => navigator.standalone === true || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 let user = null;
 try { user = JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch (e) {}
 if (user && !(user.username && user.phone)) user = null;
+if (user) { const n = normPhone(user.phone); if (n) { user.phone = n.e164; user.phoneShown = n.shown; } }
 if (user && !user.status) user.status = 'approved';
 const isAdmin = () => !!(SIGNUP_URL && user && user.status === 'approved' && user.admin);
 function saveUser() { try { if (user) localStorage.setItem(USER_KEY, JSON.stringify(user)); else localStorage.removeItem(USER_KEY); } catch (e) {} }
@@ -881,18 +882,18 @@ async function api(action, phone, extra) {
 }
 const ERR = {
   username_taken:'That username is already taken. Try another.', bad_username:'Username must be 3 to 20 letters and numbers, with no spaces or symbols.',
-  bad_phone:'Enter a valid phone number.', busy:'The server is busy. Try again in a moment.', not_approved:'This device is not approved for the account.',
+  bad_phone:'Enter a valid 10-digit US phone number.', busy:'The server is busy. Try again in a moment.', not_approved:'This device is not approved for the account.',
   server:'Something went wrong on the server. Try again.'
 };
 const OFFLINE = 'Could not reach the sign-up server. Check your connection and try again.';
 
-// US numbers: 10 digits (optional leading 1). Other countries: start with + and the country code.
+// US numbers only: 10 digits (a leading 1 is ignored). Stored and sent as the 10 digits.
+function fmtPhone(n) { return '(' + n.slice(0, 3) + ') ' + n.slice(3, 6) + '-' + n.slice(6); }
 function normPhone(raw) {
-  const s = String(raw).trim(), d = s.replace(/\D/g, '');
-  if (s.startsWith('+')) return d.length >= 8 && d.length <= 15 ? {e164:'+' + d, shown:'+' + d} : null;
-  const n = d.length === 11 && d[0] === '1' ? d.slice(1) : d;
-  if (n.length !== 10 || !/[2-9]/.test(n[0]) || !/[2-9]/.test(n[3])) return null;
-  return {e164:'+1' + n, shown:'(' + n.slice(0, 3) + ') ' + n.slice(3, 6) + '-' + n.slice(6)};
+  let d = String(raw).replace(/\D/g, '');
+  if (d.length === 11 && d[0] === '1') d = d.slice(1);
+  if (d.length !== 10 || !/[2-9]/.test(d[0]) || !/[2-9]/.test(d[3])) return null;
+  return {e164:d, shown:fmtPhone(d)};
 }
 function applyAccess() {
   $('tabAdmin').hidden = !isAdmin();
@@ -947,7 +948,7 @@ $('signupForm').addEventListener('submit', async e => {
   if ($('signupForm').classList.contains('waiting')) return;
   const name = $('suUser').value.trim(), ph = normPhone($('suPhone').value);
   if (!/^[A-Za-z0-9]{3,20}$/.test(name)) { $('suErr').textContent = ERR.bad_username; $('suUser').focus(); return; }
-  if (!ph) { $('suErr').textContent = 'Enter a valid phone number, like (212) 555-0123. For a number outside the US, start with + and the country code.'; $('suPhone').focus(); return; }
+  if (!ph) { $('suErr').textContent = 'Enter a valid 10-digit US phone number, like (212) 555-0123.'; $('suPhone').focus(); return; }
   const base = {phone:ph.e164, phoneShown:ph.shown, created:Date.now()};
   if (!SIGNUP_URL) { user = Object.assign({username:name, status:'approved', admin:false}, base); saveUser(); finishSignup(); return; }
   $('suGo').disabled = true; $('suErr').textContent = '';
@@ -1003,7 +1004,7 @@ function renderRequests(list) {
   list.forEach(q => {
     const li = document.createElement('li'), t = document.createElement('div');
     const b = document.createElement('b'); b.textContent = q.account;
-    t.append('Duplicate sign-up for the account ', b, ' (' + q.phone + '). Someone on another device is asking for access to it.');
+    t.append('Duplicate sign-up for the account ', b, ' (' + (q.phone.length === 10 ? fmtPhone(q.phone) : q.phone) + '). Someone on another device is asking for access to it.');
     const sm = document.createElement('small');
     sm.textContent = (q.info ? q.info + ' · ' : '') + (q.requested ? new Date(q.requested).toLocaleString() : '');
     const bt = document.createElement('div'); bt.className = 'btns';
