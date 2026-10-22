@@ -80,6 +80,23 @@
   /* ---- totals ---- */
   #total { flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 10px 8px; color:var(--muted); text-align:center; border-top:1px solid var(--line); }
   #total .clearRow { align-self:flex-end; margin-bottom:2px; display:flex; gap:8px; }
+  #total .clearRow { width:100%; justify-content:flex-end; }
+  #draftForfeit, #draftNew.left { margin-right:auto; }
+  body.locked #tabs button:not(#tabDraft) { opacity:.3; pointer-events:none; }
+  .lhead { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .lhead button { padding:5px 12px; font-size:12px; }
+  #ldFilter { display:flex; margin:12px 0 8px; }
+  #ldFilter button { flex:1; padding:8px 4px; font-size:13px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
+  #ldFilter button:first-child { border-radius:6px 0 0 6px; } #ldFilter button:last-child { border-radius:0 6px 6px 0; }
+  #ldFilter button + button { border-left:0; }
+  #ldFilter button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  #ldTable { width:100%; border-collapse:collapse; font-size:.82rem; margin-top:4px; }
+  #ldTable th { font-size:.64rem; font-weight:600; color:var(--muted); text-align:right; padding:6px 3px; border-bottom:1px solid var(--line); }
+  #ldTable td { padding:8px 3px; text-align:right; border-bottom:1px solid #1a2029; font-variant-numeric:tabular-nums; }
+  #ldTable th:nth-child(2), #ldTable td:nth-child(2) { text-align:left; word-break:break-all; }
+  #ldTable th:first-child, #ldTable td:first-child { width:26px; text-align:left; color:var(--muted); }
+  #ldTable td:nth-child(5) { font-weight:700; color:var(--accent); }
+  #ldTable tr.me td { background:#16261b; }
   #draftBanner { width:100%; }
   #draftBanner .dt { font-size:12px; color:var(--ink); margin:2px 0 7px; line-height:1.3; }
   #draftOpts { display:flex; gap:8px; justify-content:center; }
@@ -204,6 +221,7 @@
         <div id="draftOpts"></div>
       </div>
       <div class="clearRow">
+        <button id="draftForfeit" class="quiet" hidden>Forfeit</button>
         <button id="draftNew" class="quiet" hidden>New Draft</button>
         <button id="draftNext" hidden disabled>Next</button>
         <button id="clearAll" class="quiet" disabled>Clear</button>
@@ -218,6 +236,20 @@
         <div class="stat"><span>Accuracy</span><strong id="accNum">&ndash;</strong></div>
         <button id="solve" disabled>View Solution</button>
       </div>
+    </div>
+  </section>
+
+  <section id="viewLeaders" class="view" role="tabpanel" aria-labelledby="tabLeaders" hidden>
+    <div class="pane">
+      <div class="lhead"><h2>Leaders</h2><button id="ldRefresh" class="quiet">Refresh</button></div>
+      <div id="ldFilter" role="group" aria-label="Time range">
+        <button type="button" data-r="today" class="on">Today</button><button type="button" data-r="week">This Week</button><button type="button" data-r="all">All-Time</button>
+      </div>
+      <p id="ldMsg" role="status"></p>
+      <table id="ldTable" hidden>
+        <thead><tr><th>#</th><th>Username</th><th>Talent</th><th>Chemistry</th><th>Total</th><th>Accuracy</th></tr></thead>
+        <tbody id="ldBody"></tbody>
+      </table>
     </div>
   </section>
 
@@ -283,6 +315,12 @@
     </svg>
     <span>Draft</span>
   </button>
+  <button id="tabLeaders" role="tab" aria-selected="false" aria-controls="viewLeaders">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3.5 20.5h17"/><rect x="5" y="12" width="3.6" height="8.5" rx=".8"/><rect x="10.2" y="5" width="3.6" height="15.5" rx=".8"/><rect x="15.4" y="9" width="3.6" height="11.5" rx=".8"/>
+    </svg>
+    <span>Leaders</span>
+  </button>
   <button id="tabAccount" role="tab" aria-selected="false" aria-controls="viewAccount">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="12" cy="8" r="4"/>
@@ -326,7 +364,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-21.3';
+const APP_VERSION = '2026-10-21.4';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -454,7 +492,7 @@ function show(i) {
   shines[i].style.opacity = p ? 1 : 0;
   hexes[i].style.cursor = p && !VIEW ? 'grab' : '';
   cells[i].classList.toggle('filled', !!p);
-  btns[i].textContent = p ? p.name : (mode === 'draft' ? 'Open spot' : 'Select player');
+  btns[i].textContent = p ? p.name : (mode === 'draft' ? 'Open' : 'Select player');
   cells[i].style.setProperty('--tx', p ? TIER[n].text : '#14181f');
   // Players with several possible levels get a small level dropdown.
   const multi = !!p && p.levels.length > 1 && !VIEW && mode !== 'draft';
@@ -720,6 +758,13 @@ function loadDraft() {
     if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) draft = d;
   } catch (e) {}
 }
+const draftLocked = () => !!(draft && draft.phase === 'picking');
+function forfeitDraft() {
+  if (!draftLocked()) return;
+  if (!window.confirm('Forfeit this draft? Your picks will be lost and nothing is saved to the leaderboard.')) return;
+  draft = null; try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  restore([]); renderDraft();
+}
 function newDraft() {
   draft = {phase:'picking', opts:[], chosen:null, seen:[], id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
   restore([]); dealRound(); saveDraft();
@@ -761,7 +806,8 @@ function draftAction() {
 }
 function submitDraft() {
   draft.phase = 'submitted'; draft.opts = draft.opts.filter(o => o.key === draft.chosen);
-  draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent)};
+  const acc = parseFloat($('accNum').textContent);
+  draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent), accuracy:isNaN(acc) ? null : acc};
   saveDraft(); renderDraft();
   logDraft(Object.assign({id:draft.id}, draft.result));
 }
@@ -780,15 +826,22 @@ async function logDraft(rec) {
   try { left.length ? localStorage.setItem(DLQ_KEY, JSON.stringify(left)) : localStorage.removeItem(DLQ_KEY); } catch (e) {}
 }
 function renderDraft() {
-  const on = mode === 'draft' && !!draft;
-  document.body.classList.toggle('drafting', mode === 'draft');
-  $('clearAll').hidden = mode === 'draft';
-  $('draftNext').hidden = !on; $('draftNew').hidden = !(on && draft.phase === 'submitted');
-  $('scoreRow').hidden = on && draft.phase !== 'submitted';
-  $('draftBanner').hidden = !(on && draft.phase === 'picking');
-  if (!on) return;
-  if (draft.phase === 'picking' && !draft.opts.length && !draft.chosen && players.length && filledCount() < 9) { dealRound(); saveDraft(); }
-  const n = filledCount(), done = draft.phase === 'submitted';
+  const isD = mode === 'draft', done = !!(draft && draft.phase === 'submitted'), picking = draftLocked();
+  document.body.classList.toggle('drafting', isD);
+  document.body.classList.toggle('locked', picking);
+  $('clearAll').hidden = isD;
+  $('draftNext').hidden = !(isD && (picking || done));
+  $('draftForfeit').hidden = !(isD && picking);
+  $('draftNew').hidden = !(isD && !picking); $('draftNew').classList.toggle('left', done);
+  $('scoreRow').hidden = isD && !done;
+  $('draftBanner').hidden = !(isD && !done);
+  if (!isD) return;
+  if (!draft) {
+    $('draftTitle').textContent = 'Press New Draft to begin. Each round you pick 1 of 3 players, for 9 rounds. Other tabs stay locked until you submit or forfeit.';
+    $('draftOpts').innerHTML = ''; return;
+  }
+  if (picking && !draft.opts.length && !draft.chosen && players.length && filledCount() < 9) { dealRound(); saveDraft(); }
+  const n = filledCount();
   $('draftNext').textContent = done ? 'See in Sandbox' : (draft.chosen && n >= 9 ? 'Submit' : 'Next');
   $('draftNext').disabled = !done && !draft.chosen;
   if (done) return;
@@ -807,28 +860,59 @@ function renderDraft() {
 $('draftOpts').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && !b.disabled) pickOption(Number(b.dataset.n)); });
 $('draftNext').addEventListener('click', draftAction);
 $('draftNew').addEventListener('click', () => { newDraft(); renderDraft(); });
+$('draftForfeit').addEventListener('click', forfeitDraft);
 function enterMode(m) {
   if (m === mode) return;
   if (mode === 'draft') saveDraft(); else sandboxSnap = snapshot();
   closePicker(false);
   mode = m;
-  if (m === 'draft') { if (!draft) loadDraft(); if (draft) restore(draft.snap); else newDraft(); }
+  if (m === 'draft') { if (!draft) loadDraft(); restore(draft ? draft.snap : []); }
   else restore(sandboxSnap);
   renderDraft();
 }
 
+// ---- Leaders: the top 50 drafts from the "Draft History" sheet tab.
+let ldRange = 'today', ldTok = 0;
+async function loadLeaders() {
+  const msg = $('ldMsg'), tbl = $('ldTable'), body = $('ldBody');
+  if (!SIGNUP_URL || !user || user.status !== 'approved') { tbl.hidden = true; msg.textContent = 'Sign up in the Account tab to see the leaderboard.'; return; }
+  const tok = ++ldTok; msg.textContent = 'Loading…';
+  try {
+    const r = await api('leaders', user.phone, {range:ldRange});
+    if (tok !== ldTok) return;
+    if (!r.ok) { tbl.hidden = true; msg.textContent = ERR[r.error] || 'Could not load the leaderboard.'; return; }
+    const rows = (r.rows || []).slice(0, 50), me = String(user.username).toLowerCase();
+    body.innerHTML = '';
+    rows.forEach((x, i) => {
+      const tr = document.createElement('tr');
+      if (String(x.username).toLowerCase() === me) tr.className = 'me';
+      [i + 1, x.username, x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+      body.appendChild(tr);
+    });
+    tbl.hidden = !rows.length;
+    msg.textContent = rows.length ? '' : 'No drafts yet for this period.';
+  } catch (e) { if (tok === ldTok) { tbl.hidden = true; msg.textContent = OFFLINE; } }
+}
+$('ldFilter').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  ldRange = b.dataset.r; Array.from($('ldFilter').children).forEach(x => x.classList.toggle('on', x === b)); loadLeaders();
+});
+$('ldRefresh').addEventListener('click', loadLeaders);
+
 // ---- Tabs: Sandbox, Draft, Account and (owner only) Admin.
-const TABS = {sandbox:'tabSandbox', draft:'tabDraft', account:'tabAccount', admin:'tabAdmin'};
-const VIEWOF = {sandbox:'viewSandbox', draft:'viewSandbox', account:'viewAccount', admin:'viewAdmin'};
+const TABS = {sandbox:'tabSandbox', draft:'tabDraft', leaders:'tabLeaders', account:'tabAccount', admin:'tabAdmin'};
+const VIEWOF = {sandbox:'viewSandbox', draft:'viewSandbox', leaders:'viewLeaders', account:'viewAccount', admin:'viewAdmin'};
 let curTab = 'sandbox';
 function showTab(name) {
+  if (draftLocked() && name !== 'draft') return;      // a draft in progress keeps the user on the Draft tab
   if (name === 'admin' && !isAdmin()) name = 'sandbox';
   curTab = name;
   if (name === 'sandbox' || name === 'draft') enterMode(name);
   for (const k in TABS) $(TABS[k]).setAttribute('aria-selected', String(k === name));
-  ['viewSandbox', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
+  ['viewSandbox', 'viewLeaders', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
   closePicker(false);
   if (name === 'admin') pollRequests();
+  else if (name === 'leaders') loadLeaders();
   else if (name === 'account') renderAccount();
   else fit();
 }
@@ -1228,6 +1312,7 @@ async function syncAccount() {
 }
 setInterval(syncAccount, 45000);
 if (!VIEW) {
+  loadDraft(); if (draftLocked()) showTab('draft');
   renderAccount(); applyBlocked();
   if (user && user.status === 'pending') openSignup(false);
   else if (isInstalled() && !user) openSignup(false);
