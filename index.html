@@ -81,21 +81,29 @@
   #total { flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 10px 8px; color:var(--muted); text-align:center; border-top:1px solid var(--line); }
   #total .clearRow { align-self:flex-end; margin-bottom:2px; display:flex; gap:8px; }
   #total .clearRow { width:100%; justify-content:flex-end; }
-  #draftForfeit, #draftNew.left { margin-right:auto; }
+  #draftForfeit, #draftNew.left, #oddsSel { margin-right:auto; }
+  #oddsSel { display:flex; } #oddsSel[hidden] { display:none; }
+  #oddsSel button { padding:6px 10px; font-size:12px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
+  #oddsSel button:first-child { border-radius:6px 0 0 6px; } #oddsSel button:last-child { border-radius:0 6px 6px 0; }
+  #oddsSel button + button { border-left:0; }
+  #oddsSel button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  #subTabs button:disabled { opacity:.35; cursor:not-allowed; }
   body.locked #tabs button:not(#tabDraft) { opacity:.3; pointer-events:none; }
   .lhead { display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .lhead button { padding:5px 12px; font-size:12px; }
-  #ldFilter { display:flex; margin:12px 0 8px; }
-  #ldFilter button { flex:1; padding:8px 4px; font-size:13px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
-  #ldFilter button:first-child { border-radius:6px 0 0 6px; } #ldFilter button:last-child { border-radius:0 6px 6px 0; }
-  #ldFilter button + button { border-left:0; }
-  #ldFilter button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  #ldFilter, #ldOdds { display:flex; margin:12px 0 8px; } #ldOdds { margin-top:0; }
+  #ldFilter button, #ldOdds button { flex:1; padding:8px 4px; font-size:13px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
+  #ldFilter button:first-child, #ldOdds button:first-child { border-radius:6px 0 0 6px; } #ldFilter button:last-child, #ldOdds button:last-child { border-radius:0 6px 6px 0; }
+  #ldFilter button + button, #ldOdds button + button { border-left:0; }
+  #ldOdds button { padding:6px 4px; font-size:12px; }
+  #ldFilter button.on, #ldOdds button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
   #ldTable { width:100%; border-collapse:collapse; font-size:.82rem; margin-top:4px; }
   #ldTable th { font-size:.64rem; font-weight:600; color:var(--muted); text-align:right; padding:6px 3px; border-bottom:1px solid var(--line); }
   #ldTable td { padding:8px 3px; text-align:right; border-bottom:1px solid #1a2029; font-variant-numeric:tabular-nums; }
   #ldTable th:nth-child(2), #ldTable td:nth-child(2) { text-align:left; word-break:break-all; }
   #ldTable th:first-child, #ldTable td:first-child { width:26px; text-align:left; color:var(--muted); }
-  #ldTable td:nth-child(5) { font-weight:700; color:var(--accent); }
+  #ldTable td:nth-child(6) { font-weight:700; color:var(--accent); }
+  #ldTable th:nth-child(3), #ldTable td:nth-child(3) { text-align:center; padding-left:6px; padding-right:6px; }
   #ldTable tr.me td { background:#16261b; }
   #ldTable th[data-k] { cursor:pointer; user-select:none; }
   #ldTable th.sorted { color:var(--ink); }
@@ -234,9 +242,10 @@
         <div id="draftOpts"></div>
       </div>
       <div id="subTabs" role="group" aria-label="Draft view" hidden>
-        <button type="button" data-v="sub" class="on">Submission</button><button type="button" data-v="sol">Solution</button>
+        <button type="button" data-v="sub" class="on">Sandbox</button><button type="button" data-v="sol">Solution</button>
       </div>
       <div class="clearRow">
+        <div id="oddsSel" role="group" aria-label="Draft odds" hidden><button type="button" data-o="Default" class="on">Default</button><button type="button" data-o="Chaos">Chaos</button></div>
         <button id="draftForfeit" class="quiet" hidden>Forfeit</button>
         <button id="draftNew" class="quiet" hidden>New Draft</button>
         <button id="draftNext" hidden disabled>Next</button>
@@ -250,7 +259,7 @@
       <div class="row two" id="scoreRow">
         <div class="stat"><span>Max Score</span><strong id="maxNum">&ndash;</strong></div>
         <div class="stat"><span>Accuracy</span><strong id="accNum">&ndash;</strong></div>
-        <button id="solve" disabled>View Solution</button>
+        <button id="solve" disabled hidden>View Solution</button>
       </div>
     </div>
   </section>
@@ -261,10 +270,13 @@
       <div id="ldFilter" role="group" aria-label="Time range">
         <button type="button" data-r="today" class="on">Today</button><button type="button" data-r="week">This Week</button><button type="button" data-r="all">All-Time</button>
       </div>
+      <div id="ldOdds" role="group" aria-label="Odds">
+        <button type="button" data-o="all" class="on">All odds</button><button type="button" data-o="default">Default</button><button type="button" data-o="chaos">Chaos</button>
+      </div>
       <p id="ldMsg" role="status"></p>
       <p class="hintline" id="ldHint" hidden>Tap a column to sort the top 50.</p>
       <table id="ldTable" hidden>
-        <thead><tr><th>#</th><th>Username</th><th data-k="talent">Talent</th><th data-k="chemistry">Chemistry</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
+        <thead><tr><th>#</th><th>Username</th><th>Odds</th><th data-k="talent">Talent</th><th data-k="chemistry">Chemistry</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
         <tbody id="ldBody"></tbody>
       </table>
     </div>
@@ -304,7 +316,7 @@
     <div class="pane">
       <h2>Admin</h2>
       <div class="sect first">
-        <h3>Device requests</h3>
+        <h3>Sign-up and device requests</h3>
         <p id="reqNone">No requests right now.</p>
         <ul id="reqList"></ul>
         <p id="reqMsg" class="err" role="alert"></p>
@@ -370,7 +382,7 @@
     <p id="suErr" class="err" role="alert"></p>
     <div class="row"><button type="button" id="suCancel" class="quiet" hidden>Cancel</button><button type="submit" id="suGo">Sign up</button></div>
     <p id="suWait" hidden></p>
-    <p class="fine" id="suFine">Your name and phone number cannot be changed later. Your phone number stays private, and only your username shows on the leaderboard.</p>
+    <p class="fine" id="suFine">Your name and phone number cannot be changed later.</p>
   </form>
 </div>
 
@@ -383,7 +395,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-23.1';
+const APP_VERSION = '2026-10-24.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -489,7 +501,8 @@ window.addEventListener('orientationchange', () => setTimeout(fit, 150));
 fit();
 
 let players = [];
-let mode = 'sandbox', draft = null, sandboxSnap = null;   // 'sandbox' or 'draft' (both use the same board)
+let mode = 'sandbox', draft = null, sandboxSnap = null, sbView = 'sub', sbSnap = null;   // sbView: Sandbox sub-tab ('sub') or read-only Solution ('sol')
+const roView = () => mode === 'sandbox' && sbView === 'sol';   // 'sandbox' or 'draft' (both use the same board)
 const maxLevel = p => Math.max(...p.levels);
 // "4" -> [4]; "4,5" -> [4,5] (a card that can be either). Values are kept between 1 and 5.
 const parseLevels = v => {
@@ -515,7 +528,7 @@ function show(i) {
   btns[i].textContent = p ? p.name : (mode === 'draft' ? 'Open' : 'Select player');
   cells[i].style.setProperty('--tx', p ? TIER[n].text : '#14181f');
   // Players with several possible levels get a small level dropdown.
-  const multi = !!p && p.levels.length > 1 && !VIEW && mode !== 'draft';
+  const multi = !!p && p.levels.length > 1 && !VIEW && mode !== 'draft' && !roView();
   lvls[i].hidden = !multi;
   if (multi) { lvls[i].innerHTML = p.levels.map(v => `<option value="${v}">${v}★</option>`).join(''); lvls[i].value = String(p.level); }
   cells[i].style.top = NODES[i][1] + 'px';   // the top of the name box sits on the octagon's centre line
@@ -580,7 +593,7 @@ function chemistry() {
     playerTotal += earned;
     talent += TALENT[stars(p)];
   });
-  $('clearAll').disabled = !selects.some(sel => sel.value !== '');
+  $('clearAll').disabled = roView() || !selects.some(sel => sel.value !== '');
   const chem = playerTotal + linkTotal;
   $('chemNum').textContent = chem;
   $('chemSub').textContent = 'players ' + playerTotal + ' + links ' + linkTotal;
@@ -589,6 +602,7 @@ function chemistry() {
   const res = bestDraft();
   lastBest = res;
   $('solve').disabled = !res;
+  updateSubTabs();
   $('draftSub').textContent = VIEW && res && !VIEW_TITLE ? 'best possible lineup' : 'chemistry + talent';
   $('maxNum').textContent = res ? res.score : '–';
   $('accNum').textContent = res ? (Math.round((chem + talent) / res.score * 1000) / 10) + '%' : '–';
@@ -756,7 +770,16 @@ if (!VIEW && navigator.storage && navigator.storage.persist) navigator.storage.p
 if (!VIEW) loadHosted().then(() => { refreshTop(); runNote(); });
 
 // ---- Draft mode: 9 rounds of "pick 1 of 3". It uses the same board as the Sandbox tab.
-const DRAFT_KEY = 'fud.draft.v1', DLQ_KEY = 'fud.draftlog.v1';
+const DRAFT_KEY = 'fud.draft.v1', DLQ_KEY = 'fud.draftlog.v1', ODDS_KEY = 'fud.odds.v1';
+// Default odds: chance (%) that each offered card is 5, 4, 3, 2 or 1 star, by round (every row adds up to 100).
+const ODDS = [[2,80,18,0,0],[2,50,45,3,0],[2,10,65,23,0],[2,8,45,40,5],[2,8,25,60,5],[2,7,10,50,31],[2,7,10,41,40],[2,5,7,21,65],[2,4,6,18,70]];
+let oddsPref = 'Default';
+try { if (localStorage.getItem(ODDS_KEY) === 'Chaos') oddsPref = 'Chaos'; } catch (e) {}
+function rollStar(round) {
+  const w = ODDS[Math.min(9, Math.max(1, round)) - 1]; let r = Math.random() * 100;
+  for (let k = 0; k < 5; k++) { r -= w[k]; if (r < 0) return 5 - k; }
+  return 3;
+}
 const snapshot = () => selects.map(sel => { const p = players[sel.value]; return p ? {key:keyOf(p), level:p.level} : null; });
 function restore(snap) {
   players.forEach(p => { p.level = maxLevel(p); });
@@ -779,7 +802,7 @@ function saveDraft() {
 function loadDraft() {
   try {
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) { draft = d; draft.view = 'sub'; }
+    if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) { draft = d; draft.view = 'sub'; if (draft.odds !== 'Default') draft.odds = 'Chaos'; }
   } catch (e) {}
 }
 const draftLocked = () => !!(draft && draft.phase === 'picking');
@@ -789,23 +812,51 @@ function forfeitDraft() {
   draft = null; try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
   restore([]); renderDraft(); openNamePrompt();
 }
+function clearDraft() {
+  if (!draft || draft.phase !== 'submitted') return;
+  draft = null; try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  restore([]); renderDraft();
+}
 function newDraft() {
-  draft = {phase:'picking', opts:[], chosen:null, seen:[], view:'sub', id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
+  draft = {phase:'picking', odds:oddsPref, opts:[], chosen:null, seen:[], view:'sub', id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
   restore([]); dealRound(); saveDraft();
 }
-// Three random players that fit at least one open spot, each with a random level when the card has several.
+// Three players that fit at least one open spot. Chaos: any player, any of their levels. Default: each card rolls its
+// star level from the round's odds, then takes a random player who has that level (nearest level if none does).
 function dealRound() {
   draft.chosen = null; draft.opts = [];
   const spots = selects.map((sel, i) => sel.value === '' ? i : -1).filter(i => i >= 0);
   if (!spots.length) return;
   const placed = new Set(snapshot().filter(Boolean).map(x => x.key));
   let pool = players.filter(p => !placed.has(keyOf(p)) && spots.some(i => allowed(i, p)));
-  const fresh = pool.filter(p => !draft.seen.includes(keyOf(p)));
-  if (fresh.length >= 3) pool = fresh;
+  const rnd = n => Math.floor(Math.random() * n);
+  if (draft.odds !== 'Default') {
+    const fresh = pool.filter(p => !draft.seen.includes(keyOf(p)));
+    if (fresh.length >= 3) pool = fresh;
+    while (draft.opts.length < 3 && pool.length) {
+      const p = pool.splice(rnd(pool.length), 1)[0];
+      draft.opts.push({key:keyOf(p), level:p.levels[rnd(p.levels.length)]});
+      draft.seen.push(keyOf(p));
+    }
+    return;
+  }
+  const round = filledCount() + 1;
   while (draft.opts.length < 3 && pool.length) {
-    const p = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-    draft.opts.push({key:keyOf(p), level:p.levels[Math.floor(Math.random() * p.levels.length)]});
-    draft.seen.push(keyOf(p));
+    const want = rollStar(round);
+    let pick = null, lv = want;
+    for (let d = 0; d <= 4 && !pick; d++) {
+      for (const L of d ? [want - d, want + d] : [want]) {
+        const has = pool.filter(p => p.levels.includes(L));
+        if (!has.length) continue;
+        const fresh = has.filter(p => !draft.seen.includes(keyOf(p)));
+        const from = fresh.length ? fresh : has;
+        pick = from[rnd(from.length)]; lv = L; break;
+      }
+    }
+    if (!pick) break;
+    pool.splice(pool.indexOf(pick), 1);
+    draft.opts.push({key:keyOf(pick), level:lv});
+    draft.seen.push(keyOf(pick));
   }
 }
 function pickOption(n) {
@@ -834,7 +885,7 @@ function submitDraft() {
   draft.snap = snap; draft.phase = 'submitted'; draft.view = 'sub'; draft.opts = draft.opts.filter(o => o.key === draft.chosen);
   draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent), accuracy:isNaN(acc) ? null : acc};
   saveDraft(); setCount(todayN + 1); renderDraft(); openNamePrompt();
-  logDraft(Object.assign({id:draft.id}, draft.result)).then(refreshCount);
+  logDraft(Object.assign({id:draft.id, odds:draft.odds}, draft.result)).then(refreshCount);
 }
 // Sub-tabs after a draft is submitted: "Submission" (the team as drafted) and "Solution" (the best possible layout).
 function setSubView(v) {
@@ -843,7 +894,27 @@ function setSubView(v) {
   if (v === 'sol' && lastBest) fill(lastBest.lineup.map(p => String(players.indexOf(p))));
   draft.view = v; renderDraft();
 }
-$('subTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setSubView(b.dataset.v); });
+// Sandbox sub-tabs: "Sandbox" (your arrangement) and a read-only "Solution" (best layout), only when the grid holds 9 players.
+function setSbView(v) {
+  if (mode !== 'sandbox' || v === sbView) return;
+  if (v === 'sol') {
+    if (!(filledCount() === 9 && lastBest)) return;
+    const best = lastBest; sbSnap = snapshot();
+    sbView = 'sol'; fill(best.lineup.map(p => String(players.indexOf(p))));
+  } else { sbView = 'sub'; restore(sbSnap); }
+  closePicker(false); renderDraft();
+}
+function updateSubTabs() {
+  const isD = mode === 'draft', done = !!(draft && draft.phase === 'submitted');
+  const on = !VIEW && (isD ? done : true);
+  $('subTabs').hidden = !on; if (!on) return;
+  const v = isD ? draft.view : sbView, a = $('subTabs').children[0], b = $('subTabs').children[1];
+  a.textContent = isD ? 'Submission' : 'Sandbox';
+  a.classList.toggle('on', v === 'sub'); b.classList.toggle('on', v === 'sol');
+  b.disabled = isD ? false : !(v === 'sol' || (filledCount() === 9 && lastBest));
+}
+$('subTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) (mode === 'draft' ? setSubView : setSbView)(b.dataset.v); });
+$('oddsSel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; oddsPref = b.dataset.o; try { localStorage.setItem(ODDS_KEY, oddsPref); } catch (e2) {} renderDraft(); });
 // "Drafts Completed Today": counted from the sheet (all devices), with the last known number kept on this device.
 const COUNT_KEY = 'fud.count.v1';
 const easternDay = () => new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'});
@@ -876,16 +947,16 @@ function renderDraft() {
   $('draftNext').hidden = !(isD && (picking || done));
   const nOn = filledCount();
   $('draftForfeit').hidden = !(isD && picking && (nOn < 8 || (nOn === 8 && !!draft.chosen)));   // round 9 has to be submitted
-  $('draftNew').hidden = !(isD && !picking); $('draftNew').classList.toggle('left', done);
-  $('scoreRow').hidden = isD && !(done && draft.view !== 'sol');
-  $('subTabs').hidden = !(isD && done);
+  $('draftNew').hidden = !(isD && !picking); $('draftNew').classList.toggle('left', done); $('draftNew').textContent = done ? 'Clear' : 'New Draft';
+  $('oddsSel').hidden = !(isD && !picking && !done);
+  Array.from($('oddsSel').children).forEach(b => b.classList.toggle('on', b.dataset.o === oddsPref));
+  $('scoreRow').hidden = isD ? !(done && draft.view !== 'sol') : roView();
+  updateSubTabs();
   $('draftCount').hidden = !isD;
-  if (!VIEW) $('solve').hidden = isD;
-  if (done) Array.from($('subTabs').children).forEach(b => b.classList.toggle('on', b.dataset.v === draft.view));
   $('draftBanner').hidden = !(isD && !done);
   if (!isD) return;
   if (!draft) {
-    $('draftTitle').textContent = 'Press New Draft to begin. Each round you pick 1 of 3 players, for 9 rounds. Other tabs stay locked until you submit or forfeit.';
+    $('draftTitle').textContent = 'Choose Default (weighted by round) or Chaos (fully random) odds, then press New Draft. Each round you pick 1 of 3 players, for 9 rounds. Other tabs stay locked until you submit or forfeit.';
     $('draftOpts').innerHTML = ''; return;
   }
   if (picking && !draft.opts.length && !draft.chosen && players.length && filledCount() < 9) { dealRound(); saveDraft(); }
@@ -897,7 +968,7 @@ function renderDraft() {
   $('draftTitle').textContent = !players.length ? 'No players loaded yet. Connect to the internet once so the player database can load.'
     : !draft.opts.length ? 'No eligible players are left in the database for the open spots.'
     : chosen ? 'Round ' + n + ' of 9: ' + chosen.name + ' added. ' + (n >= 9 ? 'Move players if you like, then press Submit.' : 'Press Next for the next three.')
-    : 'Round ' + (n + 1) + ' of 9: choose one player';
+    : 'Round ' + (n + 1) + ' of 9 (' + draft.odds + ' odds): choose one player';
   $('draftOpts').innerHTML = draft.opts.map((o, k) => {
     const p = byKey(o.key); if (!p) return '';
     const t = TIER[o.level];
@@ -907,11 +978,11 @@ function renderDraft() {
 }
 $('draftOpts').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && !b.disabled) pickOption(Number(b.dataset.n)); });
 $('draftNext').addEventListener('click', draftAction);
-$('draftNew').addEventListener('click', () => { newDraft(); renderDraft(); });
+$('draftNew').addEventListener('click', () => { if (draft && draft.phase === 'submitted') clearDraft(); else { newDraft(); renderDraft(); } });
 $('draftForfeit').addEventListener('click', forfeitDraft);
 function enterMode(m) {
   if (m === mode) return;
-  if (mode === 'draft') saveDraft(); else sandboxSnap = snapshot();
+  if (mode === 'draft') saveDraft(); else { sandboxSnap = sbView === 'sol' ? sbSnap : snapshot(); sbView = 'sub'; }
   closePicker(false);
   mode = m;
   if (m === 'draft') { if (!draft) loadDraft(); restore(draft ? draft.snap : []); }
@@ -920,7 +991,7 @@ function enterMode(m) {
 }
 
 // ---- Leaders: the top 50 drafts (by Total) from the "Draft History" sheet tab. Talent, Chemistry and Total can be re-sorted.
-let ldRange = 'today', ldTok = 0, ldRows = [], ldSort = {k:'total', dir:-1};
+let ldRange = 'today', ldOdds = 'all', ldTok = 0, ldRows = [], ldSort = {k:'total', dir:-1};
 const sameName = (x, y) => String(x || '').trim().toLowerCase() === String(y || '').trim().toLowerCase();
 const isMine = x => user && (x.name ? sameName(x.name, user.name) : sameName(x.username, user.username));
 function renderLeaders() {
@@ -931,7 +1002,7 @@ function renderLeaders() {
   rows.forEach(({r:x, rank}) => {
     const tr = document.createElement('tr');
     if (isMine(x)) tr.className = 'me';
-    [rank, x.username, x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+    [rank, x.username, x.odds === 'Default' ? 'D' : 'C', x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
     body.appendChild(tr);
   });
   Array.from(tbl.querySelectorAll('th[data-k]')).forEach(th => { const on = th.dataset.k === k; th.classList.toggle('sorted', on); th.textContent = th.dataset.k[0].toUpperCase() + th.dataset.k.slice(1) + (on ? (ldSort.dir < 0 ? ' ▼' : ' ▲') : ''); });
@@ -943,7 +1014,7 @@ async function loadLeaders() {
   if (!SIGNUP_URL || !user || user.status !== 'approved') { tbl.hidden = true; $('ldHint').hidden = true; msg.textContent = 'Sign up in the Account tab to see the leaderboard.'; return; }
   const tok = ++ldTok; msg.textContent = 'Loading…';
   try {
-    const r = await api('leaders', user.phone, {range:ldRange});
+    const r = await api('leaders', user.phone, {range:ldRange, odds:ldOdds});
     if (tok !== ldTok) return;
     if (!r.ok) { tbl.hidden = true; $('ldHint').hidden = true; msg.textContent = ERR[r.error] || 'Could not load the leaderboard.'; return; }
     ldRows = (r.rows || []).slice(0, 50);
@@ -958,6 +1029,10 @@ $('ldTable').querySelector('thead').addEventListener('click', e => {
   const th = e.target.closest('th[data-k]'); if (!th) return;
   ldSort = ldSort.k === th.dataset.k ? {k:ldSort.k, dir:-ldSort.dir} : {k:th.dataset.k, dir:-1};
   renderLeaders();
+});
+$('ldOdds').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  ldOdds = b.dataset.o; Array.from($('ldOdds').children).forEach(x => x.classList.toggle('on', x === b)); loadLeaders();
 });
 $('ldRefresh').addEventListener('click', loadLeaders);
 
@@ -1010,7 +1085,7 @@ function flash(msg) {
   flashT = setTimeout(() => { t.classList.remove('show'); flashT = null; }, 2500);
 }
 function startDrag(i, e) {
-  if (VIEW || (mode === 'draft' && draft && draft.phase === 'submitted')) return;
+  if (VIEW || roView() || (mode === 'draft' && draft && draft.phase === 'submitted')) return;
   if (e.target.closest(mode === 'draft' ? '.lvl' : 'button, select') || e.button > 0 || !selects[i].value) return;
   drag = {i, x:e.clientX, y:e.clientY, on:false, ghost:null};
 }
@@ -1106,7 +1181,7 @@ function closePicker(refocus) {
   const i = pickerFor; picker.hidden = true; pickerFor = -1;
   if (refocus && i >= 0 && btns[i].focus) btns[i].focus();
 }
-function togglePicker(i) { if (mode === 'draft') return;
+function togglePicker(i) { if (mode === 'draft' || roView()) return;
   if (!picker.hidden && pickerFor === i) closePicker(true); else openPicker(i); }
 function choose(v) {
   const i = pickerFor; if (i < 0) return;
@@ -1257,14 +1332,14 @@ function openNamePrompt() {
   stopWait(); fromAccount = false; setWaiting(false);
   $('signupForm').classList.add('nameonly');
   $('suTitle').textContent = 'One more step';
-  $('suIntro').textContent = 'Add your first name and last initial, like John S. It is used to highlight your drafts and cannot be changed later.';
+  $('suIntro').textContent = 'Add your first name and last initial, like John S. It cannot be changed later.';
   $('suGo').textContent = 'Save'; $('suCancel').hidden = true;
   $('suName').value = ''; $('suErr').textContent = ''; $('signup').hidden = false;
   setTimeout(() => $('suName').focus(), 60);
 }
 function finishSignup() { stopWait(); $('signup').hidden = true; setWaiting(false); renderAccount(); applyAccess(); }
 function waitForApproval() {
-  setWaiting(true, 'This phone number already has an FUD account. The account owner has been asked to approve this device. This page updates by itself once they decide.');
+  setWaiting(true, user && user.kind === 'signup' ? 'Your sign-up has been sent to the admin for approval. This page updates by itself once they decide.' : 'This phone number already has an FUD account. The account owner has been asked to approve this device. This page updates by itself once they decide.');
   stopWait();
   const check = async () => {
     if (!user || user.status !== 'pending') return stopWait();
@@ -1273,8 +1348,9 @@ function waitForApproval() {
       if (!r.ok) return;
       if (r.status === 'approved') { user.status = 'approved'; user.username = r.username; user.name = r.name || user.name || ''; user.admin = !!r.admin; saveUser(); finishSignup(); }
       else if (r.status === 'denied' || r.status === 'unknown') {
+        const first = (r.kind || (user && user.kind)) === 'signup';
         user = null; saveUser(); stopWait(); setWaiting(false); applyAccess();
-        $('suErr').textContent = r.status === 'denied' ? 'The account owner did not approve this device.' : 'That request is no longer active. You can sign up again.';
+        $('suErr').textContent = r.status === 'denied' ? (first ? 'Your sign-up was not approved. You can submit a new sign-up.' : 'The account owner did not approve this device.') : 'That request is no longer active. You can sign up again.';
       }
     } catch (e) {}
   };
@@ -1306,10 +1382,10 @@ $('signupForm').addEventListener('submit', async e => {
   try {
     const r = await api('signup', ph.e164, {username:name, name:fullName, info:deviceInfo()});
     if (!r.ok) { $('suErr').textContent = ERR[r.error] || ERR.server; }
-    else if (r.status === 'denied') { $('suErr').textContent = 'The account owner did not approve this device.'; }
+    else if (r.status === 'denied') { $('suErr').textContent = 'Your sign-up was not approved. You can submit a new sign-up.'; }
     else if (r.status === 'blocked') { user = Object.assign({username:name, name:fullName, status:'blocked', admin:false}, base); saveUser(); applyBlocked(); }
     else {
-      user = Object.assign({username:r.username || name, name:r.name || '', status:r.status === 'approved' ? 'approved' : 'pending', admin:!!r.admin}, base); saveUser();
+      user = Object.assign({username:r.username || name, name:r.name || '', status:r.status === 'approved' ? 'approved' : 'pending', kind:r.kind || 'device', admin:!!r.admin}, base); saveUser();
       if (user.status === 'approved') finishSignup(); else waitForApproval();
     }
   } catch (err) { $('suErr').textContent = OFFLINE; }
@@ -1347,7 +1423,7 @@ $('acForm').addEventListener('submit', async e => {
   $('acSave').disabled = false;
 });
 
-// -- owner only: approve or deny a second device that signs up with an existing number
+// -- owner only: allow or block a first sign-up, or confirm or deny a second device on an existing number
 let pollT = null;
 function setBadge(n) { $('reqBadge').textContent = n; $('reqBadge').hidden = !n; }
 function renderRequests(list) {
@@ -1357,12 +1433,15 @@ function renderRequests(list) {
   list.forEach(q => {
     const li = document.createElement('li'), t = document.createElement('div');
     const b = document.createElement('b'); b.textContent = q.account;
-    t.append('Duplicate sign-up for the account ', b, (q.accountName ? ' (' + q.accountName + ')' : '') + ', phone ' + (q.phone.length === 10 ? fmtPhone(q.phone) : q.phone) + '. Someone on another device is asking for access to it.');
+    const first = q.kind === 'signup', ph = q.phone.length === 10 ? fmtPhone(q.phone) : q.phone;
+    if (first) { const nb = document.createElement('b'); nb.textContent = q.enteredName || '—'; t.append('New sign-up: ', nb, ' · username ', b, ' · ' + ph); }
+    else t.append('Duplicate sign-up for the account ', b, (q.accountName ? ' (' + q.accountName + ')' : '') + ', phone ' + ph + '. Someone on another device is asking for access to it.');
     const sm = document.createElement('small');
-    sm.textContent = (q.enteredName ? 'They entered: ' + q.enteredName + (q.entered ? ' / ' + q.entered : '') + ' · ' : '') + (q.info ? q.info + ' · ' : '') + (q.requested ? new Date(q.requested).toLocaleString() : '');
+    const when = (q.info ? q.info + ' · ' : '') + (q.requested ? new Date(q.requested).toLocaleString() : '');
+    sm.textContent = first ? when : (q.enteredName ? 'They entered: ' + q.enteredName + (q.entered ? ' / ' + q.entered : '') + ' · ' : '') + when;
     const bt = document.createElement('div'); bt.className = 'btns';
     const ok = document.createElement('button'), no = document.createElement('button');
-    ok.textContent = 'Confirm'; no.textContent = 'Deny'; no.className = 'deny';
+    ok.textContent = first ? 'Allow' : 'Confirm'; no.textContent = first ? 'Block' : 'Deny'; no.className = 'deny';
     ok.addEventListener('click', () => decide(q.id, 'approve', li));
     no.addEventListener('click', () => decide(q.id, 'deny', li));
     bt.append(ok, no); li.append(t, sm, bt); ul.append(li);
