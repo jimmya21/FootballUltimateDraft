@@ -52,9 +52,9 @@
   #board svg { position:absolute; inset:0; width:100%; height:100%; }
   .cell, #board svg { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
   .edge { stroke:var(--edge); stroke-width:2; transition:stroke .2s; }
-  .edge.c0 { stroke:#b5524f; stroke-width:3.2; }
-  .edge.c1 { stroke:#c2ad3f; stroke-width:3.2; }
-  .edge.c2 { stroke:#5aa064; stroke-width:3.2; }
+  .edge.c0 { stroke:#ff4b47; stroke-width:3.2; }
+  .edge.c1 { stroke:#ffd92e; stroke-width:3.2; }
+  .edge.c2 { stroke:#2fe074; stroke-width:3.2; }
   .hex { fill:#151a22; stroke:#4a5361; stroke-width:1.6; }
   .hex.ok { stroke:#5aa064 !important; stroke-width:4; }
   .hex.bad { stroke:#b5524f !important; stroke-width:4; }
@@ -97,17 +97,29 @@
   #ldTable th:first-child, #ldTable td:first-child { width:26px; text-align:left; color:var(--muted); }
   #ldTable td:nth-child(5) { font-weight:700; color:var(--accent); }
   #ldTable tr.me td { background:#16261b; }
+  #ldTable th[data-k] { cursor:pointer; user-select:none; }
+  #ldTable th.sorted { color:var(--ink); }
+  .hintline { font-size:.75rem !important; }
+  #draftCount { flex:none; text-align:center; font-size:12px; color:var(--muted); padding:4px 0 0; }
+  @media (orientation:landscape) and (max-height:520px) { #draftCount { position:absolute; top:2px; left:8px; z-index:2; } }
+  #draftCount b { color:var(--ink); }
+  #subTabs { display:flex; width:100%; margin:2px 0 4px; }
+  #subTabs button { flex:1; padding:7px 4px; font-size:13px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
+  #subTabs button:first-child { border-radius:6px 0 0 6px; } #subTabs button:last-child { border-radius:0 6px 6px 0; }
+  #subTabs button + button { border-left:0; }
+  #subTabs button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .su.nameonly label[for=suUser], .su.nameonly #suUser, .su.nameonly label[for=suPhone], .su.nameonly #suPhone { display:none; }
   #draftBanner { width:100%; }
-  #draftBanner .dt { font-size:12px; color:var(--ink); margin:2px 0 7px; line-height:1.3; }
-  #draftOpts { display:flex; gap:8px; justify-content:center; }
-  #total .opt { --cut:16px; position:relative; flex:0 1 104px; height:112px; padding:0; border:0; border-radius:0; background:#7a8494; cursor:pointer; color:var(--tx);
+  #draftBanner .dt { font-size:10.5px; color:var(--ink); margin:0 0 4px; line-height:1.25; }
+  #draftOpts { display:flex; gap:6px; justify-content:center; }
+  #total .opt { --cut:11px; position:relative; flex:0 1 73px; height:78px; padding:0; border:0; border-radius:0; background:#7a8494; cursor:pointer; color:var(--tx);
     clip-path:polygon(var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)), 0 var(--cut)); }
-  .opt .in { --c2:calc(var(--cut) - 3px); position:absolute; inset:3px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:0 6px; text-align:center;
+  .opt .in { --c2:calc(var(--cut) - 2px); position:absolute; inset:2px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; padding:0 3px; text-align:center;
     background:linear-gradient(180deg,var(--l),var(--b) 40%,var(--d));
     clip-path:polygon(var(--c2) 0, calc(100% - var(--c2)) 0, 100% var(--c2), 100% calc(100% - var(--c2)), calc(100% - var(--c2)) 100%, var(--c2) 100%, 0 calc(100% - var(--c2)), 0 var(--c2)); }
-  .opt b { font-size:11px; line-height:1.15; font-weight:700; }
-  .opt i { font-style:normal; font-size:9px; line-height:1.25; }
-  .opt em { font-style:normal; color:#ffd400; font-size:11px; letter-spacing:1px; text-shadow:0 0 2px #3a2a00; }
+  .opt b { font-size:8.5px; line-height:1.12; font-weight:700; }
+  .opt i { font-style:normal; font-size:7px; line-height:1.2; }
+  .opt em { font-style:normal; color:#ffd400; font-size:8px; letter-spacing:.5px; text-shadow:0 0 2px #3a2a00; }
   #total .opt:disabled { opacity:1; }
   #total .opt.sel { background:#fff; }
   #total .opt.off { opacity:.3; cursor:default; }
@@ -126,7 +138,7 @@
     #total { width:200px; border-top:0; border-left:1px solid var(--line); justify-content:center; overflow:auto; }
     body.drafting #total { justify-content:flex-start; }
     #draftOpts { flex-direction:column; gap:5px; }
-    #total .opt { --cut:10px; flex:none; width:100%; height:44px; }
+    #total .opt { --cut:8px; flex:none; width:100%; height:32px; }
     .opt .in { flex-direction:row; flex-wrap:wrap; gap:0 6px; padding:2px 12px; }
   }
 
@@ -207,6 +219,7 @@
 
 <main>
   <section id="viewSandbox" class="view" role="tabpanel" aria-labelledby="tabSandbox">
+    <div id="draftCount" hidden>Drafts Completed Today: <b id="draftCountN">0</b></div>
     <div id="stage">
       <div id="toast" role="status"></div>
       <div id="boardBox">
@@ -219,6 +232,9 @@
       <div id="draftBanner" hidden>
         <div class="dt" id="draftTitle"></div>
         <div id="draftOpts"></div>
+      </div>
+      <div id="subTabs" role="group" aria-label="Draft view" hidden>
+        <button type="button" data-v="sub" class="on">Submission</button><button type="button" data-v="sol">Solution</button>
       </div>
       <div class="clearRow">
         <button id="draftForfeit" class="quiet" hidden>Forfeit</button>
@@ -246,8 +262,9 @@
         <button type="button" data-r="today" class="on">Today</button><button type="button" data-r="week">This Week</button><button type="button" data-r="all">All-Time</button>
       </div>
       <p id="ldMsg" role="status"></p>
+      <p class="hintline" id="ldHint" hidden>Tap a column to sort the top 50.</p>
       <table id="ldTable" hidden>
-        <thead><tr><th>#</th><th>Username</th><th>Talent</th><th>Chemistry</th><th>Total</th><th>Accuracy</th></tr></thead>
+        <thead><tr><th>#</th><th>Username</th><th data-k="talent">Talent</th><th data-k="chemistry">Chemistry</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
         <tbody id="ldBody"></tbody>
       </table>
     </div>
@@ -257,7 +274,7 @@
     <div class="pane">
       <h2>Account</h2>
       <div id="acIn" hidden>
-        <dl class="db"><dt>Username</dt><dd id="acUser"></dd><dt>Phone</dt><dd id="acPhone"></dd></dl>
+        <dl class="db"><dt>Name</dt><dd id="acName"></dd><dt>Username</dt><dd id="acUser"></dd><dt>Phone</dt><dd id="acPhone"></dd></dl>
         <button id="acEdit" class="quiet">Change username</button>
         <form id="acForm" class="field" hidden autocomplete="off">
           <input id="acNew" type="text" maxlength="20" placeholder="New username" aria-label="New username" autocapitalize="none" autocorrect="off" spellcheck="false">
@@ -265,7 +282,7 @@
           <button type="button" id="acCancel" class="quiet">Cancel</button>
         </form>
         <p id="acMsg" class="err" role="alert"></p>
-        <p>Your phone number is tied to this account and cannot be changed.</p>
+        <p>Your name and phone number are tied to this account and cannot be changed.</p>
       </div>
       <div id="acOut">
         <p>You are not signed up on this device yet.</p>
@@ -343,15 +360,17 @@
 <div id="signup" hidden role="dialog" aria-modal="true" aria-labelledby="suTitle">
   <form id="signupForm" class="su" novalidate>
     <h2 id="suTitle">Sign up</h2>
-    <p id="suIntro">Pick a username and add your phone number to get started.</p>
-    <label for="suUser">Username</label>
-    <input id="suUser" type="text" maxlength="20" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Letters and numbers only">
+    <p id="suIntro">Add your first name and last initial, phone number and a username to get started.</p>
+    <label for="suName">First name &amp; last initial</label>
+    <input id="suName" type="text" maxlength="30" autocomplete="name" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="John S">
     <label for="suPhone">Phone number</label>
     <input id="suPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(212) 555-0123" maxlength="20">
+    <label for="suUser">Username</label>
+    <input id="suUser" type="text" maxlength="20" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Letters and numbers only">
     <p id="suErr" class="err" role="alert"></p>
     <div class="row"><button type="button" id="suCancel" class="quiet" hidden>Cancel</button><button type="submit" id="suGo">Sign up</button></div>
     <p id="suWait" hidden></p>
-    <p class="fine" id="suFine">Your phone number stays private. Your username is how you appear in FUD.</p>
+    <p class="fine" id="suFine">Your name and phone number cannot be changed later. Your phone number stays private, and only your username shows on the leaderboard.</p>
   </form>
 </div>
 
@@ -364,7 +383,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-21.4';
+const APP_VERSION = '2026-10-23.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -373,7 +392,8 @@ window.addEventListener('orientationchange', () => setTimeout(setAppH, 150));
 if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppH);
 // When this page is opened with #solution=..., it shows the best lineup read-only.
 let VIEW = null;
-try { const m = location.hash.match(/^#solution=(.+)$/); if (m) { const v = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(v) && v.length === 9) VIEW = v; } } catch (e) {}
+let VIEW_TITLE = '';
+try { const m = location.hash.match(/^#(?:solution|review)=([^&]+)(?:&t=(.*))?$/); if (m) { const v = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(v) && v.length === 9) { VIEW = v; VIEW_TITLE = m[2] ? decodeURIComponent(m[2]) : ''; } } } catch (e) {}
 
 // Octagon centers (x,y) on a compact 464 x 532 board that is scaled to fit the screen.
 const NODES = [[162,78],[302,78],[55,216],[177,258],[287,258],[409,216],[93,404],[232,437],[371,404]];
@@ -512,7 +532,7 @@ function show(i) {
 const same = (x, y) => { const a = String(x).trim().toLowerCase(), b = String(y).trim().toLowerCase(); return a !== '' && a === b; };
 // Player chemistry from the links touching their octagon: 0-1 = 0 (red), 2-3 = 6 (yellow), 4+ = 11 (green).
 // Total chemistry = player chemistry + link points (yellow link 1, green link 2).
-const CHEM = [['#b5524f',0],['#c2ad3f',6],['#5aa064',11]];
+const CHEM = [['#ff4b47',0],['#ffd92e',6],['#2fe074',11]];
 const TALENT = {5:15, 4:11, 3:8, 2:5, 1:3};
 // Best possible Draft total for the 9 chosen players: try every legal arrangement.
 let lastBest = null;
@@ -569,7 +589,7 @@ function chemistry() {
   const res = bestDraft();
   lastBest = res;
   $('solve').disabled = !res;
-  $('draftSub').textContent = VIEW && res ? 'best possible lineup' : 'chemistry + talent';
+  $('draftSub').textContent = VIEW && res && !VIEW_TITLE ? 'best possible lineup' : 'chemistry + talent';
   $('maxNum').textContent = res ? res.score : '–';
   $('accNum').textContent = res ? (Math.round((chem + talent) / res.score * 1000) / 10) + '%' : '–';
 }
@@ -751,11 +771,15 @@ function restore(snap) {
 }
 const filledCount = () => selects.filter(sel => sel.value !== '').length;
 const byKey = key => players.find(p => keyOf(p) === key);
-function saveDraft() { if (draft) try { localStorage.setItem(DRAFT_KEY, JSON.stringify(Object.assign({}, draft, {snap:snapshot()}))); } catch (e) {} }
+function saveDraft() {
+  if (!draft) return;
+  const d = Object.assign({}, draft, {snap:draft.phase === 'submitted' ? draft.snap : snapshot()}); delete d.view;
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch (e) {}
+}
 function loadDraft() {
   try {
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) draft = d;
+    if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) { draft = d; draft.view = 'sub'; }
   } catch (e) {}
 }
 const draftLocked = () => !!(draft && draft.phase === 'picking');
@@ -763,10 +787,10 @@ function forfeitDraft() {
   if (!draftLocked()) return;
   if (!window.confirm('Forfeit this draft? Your picks will be lost and nothing is saved to the leaderboard.')) return;
   draft = null; try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
-  restore([]); renderDraft();
+  restore([]); renderDraft(); openNamePrompt();
 }
 function newDraft() {
-  draft = {phase:'picking', opts:[], chosen:null, seen:[], id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
+  draft = {phase:'picking', opts:[], chosen:null, seen:[], view:'sub', id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
   restore([]); dealRound(); saveDraft();
 }
 // Three random players that fit at least one open spot, each with a random level when the card has several.
@@ -799,17 +823,36 @@ function pickOption(n) {
 }
 function draftAction() {
   if (!draft) return;
-  if (draft.phase === 'submitted') { sandboxSnap = snapshot(); showTab('sandbox'); return; }
+  if (draft.phase === 'submitted') { sandboxSnap = draft.snap; showTab('sandbox'); return; }
   if (!draft.chosen) return;
   if (filledCount() >= 9) { submitDraft(); return; }
   dealRound(); saveDraft(); renderDraft();
 }
 function submitDraft() {
-  draft.phase = 'submitted'; draft.opts = draft.opts.filter(o => o.key === draft.chosen);
   const acc = parseFloat($('accNum').textContent);
+  const snap = snapshot();
+  draft.snap = snap; draft.phase = 'submitted'; draft.view = 'sub'; draft.opts = draft.opts.filter(o => o.key === draft.chosen);
   draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent), accuracy:isNaN(acc) ? null : acc};
-  saveDraft(); renderDraft();
-  logDraft(Object.assign({id:draft.id}, draft.result));
+  saveDraft(); setCount(todayN + 1); renderDraft(); openNamePrompt();
+  logDraft(Object.assign({id:draft.id}, draft.result)).then(refreshCount);
+}
+// Sub-tabs after a draft is submitted: "Submission" (the team as drafted) and "Solution" (the best possible layout).
+function setSubView(v) {
+  if (!draft || draft.phase !== 'submitted') return;
+  restore(draft.snap);
+  if (v === 'sol' && lastBest) fill(lastBest.lineup.map(p => String(players.indexOf(p))));
+  draft.view = v; renderDraft();
+}
+$('subTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setSubView(b.dataset.v); });
+// "Drafts Completed Today": counted from the sheet (all devices), with the last known number kept on this device.
+const COUNT_KEY = 'fud.count.v1';
+const easternDay = () => new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'});
+let todayN = 0;
+function setCount(n) { todayN = n; $('draftCountN').textContent = n; try { localStorage.setItem(COUNT_KEY, JSON.stringify({d:easternDay(), n})); } catch (e) {} }
+function loadCountLocal() { let n = 0; try { const c = JSON.parse(localStorage.getItem(COUNT_KEY) || 'null'); if (c && c.d === easternDay()) n = c.n; } catch (e) {} todayN = n; $('draftCountN').textContent = n; }
+async function refreshCount() {
+  if (!SIGNUP_URL || !user || user.status !== 'approved') return;
+  try { const r = await api('count', user.phone); if (r.ok) setCount(r.count); } catch (e) {}
 }
 async function logDraft(rec) {
   if (!SIGNUP_URL || !user) return;
@@ -831,9 +874,14 @@ function renderDraft() {
   document.body.classList.toggle('locked', picking);
   $('clearAll').hidden = isD;
   $('draftNext').hidden = !(isD && (picking || done));
-  $('draftForfeit').hidden = !(isD && picking);
+  const nOn = filledCount();
+  $('draftForfeit').hidden = !(isD && picking && (nOn < 8 || (nOn === 8 && !!draft.chosen)));   // round 9 has to be submitted
   $('draftNew').hidden = !(isD && !picking); $('draftNew').classList.toggle('left', done);
-  $('scoreRow').hidden = isD && !done;
+  $('scoreRow').hidden = isD && !(done && draft.view !== 'sol');
+  $('subTabs').hidden = !(isD && done);
+  $('draftCount').hidden = !isD;
+  if (!VIEW) $('solve').hidden = isD;
+  if (done) Array.from($('subTabs').children).forEach(b => b.classList.toggle('on', b.dataset.v === draft.view));
   $('draftBanner').hidden = !(isD && !done);
   if (!isD) return;
   if (!draft) {
@@ -871,31 +919,45 @@ function enterMode(m) {
   renderDraft();
 }
 
-// ---- Leaders: the top 50 drafts from the "Draft History" sheet tab.
-let ldRange = 'today', ldTok = 0;
+// ---- Leaders: the top 50 drafts (by Total) from the "Draft History" sheet tab. Talent, Chemistry and Total can be re-sorted.
+let ldRange = 'today', ldTok = 0, ldRows = [], ldSort = {k:'total', dir:-1};
+const sameName = (x, y) => String(x || '').trim().toLowerCase() === String(y || '').trim().toLowerCase();
+const isMine = x => user && (x.name ? sameName(x.name, user.name) : sameName(x.username, user.username));
+function renderLeaders() {
+  const tbl = $('ldTable'), body = $('ldBody'), msg = $('ldMsg');
+  const k = ldSort.k, val = r => r[k];
+  const rows = ldRows.map((r, i) => ({r, rank:i + 1})).sort((a, b) => (val(b.r) - val(a.r)) * -ldSort.dir || a.rank - b.rank);
+  body.innerHTML = '';
+  rows.forEach(({r:x, rank}) => {
+    const tr = document.createElement('tr');
+    if (isMine(x)) tr.className = 'me';
+    [rank, x.username, x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+    body.appendChild(tr);
+  });
+  Array.from(tbl.querySelectorAll('th[data-k]')).forEach(th => { const on = th.dataset.k === k; th.classList.toggle('sorted', on); th.textContent = th.dataset.k[0].toUpperCase() + th.dataset.k.slice(1) + (on ? (ldSort.dir < 0 ? ' ▼' : ' ▲') : ''); });
+  tbl.hidden = !rows.length; $('ldHint').hidden = !rows.length;
+  msg.textContent = rows.length ? '' : 'No drafts yet for this period.';
+}
 async function loadLeaders() {
-  const msg = $('ldMsg'), tbl = $('ldTable'), body = $('ldBody');
-  if (!SIGNUP_URL || !user || user.status !== 'approved') { tbl.hidden = true; msg.textContent = 'Sign up in the Account tab to see the leaderboard.'; return; }
+  const msg = $('ldMsg'), tbl = $('ldTable');
+  if (!SIGNUP_URL || !user || user.status !== 'approved') { tbl.hidden = true; $('ldHint').hidden = true; msg.textContent = 'Sign up in the Account tab to see the leaderboard.'; return; }
   const tok = ++ldTok; msg.textContent = 'Loading…';
   try {
     const r = await api('leaders', user.phone, {range:ldRange});
     if (tok !== ldTok) return;
-    if (!r.ok) { tbl.hidden = true; msg.textContent = ERR[r.error] || 'Could not load the leaderboard.'; return; }
-    const rows = (r.rows || []).slice(0, 50), me = String(user.username).toLowerCase();
-    body.innerHTML = '';
-    rows.forEach((x, i) => {
-      const tr = document.createElement('tr');
-      if (String(x.username).toLowerCase() === me) tr.className = 'me';
-      [i + 1, x.username, x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
-      body.appendChild(tr);
-    });
-    tbl.hidden = !rows.length;
-    msg.textContent = rows.length ? '' : 'No drafts yet for this period.';
-  } catch (e) { if (tok === ldTok) { tbl.hidden = true; msg.textContent = OFFLINE; } }
+    if (!r.ok) { tbl.hidden = true; $('ldHint').hidden = true; msg.textContent = ERR[r.error] || 'Could not load the leaderboard.'; return; }
+    ldRows = (r.rows || []).slice(0, 50);
+    renderLeaders();
+  } catch (e) { if (tok === ldTok) { tbl.hidden = true; $('ldHint').hidden = true; msg.textContent = OFFLINE; } }
 }
 $('ldFilter').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   ldRange = b.dataset.r; Array.from($('ldFilter').children).forEach(x => x.classList.toggle('on', x === b)); loadLeaders();
+});
+$('ldTable').querySelector('thead').addEventListener('click', e => {
+  const th = e.target.closest('th[data-k]'); if (!th) return;
+  ldSort = ldSort.k === th.dataset.k ? {k:ldSort.k, dir:-ldSort.dir} : {k:th.dataset.k, dir:-1};
+  renderLeaders();
 });
 $('ldRefresh').addEventListener('click', loadLeaders);
 
@@ -914,7 +976,7 @@ function showTab(name) {
   if (name === 'admin') pollRequests();
   else if (name === 'leaders') loadLeaders();
   else if (name === 'account') renderAccount();
-  else fit();
+  else { fit(); if (name === 'draft') { loadCountLocal(); refreshCount(); } }
 }
 Object.keys(TABS).forEach(k => $(TABS[k]).addEventListener('click', () => showTab(k)));
 
@@ -978,6 +1040,7 @@ function endDrag(e, drop) {
   const picked = selects.map(sel => sel.value);
   [picked[d.i], picked[j]] = [picked[j], picked[d.i]];
   fill(picked);
+  if (mode === 'draft') saveDraft();
 }
 document.addEventListener('pointerup', e => endDrag(e, true));
 document.addEventListener('pointercancel', e => endDrag(e, false));
@@ -1084,8 +1147,8 @@ if (VIEW) {
     sel.value = String(i); sel.disabled = true; btns[i].disabled = true; show(i);
   });
   document.body.classList.add('view');
-  document.title = 'FUD - Best lineup';
-  $('updated').innerHTML = '<b>Best lineup</b> · highest Draft total for the 9 players you picked';
+  document.title = VIEW_TITLE ? 'FUD - ' + VIEW_TITLE : 'FUD - Best lineup';
+  $('updated').innerHTML = VIEW_TITLE ? '<b>' + esc(VIEW_TITLE) + '</b>' : '<b>Best lineup</b> · highest Draft total for the 9 players you picked';
   $('solve').hidden = true;
 }
 chemistry();
@@ -1129,13 +1192,22 @@ async function api(action, phone, extra) {
     return j;
   } finally { clearTimeout(t); }
 }
+const NAME_ERR = 'Enter your first name and last initial, like John S.';
+const NAME_TAKEN = 'That name is already in use by another player. Change the spelling or add another letter or number to tell you apart (for example John Sm or John S2).';
 const ERR = {
   username_taken:'That username is already taken. Try another.', bad_username:'Username must be 3 to 20 letters and numbers, with no spaces or symbols.',
   bad_phone:'Enter a valid 10-digit US phone number.', busy:'The server is busy. Try again in a moment.', not_approved:'This device is not approved for the account.',
+  bad_name:NAME_ERR, name_taken:NAME_TAKEN, name_locked:'Your name is already saved.',
   server:'Something went wrong on the server. Try again.'
 };
 const OFFLINE = 'Could not reach the sign-up server. Check your connection and try again.';
 
+// First name + last initial, like "John S" (extra letters or numbers after the initial are allowed to tell two people apart, like "John S2"). Returns '' when it is not in that form.
+function normName(v) {
+  const t = String(v == null ? '' : v).trim().replace(/\s+/g, ' ').replace(/\.$/, '');
+  const m = /^([A-Za-z][A-Za-z'’-]{0,24}) ([A-Za-z][A-Za-z0-9]{0,9})$/.exec(t);
+  return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) + ' ' + m[2].charAt(0).toUpperCase() + m[2].slice(1) : '';
+}
 // US numbers only: 10 digits (a leading 1 is ignored). Stored and sent as the 10 digits.
 function fmtPhone(n) { return '(' + n.slice(0, 3) + ') ' + n.slice(3, 6) + '-' + n.slice(6); }
 function normPhone(raw) {
@@ -1158,7 +1230,7 @@ function applyAccess() {
 function renderAccount() {
   const on = !!(user && user.status === 'approved');
   $('acIn').hidden = !on; $('acOut').hidden = on;
-  if (on) { $('acUser').textContent = user.username; $('acPhone').textContent = user.phoneShown || user.phone; }
+  if (on) { $('acName').textContent = user.name || '—'; $('acUser').textContent = user.username; $('acPhone').textContent = user.phoneShown || user.phone; }
   else $('acForm').hidden = true;
 }
 
@@ -1173,11 +1245,22 @@ function setWaiting(on, msg) {
 }
 function openSignup(fromAcct) {
   fromAccount = !!fromAcct; stopWait();
-  $('suIntro').textContent = 'Pick a username and add your phone number to get started.';
-  $('suUser').value = ''; $('suPhone').value = ''; $('suErr').textContent = '';
+  $('suIntro').textContent = 'Add your first name and last initial, phone number and a username to get started.';
+  $('signupForm').classList.remove('nameonly'); $('suGo').textContent = 'Sign up';
+  $('suName').value = ''; $('suUser').value = ''; $('suPhone').value = ''; $('suErr').textContent = '';
   setWaiting(false);
-  if (user && user.status === 'pending') waitForApproval(); else setTimeout(() => $('suUser').focus(), 60);
+  if (user && user.status === 'pending') waitForApproval(); else setTimeout(() => $('suName').focus(), 60);
   $('signup').hidden = false;
+}
+function openNamePrompt() {
+  if (!$('signup').hidden || !user || user.status !== 'approved' || user.name || !SIGNUP_URL || draftLocked()) return;
+  stopWait(); fromAccount = false; setWaiting(false);
+  $('signupForm').classList.add('nameonly');
+  $('suTitle').textContent = 'One more step';
+  $('suIntro').textContent = 'Add your first name and last initial, like John S. It is used to highlight your drafts and cannot be changed later.';
+  $('suGo').textContent = 'Save'; $('suCancel').hidden = true;
+  $('suName').value = ''; $('suErr').textContent = ''; $('signup').hidden = false;
+  setTimeout(() => $('suName').focus(), 60);
 }
 function finishSignup() { stopWait(); $('signup').hidden = true; setWaiting(false); renderAccount(); applyAccess(); }
 function waitForApproval() {
@@ -1188,7 +1271,7 @@ function waitForApproval() {
     try {
       const r = await api('status', user.phone);
       if (!r.ok) return;
-      if (r.status === 'approved') { user.status = 'approved'; user.username = r.username; user.admin = !!r.admin; saveUser(); finishSignup(); }
+      if (r.status === 'approved') { user.status = 'approved'; user.username = r.username; user.name = r.name || user.name || ''; user.admin = !!r.admin; saveUser(); finishSignup(); }
       else if (r.status === 'denied' || r.status === 'unknown') {
         user = null; saveUser(); stopWait(); setWaiting(false); applyAccess();
         $('suErr').textContent = r.status === 'denied' ? 'The account owner did not approve this device.' : 'That request is no longer active. You can sign up again.';
@@ -1201,25 +1284,39 @@ $('suUser').addEventListener('input', () => { const v = $('suUser').value, c = v
 $('signupForm').addEventListener('submit', async e => {
   e.preventDefault();
   if ($('signupForm').classList.contains('waiting')) return;
+  if ($('signupForm').classList.contains('nameonly')) {
+    const nm = normName($('suName').value);
+    if (!nm) { $('suErr').textContent = NAME_ERR; $('suName').focus(); return; }
+    $('suGo').disabled = true; $('suErr').textContent = '';
+    try {
+      const r = await api('setname', user.phone, {name:nm});
+      if (r.ok) { user.name = r.name; saveUser(); $('signupForm').classList.remove('nameonly'); $('suGo').textContent = 'Sign up'; $('signup').hidden = true; renderAccount(); }
+      else $('suErr').textContent = ERR[r.error] || ERR.server;
+    } catch (err) { $('suErr').textContent = OFFLINE; }
+    $('suGo').disabled = false; return;
+  }
+  const fullName = normName($('suName').value);
   const name = $('suUser').value.trim(), ph = normPhone($('suPhone').value);
+  if (!fullName) { $('suErr').textContent = NAME_ERR; $('suName').focus(); return; }
   if (!/^[A-Za-z0-9]{3,20}$/.test(name)) { $('suErr').textContent = ERR.bad_username; $('suUser').focus(); return; }
   if (!ph) { $('suErr').textContent = 'Enter a valid 10-digit US phone number, like (212) 555-0123.'; $('suPhone').focus(); return; }
   const base = {phone:ph.e164, phoneShown:ph.shown, created:Date.now()};
-  if (!SIGNUP_URL) { user = Object.assign({username:name, status:'approved', admin:false}, base); saveUser(); finishSignup(); return; }
+  if (!SIGNUP_URL) { user = Object.assign({username:name, name:fullName, status:'approved', admin:false}, base); saveUser(); finishSignup(); return; }
   $('suGo').disabled = true; $('suErr').textContent = '';
   try {
-    const r = await api('signup', ph.e164, {username:name, info:deviceInfo()});
+    const r = await api('signup', ph.e164, {username:name, name:fullName, info:deviceInfo()});
     if (!r.ok) { $('suErr').textContent = ERR[r.error] || ERR.server; }
     else if (r.status === 'denied') { $('suErr').textContent = 'The account owner did not approve this device.'; }
-    else if (r.status === 'blocked') { user = Object.assign({username:name, status:'blocked', admin:false}, base); saveUser(); applyBlocked(); }
+    else if (r.status === 'blocked') { user = Object.assign({username:name, name:fullName, status:'blocked', admin:false}, base); saveUser(); applyBlocked(); }
     else {
-      user = Object.assign({username:r.username || name, status:r.status === 'approved' ? 'approved' : 'pending', admin:!!r.admin}, base); saveUser();
+      user = Object.assign({username:r.username || name, name:r.name || '', status:r.status === 'approved' ? 'approved' : 'pending', admin:!!r.admin}, base); saveUser();
       if (user.status === 'approved') finishSignup(); else waitForApproval();
     }
   } catch (err) { $('suErr').textContent = OFFLINE; }
   $('suGo').disabled = false;
 });
 $('suCancel').addEventListener('click', () => {
+  $('signupForm').classList.remove('nameonly'); $('suGo').textContent = 'Sign up';
   if ($('signupForm').classList.contains('waiting')) { user = null; saveUser(); applyAccess(); }
   stopWait(); setWaiting(false);
   if (fromAccount || $('suCancel').textContent === 'Cancel') { if (fromAccount) $('signup').hidden = true; }
@@ -1260,9 +1357,9 @@ function renderRequests(list) {
   list.forEach(q => {
     const li = document.createElement('li'), t = document.createElement('div');
     const b = document.createElement('b'); b.textContent = q.account;
-    t.append('Duplicate sign-up for the account ', b, ' (' + (q.phone.length === 10 ? fmtPhone(q.phone) : q.phone) + '). Someone on another device is asking for access to it.');
+    t.append('Duplicate sign-up for the account ', b, (q.accountName ? ' (' + q.accountName + ')' : '') + ', phone ' + (q.phone.length === 10 ? fmtPhone(q.phone) : q.phone) + '. Someone on another device is asking for access to it.');
     const sm = document.createElement('small');
-    sm.textContent = (q.info ? q.info + ' · ' : '') + (q.requested ? new Date(q.requested).toLocaleString() : '');
+    sm.textContent = (q.enteredName ? 'They entered: ' + q.enteredName + (q.entered ? ' / ' + q.entered : '') + ' · ' : '') + (q.info ? q.info + ' · ' : '') + (q.requested ? new Date(q.requested).toLocaleString() : '');
     const bt = document.createElement('div'); bt.className = 'btns';
     const ok = document.createElement('button'), no = document.createElement('button');
     ok.textContent = 'Confirm'; no.textContent = 'Deny'; no.className = 'deny';
@@ -1304,7 +1401,8 @@ async function syncAccount() {
     if (!r.ok || r.status === 'blocked') return;       // blocked: api() has already switched to the blocked screen
     if (r.status === 'approved') {
       const was = isAdmin(), wasBlocked = user.status === 'blocked';
-      user.status = 'approved'; user.username = r.username || user.username; user.admin = !!r.admin; saveUser(); renderAccount();
+      user.status = 'approved'; user.username = r.username || user.username; user.admin = !!r.admin; if (r.name) user.name = r.name; saveUser(); renderAccount();
+      if (!user.name) openNamePrompt();
       if (wasBlocked) applyBlocked(); else if (was !== isAdmin()) applyAccess();
       logDraft();
     } else { user = null; saveUser(); renderAccount(); applyBlocked(); if (isInstalled()) openSignup(false); }
@@ -1317,6 +1415,7 @@ if (!VIEW) {
   if (user && user.status === 'pending') openSignup(false);
   else if (isInstalled() && !user) openSignup(false);
   else syncAccount();
+  loadCountLocal();
 }
 
 // ---- Getting new versions of the app without re-adding it to the Home Screen.
