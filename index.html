@@ -151,6 +151,65 @@
   }
 
   /* ---- Admin ---- */
+  /* ---- draft review (from the Leaders tab) ---- */
+  #reviewBar { flex:none; text-align:center; font-size:12px; color:var(--muted); padding:4px 10px 0; }
+  #reviewBar b { color:var(--ink); }
+  body.reviewing #viewSandbox { overflow-y:auto; }
+  body.reviewing #stage { flex:none; height:min(540px, calc(var(--app-h, 100vh) - 320px)); min-height:340px; }
+  #rounds { width:100%; border-top:1px solid var(--line); margin-top:8px; padding-top:8px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  #rounds h3 { margin:0; font-size:13px; color:var(--ink); }
+  #rounds .rr { display:flex; flex-direction:column; align-items:center; gap:2px; }
+  #rounds .rr small { font-size:10px; }
+  #rounds .ropts { display:flex; gap:6px; justify-content:center; }
+  #total .ropts .opt { flex:none; width:73px; }
+  #ldBody tr.go { cursor:pointer; }
+  #ldBody tr.go:active td { background:#1c2531; }
+
+  /* ---- About ---- */
+  #abSub { flex:none; display:flex; margin:10px 12px 6px; }
+  #abSub button { flex:1; padding:8px 4px; font-size:13px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
+  #abSub button:first-child { border-radius:6px 0 0 6px; } #abSub button:last-child { border-radius:0 6px 6px 0; }
+  #abSub button + button { border-left:0; }
+  #abSub button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  #abDb { flex:1; min-height:0; display:flex; flex-direction:column; }
+  #pdBar { flex:none; display:flex; gap:8px; padding:4px 12px 6px; }
+  #pdSearch { flex:1; min-width:0; padding:9px 11px; border-radius:8px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); font:inherit; font-size:16px; }
+  #pdFilterBtn { flex:none; padding:8px 14px; font-size:13px; }
+  #pdFilterBtn.on { border-color:var(--accent); color:var(--accent); }
+  #pdPanel { flex:none; max-height:42%; overflow:auto; margin:0 12px 6px; padding:8px 10px; border:1px solid #3b4452; border-radius:8px; background:#10151c; }
+  #pdPanel h4 { margin:8px 0 5px; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  #pdPanel h4:first-child { margin-top:0; }
+  #pdPanel .chips { display:flex; flex-wrap:wrap; gap:5px; }
+  .chip { padding:4px 10px; font-size:12px; border-radius:14px; background:transparent; color:var(--ink); border:1px solid #4a5361; }
+  .chip.on { background:var(--accent); border-color:var(--accent); color:#04120d; }
+  #pdPanel .pdClear { margin-top:10px; padding:5px 12px; font-size:12px; }
+  #pdCount { flex:none; text-align:center; padding:7px 10px; font-size:13px; font-weight:600; background:#121821; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  #pdCount b { color:var(--accent); }
+  #pdScroll { flex:1; min-height:0; overflow:auto; }
+  #pdGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:10px; padding:12px; }
+  .pc { --cut:15px; position:relative; aspect-ratio:96/128; background:#7a8494; color:var(--tx);
+    clip-path:polygon(var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)), 0 var(--cut)); }
+  .pc .in { --c2:calc(var(--cut) - 2px); position:absolute; inset:2px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 6px; text-align:center;
+    background:linear-gradient(180deg,var(--l),var(--b) 40%,var(--d));
+    clip-path:polygon(var(--c2) 0, calc(100% - var(--c2)) 0, 100% var(--c2), 100% calc(100% - var(--c2)), calc(100% - var(--c2)) 100%, var(--c2) 100%, 0 calc(100% - var(--c2)), 0 var(--c2)); }
+  .pc b { font-size:12px; line-height:1.15; font-weight:700; }
+  .pc i { font-style:normal; font-size:9.5px; line-height:1.25; }
+  .pc em { font-style:normal; color:#ffd400; font-size:11px; letter-spacing:.5px; margin-top:3px; text-shadow:0 0 2px #3a2a00; }
+  #pdMore { display:block; margin:0 auto 18px; }
+  #pdMsg { text-align:center; color:var(--muted); font-size:.9rem; padding:24px 16px; }
+  #abHow { flex:1; min-height:0; overflow:auto; }
+  #abHow .pane { padding-top:10px; }
+  #abHow h3 { margin:20px 0 4px; font-size:1.05rem; }
+  #abHow h3:first-child { margin-top:4px; }
+  #abHow ul { margin:6px 0; padding-left:20px; color:var(--muted); font-size:.9rem; line-height:1.45; }
+  #abHow li { margin:3px 0; }
+  #abHow .tbl { width:100%; border-collapse:collapse; margin:8px 0; font-size:.85rem; }
+  #abHow .tbl th, #abHow .tbl td { padding:6px 4px; text-align:center; border-bottom:1px solid var(--line); }
+  #abHow .tbl th { color:var(--muted); font-weight:600; font-size:.72rem; }
+  #abHow .tbl td:first-child, #abHow .tbl th:first-child { text-align:left; }
+  .sw { display:inline-block; width:34px; height:0; border-top:4px solid; vertical-align:middle; margin-right:8px; border-radius:2px; }
+  .sw.o { width:20px; height:20px; border:4px solid; border-radius:5px; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:10px; font-weight:700; font-size:.8rem; }
   .pane { width:100%; max-width:440px; margin:0 auto; padding:22px 20px; overflow:auto; }
   .pane h2 { margin:0 0 6px; font-size:1.3rem; }
   .pane p { margin:6px 0; color:var(--muted); font-size:.9rem; line-height:1.4; }
@@ -228,6 +287,7 @@
 <main>
   <section id="viewSandbox" class="view" role="tabpanel" aria-labelledby="tabSandbox">
     <div id="draftCount" hidden>Drafts Completed Today: <b id="draftCountN">0</b></div>
+    <div id="reviewBar" hidden></div>
     <div id="stage">
       <div id="toast" role="status"></div>
       <div id="boardBox">
@@ -261,6 +321,7 @@
         <div class="stat"><span>Accuracy</span><strong id="accNum">&ndash;</strong></div>
         <button id="solve" disabled hidden>View Solution</button>
       </div>
+      <div id="rounds" hidden></div>
     </div>
   </section>
 
@@ -274,12 +335,23 @@
         <button type="button" data-o="all" class="on">All odds</button><button type="button" data-o="default">Default</button><button type="button" data-o="chaos">Chaos</button>
       </div>
       <p id="ldMsg" role="status"></p>
-      <p class="hintline" id="ldHint" hidden>Tap a column to sort the top 50.</p>
+      <p class="hintline" id="ldHint" hidden>Tap a column to sort the top 50. Tap a row to see that draft.</p>
       <table id="ldTable" hidden>
         <thead><tr><th>#</th><th>Username</th><th>Odds</th><th data-k="talent">Talent</th><th data-k="chemistry">Chemistry</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
         <tbody id="ldBody"></tbody>
       </table>
     </div>
+  </section>
+
+  <section id="viewAbout" class="view" role="tabpanel" aria-labelledby="tabAbout" hidden>
+    <div id="abSub" role="group" aria-label="About"><button type="button" data-v="db" class="on">Player Database</button><button type="button" data-v="how">How To</button></div>
+    <div id="abDb">
+      <div id="pdBar"><input id="pdSearch" type="search" placeholder="Search players" aria-label="Search players" autocomplete="off" autocorrect="off" spellcheck="false"><button id="pdFilterBtn" class="quiet" type="button" aria-expanded="false">Filter<span id="pdFilterN"></span></button></div>
+      <div id="pdPanel" hidden></div>
+      <div id="pdCount" role="status"></div>
+      <div id="pdScroll"><p id="pdMsg" hidden></p><div id="pdGrid"></div><button id="pdMore" class="quiet" type="button" hidden>Show more</button></div>
+    </div>
+    <div id="abHow" hidden><div class="pane" id="howBody"></div></div>
   </section>
 
   <section id="viewAccount" class="view" role="tabpanel" aria-labelledby="tabAccount" hidden>
@@ -350,6 +422,12 @@
     </svg>
     <span>Leaders</span>
   </button>
+  <button id="tabAbout" role="tab" aria-selected="false" aria-controls="viewAbout">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/><path d="M9.4 9.4a2.7 2.7 0 1 1 3.9 2.4c-.9.5-1.3 1-1.3 2"/><circle cx="12" cy="17" r=".6" fill="currentColor"/>
+    </svg>
+    <span>About</span>
+  </button>
   <button id="tabAccount" role="tab" aria-selected="false" aria-controls="viewAccount">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="12" cy="8" r="4"/>
@@ -395,7 +473,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-24.1';
+const APP_VERSION = '2026-10-25.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -795,7 +873,7 @@ function restore(snap) {
 const filledCount = () => selects.filter(sel => sel.value !== '').length;
 const byKey = key => players.find(p => keyOf(p) === key);
 function saveDraft() {
-  if (!draft) return;
+  if (!draft || draft.review) return;
   const d = Object.assign({}, draft, {snap:draft.phase === 'submitted' ? draft.snap : snapshot()}); delete d.view;
   try { localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch (e) {}
 }
@@ -818,13 +896,14 @@ function clearDraft() {
   restore([]); renderDraft();
 }
 function newDraft() {
-  draft = {phase:'picking', odds:oddsPref, opts:[], chosen:null, seen:[], view:'sub', id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
+  draft = {phase:'picking', odds:oddsPref, opts:[], chosen:null, seen:[], hist:[], picks:[], view:'sub', id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
   restore([]); dealRound(); saveDraft();
 }
 // Three players that fit at least one open spot. Chaos: any player, any of their levels. Default: each card rolls its
 // star level from the round's odds, then takes a random player who has that level (nearest level if none does).
 function dealRound() {
   draft.chosen = null; draft.opts = [];
+  const logRound = () => { if (draft.hist) draft.hist[filledCount()] = draft.opts.map(o => ({key:o.key, level:o.level})); };
   const spots = selects.map((sel, i) => sel.value === '' ? i : -1).filter(i => i >= 0);
   if (!spots.length) return;
   const placed = new Set(snapshot().filter(Boolean).map(x => x.key));
@@ -838,7 +917,7 @@ function dealRound() {
       draft.opts.push({key:keyOf(p), level:p.levels[rnd(p.levels.length)]});
       draft.seen.push(keyOf(p));
     }
-    return;
+    logRound(); return;
   }
   const round = filledCount() + 1;
   while (draft.opts.length < 3 && pool.length) {
@@ -858,6 +937,7 @@ function dealRound() {
     draft.opts.push({key:keyOf(pick), level:lv});
     draft.seen.push(keyOf(pick));
   }
+  logRound();
 }
 function pickOption(n) {
   if (!draft || draft.phase !== 'picking' || draft.chosen) return;
@@ -870,7 +950,9 @@ function pickOption(n) {
   const picked = selects.map(sel => sel.value);
   picked[open[0]] = String(players.indexOf(p));
   fill(picked);
-  draft.chosen = o.key; saveDraft(); renderDraft();
+  draft.chosen = o.key;
+  if (draft.picks) draft.picks[filledCount() - 1] = o.key;
+  saveDraft(); renderDraft();
 }
 function draftAction() {
   if (!draft) return;
@@ -879,13 +961,27 @@ function draftAction() {
   if (filledCount() >= 9) { submitDraft(); return; }
   dealRound(); saveDraft(); renderDraft();
 }
+// One text per round for the sheet: "Name 5★ @4 | (Option 4★) | (Option 3★)" (pick, final spot 1-9, options passed over).
+function roundStrings() {
+  if (!draft.hist || !draft.picks) return [];
+  const fmt = o => { const p = byKey(o.key); return p ? p.name + ' ' + o.level + '★' : null; };
+  const out = [];
+  for (let r = 0; r < 9; r++) {
+    const h = draft.hist[r], pk = draft.picks[r];
+    if (!h || !pk) return [];
+    const pick = h.find(o => o.key === pk), spot = draft.snap.findIndex(k => k && k.key === pk);
+    if (!pick || spot < 0 || !fmt(pick) || h.some(o => !fmt(o))) return [];
+    out.push([fmt(pick) + ' @' + (spot + 1)].concat(h.filter(o => o.key !== pk).map(o => '(' + fmt(o) + ')')).join(' | '));
+  }
+  return out;
+}
 function submitDraft() {
   const acc = parseFloat($('accNum').textContent);
   const snap = snapshot();
   draft.snap = snap; draft.phase = 'submitted'; draft.view = 'sub'; draft.opts = draft.opts.filter(o => o.key === draft.chosen);
   draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent), accuracy:isNaN(acc) ? null : acc};
   saveDraft(); setCount(todayN + 1); renderDraft(); openNamePrompt();
-  logDraft(Object.assign({id:draft.id, odds:draft.odds}, draft.result)).then(refreshCount);
+  logDraft(Object.assign({id:draft.id, odds:draft.odds, rounds:roundStrings()}, draft.result)).then(refreshCount);
 }
 // Sub-tabs after a draft is submitted: "Submission" (the team as drafted) and "Solution" (the best possible layout).
 function setSubView(v) {
@@ -915,6 +1011,47 @@ function updateSubTabs() {
 }
 $('subTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) (mode === 'draft' ? setSubView : setSbView)(b.dataset.v); });
 $('oddsSel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; oddsPref = b.dataset.o; try { localStorage.setItem(ODDS_KEY, oddsPref); } catch (e2) {} renderDraft(); });
+// ---- Review: tap a draft on the Leaders tab to see it the way it looked when it was submitted.
+let stash = null;
+function parseRound(s) {
+  const parts = String(s || '').split(' | '), m = /^(.*) (\d)★ @(\d)$/.exec(parts[0]);
+  if (!m) return null;
+  const alts = parts.slice(1).map(x => { const a = /^\((.*) (\d)★\)$/.exec(x); return a ? {name:a[1], level:Number(a[2])} : null; }).filter(Boolean);
+  return {name:m[1], level:Number(m[2]), spot:Number(m[3]), alts};
+}
+const findPlayer = (name, level) => players.find(p => p.name === name && p.levels.includes(level)) || players.find(p => p.name === name);
+function openReview(x) {
+  if (draftLocked()) return;
+  if (!players.length) { flash('The player database has not loaded yet.'); return; }
+  const rs = (x.rounds || []).map(parseRound);
+  if (rs.length < 9 || rs.some(r => !r)) return;
+  const snap = Array(9).fill(null); let missing = 0;
+  rs.forEach(r => { const p = findPlayer(r.name, r.level); if (p && r.spot >= 1 && r.spot <= 9) snap[r.spot - 1] = {key:keyOf(p), level:r.level}; else missing++; });
+  if (!stash) stash = {draft};
+  draft = {phase:'submitted', review:true, snap, view:'sub', odds:x.odds, opts:[], seen:[], rv:{x, rs, missing}};
+  if (mode === 'draft') restore(snap);
+  showTab('draft', true); renderDraft();
+}
+function exitReview() {
+  if (!stash) return;
+  draft = stash.draft; stash = null;
+  if (mode === 'draft') restore(draft ? draft.snap : []);
+  renderDraft();
+}
+function roundCard(name, level, cls) {
+  const p = findPlayer(name, level), t = TIER[level] || TIER[3];
+  return `<button type="button" class="opt ${cls}" disabled style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"><span class="in"><b>${esc(name)}</b>` +
+    (p ? `<i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i>` : '') + `<em>${'★'.repeat(level)}</em></span></button>`;
+}
+function renderRounds() {
+  const on = !!(draft && draft.review), box = $('rounds');
+  box.hidden = !on; $('reviewBar').hidden = !on;
+  if (!on) return;
+  const {x, rs, missing} = draft.rv;
+  $('reviewBar').innerHTML = '<b>' + esc(x.username) + '</b> &middot; ' + (x.odds === 'Default' ? 'Default' : 'Chaos') + ' odds' + (missing ? ' &middot; ' + missing + ' player' + (missing > 1 ? 's' : '') + ' no longer in the database' : '');
+  box.innerHTML = '<h3>Draft picks</h3>' + rs.map((r, i) =>
+    `<div class="rr"><small>Round ${i + 1} &middot; placed in spot ${r.spot}</small><div class="ropts">${roundCard(r.name, r.level, 'sel')}${r.alts.map(a => roundCard(a.name, a.level, 'off')).join('')}</div></div>`).join('');
+}
 // "Drafts Completed Today": counted from the sheet (all devices), with the last known number kept on this device.
 const COUNT_KEY = 'fud.count.v1';
 const easternDay = () => new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'});
@@ -947,12 +1084,14 @@ function renderDraft() {
   $('draftNext').hidden = !(isD && (picking || done));
   const nOn = filledCount();
   $('draftForfeit').hidden = !(isD && picking && (nOn < 8 || (nOn === 8 && !!draft.chosen)));   // round 9 has to be submitted
-  $('draftNew').hidden = !(isD && !picking); $('draftNew').classList.toggle('left', done); $('draftNew').textContent = done ? 'Clear' : 'New Draft';
+  $('draftNew').hidden = !(isD && !picking); $('draftNew').classList.toggle('left', done); $('draftNew').textContent = done ? (draft.review ? 'Close' : 'Clear') : 'New Draft';
   $('oddsSel').hidden = !(isD && !picking && !done);
   Array.from($('oddsSel').children).forEach(b => b.classList.toggle('on', b.dataset.o === oddsPref));
   $('scoreRow').hidden = isD ? !(done && draft.view !== 'sol') : roView();
   updateSubTabs();
-  $('draftCount').hidden = !isD;
+  $('draftCount').hidden = !isD || !!(draft && draft.review);
+  document.body.classList.toggle('reviewing', !!(isD && draft && draft.review));
+  renderRounds();
   $('draftBanner').hidden = !(isD && !done);
   if (!isD) return;
   if (!draft) {
@@ -978,7 +1117,7 @@ function renderDraft() {
 }
 $('draftOpts').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && !b.disabled) pickOption(Number(b.dataset.n)); });
 $('draftNext').addEventListener('click', draftAction);
-$('draftNew').addEventListener('click', () => { if (draft && draft.phase === 'submitted') clearDraft(); else { newDraft(); renderDraft(); } });
+$('draftNew').addEventListener('click', () => { if (draft && draft.review) showTab('leaders'); else if (draft && draft.phase === 'submitted') clearDraft(); else { newDraft(); renderDraft(); } });
 $('draftForfeit').addEventListener('click', forfeitDraft);
 function enterMode(m) {
   if (m === mode) return;
@@ -1002,6 +1141,7 @@ function renderLeaders() {
   rows.forEach(({r:x, rank}) => {
     const tr = document.createElement('tr');
     if (isMine(x)) tr.className = 'me';
+    if (x.rounds && x.rounds.length === 9 && x.rounds[0]) { tr.classList.add('go'); tr._x = x; }
     [rank, x.username, x.odds === 'Default' ? 'D' : 'C', x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
     body.appendChild(tr);
   });
@@ -1034,23 +1174,130 @@ $('ldOdds').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   ldOdds = b.dataset.o; Array.from($('ldOdds').children).forEach(x => x.classList.toggle('on', x === b)); loadLeaders();
 });
+$('ldBody').addEventListener('click', e => { const tr = e.target.closest('tr'); if (tr && tr._x) openReview(tr._x); });
 $('ldRefresh').addEventListener('click', loadLeaders);
 
-// ---- Tabs: Sandbox, Draft, Account and (owner only) Admin.
-const TABS = {sandbox:'tabSandbox', draft:'tabDraft', leaders:'tabLeaders', account:'tabAccount', admin:'tabAdmin'};
-const VIEWOF = {sandbox:'viewSandbox', draft:'viewSandbox', leaders:'viewLeaders', account:'viewAccount', admin:'viewAdmin'};
+// ---- About: the Player Database (every card a player can come as) and a How To page.
+const POS_ORDER = ['QB', 'RB', 'WR', 'TE'];
+const PD_FIELDS = [['level', 'Talent Level'], ['position', 'Position'], ['team', 'Team'], ['division', 'Division'], ['draft', 'Year']];
+const pdSel = {level:new Set(), position:new Set(), team:new Set(), division:new Set(), draft:new Set()};
+let pdShown = 60, pdSig = '', pdItems = [];
+const PD_STEP = 60;
+function pdValues(f) {
+  const set = new Set();
+  players.forEach(p => { if (f === 'level') p.levels.forEach(l => set.add(l)); else set.add(String(p[f]).trim()); });
+  const arr = Array.from(set).filter(v => v !== '');
+  if (f === 'level') return arr.sort((a, b) => b - a);
+  if (f === 'position') return arr.sort((a, b) => (POS_ORDER.indexOf(a.toUpperCase()) + 1 || 99) - (POS_ORDER.indexOf(b.toUpperCase()) + 1 || 99) || a.localeCompare(b));
+  return arr.sort((a, b) => a.localeCompare(b, undefined, {numeric:true}));
+}
+function pdBuildPanel() {
+  $('pdPanel').innerHTML = PD_FIELDS.map(([f, label]) => `<h4>${label}</h4><div class="chips">` +
+    pdValues(f).map(v => `<button type="button" class="chip${pdSel[f].has(String(v)) ? ' on' : ''}" data-f="${f}" data-v="${esc(String(v))}">${f === 'level' ? v + '★' : esc(String(v))}</button>`).join('') + '</div>').join('') +
+    '<button type="button" class="quiet pdClear">Clear filters</button>';
+}
+function pdList() {
+  const q = $('pdSearch').value.trim().toLowerCase(), words = q ? q.split(/\s+/) : [];
+  const out = [];
+  players.forEach(p => p.levels.forEach(l => {
+    const name = String(p.name).toLowerCase();
+    if (words.some(w => !name.includes(w))) return;
+    if (pdSel.level.size && !pdSel.level.has(String(l))) return;
+    for (const f of ['position', 'team', 'division', 'draft']) if (pdSel[f].size && !pdSel[f].has(String(p[f]).trim())) return;
+    out.push({p, l});
+  }));
+  const pr = x => POS_ORDER.indexOf(String(x.p.position).trim().toUpperCase()) + 1 || 99;
+  return out.sort((a, b) => pr(a) - pr(b) || String(a.p.position).localeCompare(String(b.p.position)) || b.l - a.l || String(a.p.name).localeCompare(String(b.p.name)));
+}
+function pdCard(x) {
+  const t = TIER[x.l] || TIER[3], p = x.p;
+  return `<div class="pc" style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"><div class="in"><b>${esc(p.name)}</b><i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i><em>${'★'.repeat(x.l)}</em></div></div>`;
+}
+function renderPD(keepShown) {
+  const nf = PD_FIELDS.reduce((n, [f]) => n + pdSel[f].size, 0);
+  $('pdFilterN').textContent = nf ? ' (' + nf + ')' : ''; $('pdFilterBtn').classList.toggle('on', nf > 0);
+  if (!players.length) { $('pdCount').innerHTML = '<b>0</b> Players Available'; $('pdGrid').innerHTML = ''; $('pdMore').hidden = true; $('pdMsg').hidden = false; $('pdMsg').textContent = 'The player database has not loaded yet. Connect to the internet once, then open this tab again.'; return; }
+  pdItems = pdList(); if (!keepShown) pdShown = PD_STEP;
+  $('pdCount').innerHTML = '<b>' + pdItems.length + '</b> Players Available';
+  $('pdMsg').hidden = pdItems.length > 0; $('pdMsg').textContent = 'No players match.';
+  $('pdGrid').innerHTML = pdItems.slice(0, pdShown).map(pdCard).join('');
+  $('pdMore').hidden = pdItems.length <= pdShown;
+}
+function renderAbout() {
+  const sig = players.length + ':' + (players[0] ? players[0].name : '');
+  if (sig !== pdSig) { pdSig = sig; PD_FIELDS.forEach(([f]) => pdSel[f].clear()); pdBuildPanel(); }
+  renderPD(false); renderHow();
+}
+$('pdSearch').addEventListener('input', () => { renderPD(false); $('pdScroll').scrollTop = 0; });
+$('pdFilterBtn').addEventListener('click', () => { const open = $('pdPanel').hidden; $('pdPanel').hidden = !open; $('pdFilterBtn').setAttribute('aria-expanded', String(open)); });
+$('pdPanel').addEventListener('click', e => {
+  const c = e.target.closest('.chip');
+  if (c) { const s = pdSel[c.dataset.f], v = c.dataset.v; s.has(v) ? s.delete(v) : s.add(v); c.classList.toggle('on', s.has(v)); renderPD(false); $('pdScroll').scrollTop = 0; return; }
+  if (e.target.closest('.pdClear')) { PD_FIELDS.forEach(([f]) => pdSel[f].clear()); pdBuildPanel(); renderPD(false); }
+});
+$('pdMore').addEventListener('click', () => { pdShown += PD_STEP; renderPD(true); });
+$('pdScroll').addEventListener('scroll', () => { const s = $('pdScroll'); if (!$('pdMore').hidden && s.scrollTop + s.clientHeight > s.scrollHeight - 300) { pdShown += PD_STEP; renderPD(true); } });
+$('abSub').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  Array.from($('abSub').children).forEach(x => x.classList.toggle('on', x === b));
+  $('abDb').hidden = b.dataset.v !== 'db'; $('abHow').hidden = b.dataset.v !== 'how';
+});
+$('abDb').style.display = '';
+function renderHow() {
+  const star = n => '<span style="color:#ffd400">' + '★'.repeat(n) + '</span>';
+  const tier = n => `<span class="pill" style="background:linear-gradient(180deg,${TIER[n].light},${TIER[n].base} 40%,${TIER[n].dark});color:${TIER[n].text}">${n}★</span>`;
+  const [red, yellow, green] = CHEM.map(c => c[0]);
+  const spots = ['RB', 'WR', 'Flex', 'QB', 'QB', 'Flex', 'WR', 'TE', 'RB'];
+  $('howBody').innerHTML = `
+    <h3>The goal</h3>
+    <p>Build a team of 9 players. Your <b>Draft total</b> is your <b>Talent</b> points plus your <b>Chemistry</b> points. Your <b>Max Score</b> is the best total those same 9 players could make in any legal arrangement, and your <b>Accuracy</b> is your total as a percent of that Max Score.</p>
+
+    <h3>Talent points</h3>
+    <p>Every player is worth points for their star level, whatever octagon they are in.</p>
+    <table class="tbl"><tr><th>Level</th>${[5, 4, 3, 2, 1].map(n => '<th>' + tier(n) + '</th>').join('')}</tr>
+    <tr><td>Points</td>${[5, 4, 3, 2, 1].map(n => '<td><b>' + TALENT[n] + '</b></td>').join('')}</tr></table>
+
+    <h3>Chemistry lines</h3>
+    <p>Each line between two octagons scores 1 point for every thing the two players share, up to <b>2 points per line</b>:</p>
+    <ul><li>the same division</li><li>the same team</li><li>the same draft year</li></ul>
+    <p><span class="sw" style="border-color:${red}"></span><b>Red</b> line: 0 points<br><span class="sw" style="border-color:${yellow}"></span><b>Yellow</b> line: 1 point<br><span class="sw" style="border-color:${green}"></span><b>Green</b> line: 2 points</p>
+    <p>A line stays grey until both of its octagons have a player.</p>
+
+    <h3>Chemistry outlines</h3>
+    <p>Each player's octagon is outlined by adding up the points on the lines that touch it:</p>
+    <p><span class="sw o" style="border-color:${red}"></span><b>Red</b> outline: 0 to 1 points, worth <b>0</b><br><span class="sw o" style="border-color:${yellow}"></span><b>Yellow</b> outline: 2 to 3 points, worth <b>6</b><br><span class="sw o" style="border-color:${green}"></span><b>Green</b> outline: 4 or more points, worth <b>11</b></p>
+    <p><b>Total chemistry</b> = the points from all 9 outlines + the points from all the lines. It is shown under the board as “players + links”.</p>
+
+    <h3>Where players can go</h3>
+    <p>Spots are numbered 1 to 9, left to right and top to bottom: ${spots.map((s, i) => (i + 1) + ' ' + s).join(', ')}. Flex takes an RB, WR or TE. You can drag a player onto another octagon to swap them, as long as both fit their new spots.</p>
+
+    <h3>Drafting</h3>
+    <p>A draft has 9 rounds. Each round you pick 1 of 3 players, who are placed in an open spot that fits them. After round 9, submit your draft to see your score, compare it to the Solution layout and join the Leaders. Before you start you choose the odds:</p>
+    <ul><li><b>Default</b>: each of the 3 players has a chance of being each star level that depends on the round (table below). Early rounds favor 4★ players and later rounds favor 1★ and 2★.</li><li><b>Chaos</b>: totally random players and star levels.</li></ul>
+    <table class="tbl"><tr><th>Round</th>${[5, 4, 3, 2, 1].map(n => '<th>' + n + '★</th>').join('')}</tr>
+    ${ODDS.map((r, i) => '<tr><td>' + (i + 1) + '</td>' + r.map(v => '<td>' + (v ? v + '%' : '–') + '</td>').join('') + '</tr>').join('')}</table>
+
+    <h3>Sandbox and Leaders</h3>
+    <p>The Sandbox lets you place any players you like and try different layouts. Once all 9 are in, the Solution tab shows the best arrangement. On the Leaders tab, tap a draft to see its picks and the players that were passed over.</p>`;
+}
+
+// ---- Tabs: Sandbox, Draft, Leaders, About, Account and (owner only) Admin.
+const TABS = {sandbox:'tabSandbox', draft:'tabDraft', leaders:'tabLeaders', about:'tabAbout', account:'tabAccount', admin:'tabAdmin'};
+const VIEWOF = {sandbox:'viewSandbox', draft:'viewSandbox', leaders:'viewLeaders', about:'viewAbout', account:'viewAccount', admin:'viewAdmin'};
 let curTab = 'sandbox';
-function showTab(name) {
-  if (draftLocked() && name !== 'draft') return;      // a draft in progress keeps the user on the Draft tab
+function showTab(name, keepReview) {
+  if (draftLocked() && name !== 'draft') return;
+  if (stash && !(keepReview && name === 'draft')) exitReview();      // a draft in progress keeps the user on the Draft tab
   if (name === 'admin' && !isAdmin()) name = 'sandbox';
   curTab = name;
   if (name === 'sandbox' || name === 'draft') enterMode(name);
   for (const k in TABS) $(TABS[k]).setAttribute('aria-selected', String(k === name));
-  ['viewSandbox', 'viewLeaders', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
+  ['viewSandbox', 'viewLeaders', 'viewAbout', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
   closePicker(false);
   if (name === 'admin') pollRequests();
   else if (name === 'leaders') loadLeaders();
   else if (name === 'account') renderAccount();
+  else if (name === 'about') renderAbout();
   else { fit(); if (name === 'draft') { loadCountLocal(); refreshCount(); } }
 }
 Object.keys(TABS).forEach(k => $(TABS[k]).addEventListener('click', () => showTab(k)));
