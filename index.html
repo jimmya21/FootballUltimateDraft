@@ -81,12 +81,15 @@
   #total { flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 10px 8px; color:var(--muted); text-align:center; border-top:1px solid var(--line); }
   #total .clearRow { align-self:flex-end; margin-bottom:2px; display:flex; gap:8px; }
   #total .clearRow { width:100%; justify-content:flex-end; }
-  #draftForfeit, #draftNew.left, #oddsSel { margin-right:auto; }
-  #oddsSel { display:flex; } #oddsSel[hidden] { display:none; }
-  #oddsSel button { padding:6px 10px; font-size:12px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
-  #oddsSel button:first-child { border-radius:6px 0 0 6px; } #oddsSel button:last-child { border-radius:0 6px 6px 0; }
-  #oddsSel button + button { border-left:0; }
-  #oddsSel button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  #draftForfeit, #draftNew.left, #modeSel { margin-right:auto; }
+  #total .clearRow { gap:6px; }
+  #total .clearRow #oddsSel button, #total .clearRow #modeSel button { padding:6px 6px; font-size:11px; white-space:nowrap; }
+  #total .clearRow #draftNew { padding:6px 9px; white-space:nowrap; }
+  #oddsSel, #modeSel { display:flex; } #oddsSel[hidden], #modeSel[hidden] { display:none; }
+  #oddsSel button, #modeSel button { padding:6px 8px; font-size:11.5px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
+  #oddsSel button:first-child, #modeSel button:first-child { border-radius:6px 0 0 6px; } #oddsSel button:last-child, #modeSel button:last-child { border-radius:0 6px 6px 0; }
+  #oddsSel button + button, #modeSel button + button { border-left:0; }
+  #oddsSel button.on, #modeSel button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
   #subTabs button:disabled { opacity:.35; cursor:not-allowed; }
   body.locked #tabs button:not(#tabDraft) { opacity:.3; pointer-events:none; }
   .lhead { display:flex; align-items:center; justify-content:space-between; gap:10px; }
@@ -102,8 +105,9 @@
   #ldTable td { padding:8px 3px; text-align:right; border-bottom:1px solid #1a2029; font-variant-numeric:tabular-nums; }
   #ldTable th:nth-child(2), #ldTable td:nth-child(2) { text-align:left; word-break:break-all; }
   #ldTable th:first-child, #ldTable td:first-child { width:26px; text-align:left; color:var(--muted); }
-  #ldTable td:nth-child(6) { font-weight:700; color:var(--accent); }
-  #ldTable th:nth-child(3), #ldTable td:nth-child(3) { text-align:center; padding-left:6px; padding-right:6px; }
+  #ldTable td:nth-child(7) { font-weight:700; color:var(--accent); }
+  #ldTable th:nth-child(3), #ldTable td:nth-child(3), #ldTable th:nth-child(4), #ldTable td:nth-child(4) { text-align:center; padding-left:4px; padding-right:4px; }
+  body.bk .info { visibility:hidden; }
   #ldTable tr.me td { background:#16261b; }
   #ldTable th[data-k] { cursor:pointer; user-select:none; }
   #ldTable th.sorted { color:var(--ink); }
@@ -164,6 +168,32 @@
   #total .ropts .opt { flex:none; width:73px; }
   #ldBody tr.go { cursor:pointer; }
   #ldBody tr.go:active td { background:#1c2531; }
+
+  /* ---- update pop-up ---- */
+  #updateModal { position:fixed; inset:0; z-index:90; background:rgba(0,0,0,.78); display:flex; align-items:center; justify-content:center; padding:20px; }
+  #updateModal .um { width:100%; max-width:340px; background:#10151c; border:1px solid #3b4452; border-radius:12px; padding:22px 20px; text-align:center; }
+  #updateModal h2 { margin:0 0 8px; font-size:1.25rem; }
+  #updateModal p { margin:6px 0 16px; color:var(--muted); font-size:.92rem; line-height:1.4; }
+  #updateModal button { width:100%; padding:12px 16px; font-size:1rem; }
+  #updateModal #umMsg { margin:12px 0 0; font-size:.82rem; min-height:1em; }
+
+  /* ---- Stats ---- */
+  #stPerson { width:100%; font:inherit; font-size:16px; padding:10px 12px; border-radius:8px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); margin:6px 0 10px; }
+  .seg { display:flex; margin:0 0 8px; }
+  .seg button { flex:1; padding:6px 4px; font-size:12px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
+  .seg button:first-child { border-radius:6px 0 0 6px; } .seg button:last-child { border-radius:0 6px 6px 0; }
+  .seg button + button { border-left:0; }
+  .seg button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  #stGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .sc { background:#10151c; border:1px solid #2a323d; border-radius:10px; padding:12px 10px; text-align:center; }
+  .sc span { display:block; font-size:11px; color:var(--muted); }
+  .sc strong { display:block; font-size:24px; line-height:1.2; margin-top:3px; color:var(--ink); }
+  .sc.wide { grid-column:1 / -1; }
+  .sc.accent strong { color:var(--accent); }
+  .sc ol { list-style:none; margin:6px 0 0; padding:0; text-align:left; font-size:.9rem; }
+  .sc li { display:flex; justify-content:space-between; gap:10px; padding:4px 2px; border-top:1px solid var(--line); }
+  .sc li b { color:var(--accent); }
+  .sc small { display:block; margin-top:6px; font-size:10.5px; color:var(--muted); }
 
   /* ---- About ---- */
   #abSub { flex:none; display:flex; margin:10px 12px 6px; }
@@ -244,14 +274,8 @@
   #acForm input { flex:1 1 100%; }
   .su.waiting label, .su.waiting input, .su.waiting #suGo, .su.waiting #suFine, .su.waiting #suIntro { display:none; }
   .ok { color:#7fd49a; }
-  #updateBar { margin-top:4px; color:var(--ink); font-size:12px; }
-  #updateBar button { padding:3px 10px; font-size:12px; margin-left:6px; }
   .sect { margin-top:26px; padding-top:16px; border-top:1px solid var(--line); }
   .sect h3 { margin:0 0 4px; font-size:1rem; }
-  #refreshMsg { min-height:1.2em; }
-  #upNote { min-height:1.3em; font-weight:600; }
-  #upNote.ok { color:#7fd49a; }
-  #upNote.need { color:#f0b84a; }
   #hint { font-size:.78rem; word-break:break-all; }
   #signup { position:fixed; inset:0; z-index:60; background:var(--bg); display:flex; align-items:center; justify-content:center; overflow:auto; padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); }
   .su { width:100%; max-width:380px; margin:auto; }
@@ -282,7 +306,8 @@
 </style>
 </head>
 <body>
-<div id="top"><span id="updated"></span><div id="updateBar" hidden>A new version is ready. <button id="updateNow" class="quiet">Update now</button></div></div>
+<div id="top"><span id="updated"></span></div>
+<div id="updateModal" hidden role="alertdialog" aria-modal="true" aria-labelledby="umTitle"><div class="um"><h2 id="umTitle">Update available</h2><p id="umText">Changes have been made to FUD. Update your app to keep playing.</p><button id="umGo">Update App Now</button><p id="umMsg" role="status"></p></div></div>
 
 <main>
   <section id="viewSandbox" class="view" role="tabpanel" aria-labelledby="tabSandbox">
@@ -306,6 +331,7 @@
       </div>
       <div class="clearRow">
         <div id="oddsSel" role="group" aria-label="Draft odds" hidden><button type="button" data-o="Default" class="on">Default</button><button type="button" data-o="Chaos">Chaos</button></div>
+        <div id="modeSel" role="group" aria-label="Draft mode" hidden><button type="button" data-m="Normal" class="on">Normal</button><button type="button" data-m="Ball-Knower">Ball-Knower</button></div>
         <button id="draftForfeit" class="quiet" hidden>Forfeit</button>
         <button id="draftNew" class="quiet" hidden>New Draft</button>
         <button id="draftNext" hidden disabled>Next</button>
@@ -337,9 +363,19 @@
       <p id="ldMsg" role="status"></p>
       <p class="hintline" id="ldHint" hidden>Tap a column to sort the top 50. Tap a row to see that draft.</p>
       <table id="ldTable" hidden>
-        <thead><tr><th>#</th><th>Username</th><th>Odds</th><th data-k="talent">Talent</th><th data-k="chemistry">Chemistry</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
+        <thead><tr><th>#</th><th>Username</th><th>Odds</th><th>Mode</th><th data-k="talent">Talent</th><th data-k="chemistry">Chemistry</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
         <tbody id="ldBody"></tbody>
       </table>
+    </div>
+  </section>
+
+  <section id="viewStats" class="view" role="tabpanel" aria-labelledby="tabStats" hidden>
+    <div class="pane">
+      <select id="stPerson" aria-label="Player"></select>
+      <div id="stOdds" class="seg" role="group" aria-label="Odds"><button type="button" data-o="all" class="on">All odds</button><button type="button" data-o="default">Default</button><button type="button" data-o="chaos">Chaos</button></div>
+      <div id="stMode" class="seg" role="group" aria-label="Mode"><button type="button" data-m="all" class="on">All modes</button><button type="button" data-m="normal">Normal</button><button type="button" data-m="bk">Ball-Knower</button></div>
+      <p id="stMsg" role="status"></p>
+      <div id="stGrid"></div>
     </div>
   </section>
 
@@ -375,9 +411,6 @@
       <div class="sect">
         <h3>App</h3>
         <dl class="db"><dt>Version</dt><dd id="appVer"></dd><dt>Player database</dt><dd id="dbUpdated">No player database loaded yet</dd></dl>
-        <button id="refreshApp" class="quiet">Get latest version</button>
-        <p id="refreshMsg" role="status"></p>
-        <p id="upNote" role="status"></p>
         <p id="status"></p>
         <p id="hint"></p>
       </div>
@@ -421,6 +454,15 @@
       <path d="M3.5 20.5h17"/><rect x="5" y="12" width="3.6" height="8.5" rx=".8"/><rect x="10.2" y="5" width="3.6" height="15.5" rx=".8"/><rect x="15.4" y="9" width="3.6" height="11.5" rx=".8"/>
     </svg>
     <span>Leaders</span>
+  </button>
+  <button id="tabStats" role="tab" aria-selected="false" aria-controls="viewStats">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="5" y="2.8" width="14" height="18.4" rx="2.2"/><rect x="8" y="5.8" width="8" height="3.6" rx=".7"/>
+      <circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/>
+      <circle cx="9" cy="16" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/><circle cx="15" cy="16" r=".8" fill="currentColor"/>
+      <circle cx="9" cy="19" r=".8" fill="currentColor"/><circle cx="12" cy="19" r=".8" fill="currentColor"/><circle cx="15" cy="19" r=".8" fill="currentColor"/>
+    </svg>
+    <span>Stats</span>
   </button>
   <button id="tabAbout" role="tab" aria-selected="false" aria-controls="viewAbout">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -473,7 +515,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-25.1';
+const APP_VERSION = '2026-10-26.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -829,7 +871,8 @@ async function loadHosted() {
       if (u.length < 4 || u[0] !== 0x50 || u[1] !== 0x4B) { problem = name + ' is on the site but is not a real .xlsx file. Open it in Excel and save it again as .xlsx.'; continue; }
       const hash = hashBytes(u);
       const lm = Date.parse(res.headers.get('last-modified') || '') || 0;
-      if (hash !== dbMeta.hostedHash || !dbMeta.dataTime) await parse(buf, name, hash, lm);
+      const hadDb = !!dbMeta.hostedHash && !!dbMeta.dataTime;
+      if (hash !== dbMeta.hostedHash || !dbMeta.dataTime) { await parse(buf, name, hash, lm); if (hadDb) showUpdate('db'); }
       else dbStatus();
       hint.textContent = '';
       return;
@@ -845,13 +888,14 @@ async function loadHosted() {
 
 if (!VIEW) loadDb();
 if (!VIEW && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-if (!VIEW) loadHosted().then(() => { refreshTop(); runNote(); });
+if (!VIEW) loadHosted().then(() => { refreshTop(); });
 
 // ---- Draft mode: 9 rounds of "pick 1 of 3". It uses the same board as the Sandbox tab.
 const DRAFT_KEY = 'fud.draft.v1', DLQ_KEY = 'fud.draftlog.v1', ODDS_KEY = 'fud.odds.v1';
 // Default odds: chance (%) that each offered card is 5, 4, 3, 2 or 1 star, by round (every row adds up to 100).
 const ODDS = [[2,80,18,0,0],[2,50,45,3,0],[2,10,65,23,0],[2,8,45,40,5],[2,8,25,60,5],[2,7,10,50,31],[2,7,10,41,40],[2,5,7,21,65],[2,4,6,18,70]];
-let oddsPref = 'Default';
+let oddsPref = 'Default', modePref = 'Normal';
+try { if (localStorage.getItem('fud.mode.v1') === 'Ball-Knower') modePref = 'Ball-Knower'; } catch (e) {}
 try { if (localStorage.getItem(ODDS_KEY) === 'Chaos') oddsPref = 'Chaos'; } catch (e) {}
 function rollStar(round) {
   const w = ODDS[Math.min(9, Math.max(1, round)) - 1]; let r = Math.random() * 100;
@@ -880,7 +924,7 @@ function saveDraft() {
 function loadDraft() {
   try {
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) { draft = d; draft.view = 'sub'; if (draft.odds !== 'Default') draft.odds = 'Chaos'; }
+    if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) { draft = d; draft.view = 'sub'; if (draft.odds !== 'Default') draft.odds = 'Chaos'; if (draft.mode !== 'Ball-Knower') draft.mode = 'Normal'; }
   } catch (e) {}
 }
 const draftLocked = () => !!(draft && draft.phase === 'picking');
@@ -896,7 +940,7 @@ function clearDraft() {
   restore([]); renderDraft();
 }
 function newDraft() {
-  draft = {phase:'picking', odds:oddsPref, opts:[], chosen:null, seen:[], hist:[], picks:[], view:'sub', id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
+  draft = {phase:'picking', odds:oddsPref, mode:modePref, opts:[], chosen:null, seen:[], hist:[], picks:[], view:'sub', id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
   restore([]); dealRound(); saveDraft();
 }
 // Three players that fit at least one open spot. Chaos: any player, any of their levels. Default: each card rolls its
@@ -981,7 +1025,7 @@ function submitDraft() {
   draft.snap = snap; draft.phase = 'submitted'; draft.view = 'sub'; draft.opts = draft.opts.filter(o => o.key === draft.chosen);
   draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent), accuracy:isNaN(acc) ? null : acc};
   saveDraft(); setCount(todayN + 1); renderDraft(); openNamePrompt();
-  logDraft(Object.assign({id:draft.id, odds:draft.odds, rounds:roundStrings()}, draft.result)).then(refreshCount);
+  logDraft(Object.assign({id:draft.id, odds:draft.odds, mode:draft.mode, rounds:roundStrings()}, draft.result)).then(refreshCount);
 }
 // Sub-tabs after a draft is submitted: "Submission" (the team as drafted) and "Solution" (the best possible layout).
 function setSubView(v) {
@@ -1010,6 +1054,7 @@ function updateSubTabs() {
   b.disabled = isD ? false : !(v === 'sol' || (filledCount() === 9 && lastBest));
 }
 $('subTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) (mode === 'draft' ? setSubView : setSbView)(b.dataset.v); });
+$('modeSel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; modePref = b.dataset.m; try { localStorage.setItem('fud.mode.v1', modePref); } catch (e2) {} renderDraft(); });
 $('oddsSel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; oddsPref = b.dataset.o; try { localStorage.setItem(ODDS_KEY, oddsPref); } catch (e2) {} renderDraft(); });
 // ---- Review: tap a draft on the Leaders tab to see it the way it looked when it was submitted.
 let stash = null;
@@ -1048,7 +1093,7 @@ function renderRounds() {
   box.hidden = !on; $('reviewBar').hidden = !on;
   if (!on) return;
   const {x, rs, missing} = draft.rv;
-  $('reviewBar').innerHTML = '<b>' + esc(x.username) + '</b> &middot; ' + (x.odds === 'Default' ? 'Default' : 'Chaos') + ' odds' + (missing ? ' &middot; ' + missing + ' player' + (missing > 1 ? 's' : '') + ' no longer in the database' : '');
+  $('reviewBar').innerHTML = '<b>' + esc(x.username) + '</b> &middot; ' + (x.odds === 'Default' ? 'Default' : 'Chaos') + ' odds' + (x.mode === 'Ball-Knower' ? ' &middot; Ball-Knower' : '') + (missing ? ' &middot; ' + missing + ' player' + (missing > 1 ? 's' : '') + ' no longer in the database' : '');
   box.innerHTML = '<h3>Draft picks</h3>' + rs.map((r, i) =>
     `<div class="rr"><small>Round ${i + 1} &middot; placed in spot ${r.spot}</small><div class="ropts">${roundCard(r.name, r.level, 'sel')}${r.alts.map(a => roundCard(a.name, a.level, 'off')).join('')}</div></div>`).join('');
 }
@@ -1087,6 +1132,9 @@ function renderDraft() {
   $('draftNew').hidden = !(isD && !picking); $('draftNew').classList.toggle('left', done); $('draftNew').textContent = done ? (draft.review ? 'Close' : 'Clear') : 'New Draft';
   $('oddsSel').hidden = !(isD && !picking && !done);
   Array.from($('oddsSel').children).forEach(b => b.classList.toggle('on', b.dataset.o === oddsPref));
+  $('modeSel').hidden = $('oddsSel').hidden;
+  Array.from($('modeSel').children).forEach(b => b.classList.toggle('on', b.dataset.m === modePref));
+  document.body.classList.toggle('bk', !!(isD && draft && picking && draft.mode === 'Ball-Knower'));
   $('scoreRow').hidden = isD ? !(done && draft.view !== 'sol') : roView();
   updateSubTabs();
   $('draftCount').hidden = !isD || !!(draft && draft.review);
@@ -1095,7 +1143,7 @@ function renderDraft() {
   $('draftBanner').hidden = !(isD && !done);
   if (!isD) return;
   if (!draft) {
-    $('draftTitle').textContent = 'Choose Default (weighted by round) or Chaos (fully random) odds, then press New Draft. Each round you pick 1 of 3 players, for 9 rounds. Other tabs stay locked until you submit or forfeit.';
+    $('draftTitle').textContent = 'Choose Default (weighted by round) or Chaos (fully random) odds and Normal or Ball-Knower (names and stars only until you submit), then press New Draft. Each round you pick 1 of 3 players, for 9 rounds. Other tabs stay locked until you submit or forfeit.';
     $('draftOpts').innerHTML = ''; return;
   }
   if (picking && !draft.opts.length && !draft.chosen && players.length && filledCount() < 9) { dealRound(); saveDraft(); }
@@ -1107,12 +1155,12 @@ function renderDraft() {
   $('draftTitle').textContent = !players.length ? 'No players loaded yet. Connect to the internet once so the player database can load.'
     : !draft.opts.length ? 'No eligible players are left in the database for the open spots.'
     : chosen ? 'Round ' + n + ' of 9: ' + chosen.name + ' added. ' + (n >= 9 ? 'Move players if you like, then press Submit.' : 'Press Next for the next three.')
-    : 'Round ' + (n + 1) + ' of 9 (' + draft.odds + ' odds): choose one player';
+    : 'Round ' + (n + 1) + ' of 9 (' + draft.odds + ' odds' + (draft.mode === 'Ball-Knower' ? ', Ball-Knower' : '') + '): choose one player';
   $('draftOpts').innerHTML = draft.opts.map((o, k) => {
     const p = byKey(o.key); if (!p) return '';
     const t = TIER[o.level];
     return `<button type="button" class="opt${draft.chosen ? (draft.chosen === o.key ? ' sel' : ' off') : ''}" data-n="${k}" style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"${draft.chosen ? ' disabled' : ''}>` +
-      `<span class="in"><b>${esc(p.name)}</b><i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i><em>${'★'.repeat(o.level)}</em></span></button>`;
+      `<span class="in"><b>${esc(p.name)}</b>` + (draft.mode === 'Ball-Knower' ? '' : `<i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i>`) + `<em>${'★'.repeat(o.level)}</em></span></button>`;
   }).join('');
 }
 $('draftOpts').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && !b.disabled) pickOption(Number(b.dataset.n)); });
@@ -1142,7 +1190,7 @@ function renderLeaders() {
     const tr = document.createElement('tr');
     if (isMine(x)) tr.className = 'me';
     if (x.rounds && x.rounds.length === 9 && x.rounds[0]) { tr.classList.add('go'); tr._x = x; }
-    [rank, x.username, x.odds === 'Default' ? 'D' : 'C', x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+    [rank, x.username, x.odds === 'Default' ? 'D' : 'C', x.mode === 'Ball-Knower' ? 'BK' : 'N', x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
     body.appendChild(tr);
   });
   Array.from(tbl.querySelectorAll('th[data-k]')).forEach(th => { const on = th.dataset.k === k; th.classList.toggle('sorted', on); th.textContent = th.dataset.k[0].toUpperCase() + th.dataset.k.slice(1) + (on ? (ldSort.dir < 0 ? ' ▼' : ' ▲') : ''); });
@@ -1273,7 +1321,7 @@ function renderHow() {
 
     <h3>Drafting</h3>
     <p>A draft has 9 rounds. Each round you pick 1 of 3 players, who are placed in an open spot that fits them. After round 9, submit your draft to see your score, compare it to the Solution layout and join the Leaders. Before you start you choose the odds:</p>
-    <ul><li><b>Default</b>: each of the 3 players has a chance of being each star level that depends on the round (table below). Early rounds favor 4★ players and later rounds favor 1★ and 2★.</li><li><b>Chaos</b>: totally random players and star levels.</li></ul>
+    <ul><li><b>Normal</b> or <b>Ball-Knower</b> mode: Normal shows every detail about each player while you draft. Ball-Knower scores the same way but only shows names and star levels during the draft. Position, team, division and year appear after you submit.</li><li><b>Default</b>: each of the 3 players has a chance of being each star level that depends on the round (table below). Early rounds favor 4★ players and later rounds favor 1★ and 2★.</li><li><b>Chaos</b>: totally random players and star levels.</li></ul>
     <table class="tbl"><tr><th>Round</th>${[5, 4, 3, 2, 1].map(n => '<th>' + n + '★</th>').join('')}</tr>
     ${ODDS.map((r, i) => '<tr><td>' + (i + 1) + '</td>' + r.map(v => '<td>' + (v ? v + '%' : '–') + '</td>').join('') + '</tr>').join('')}</table>
 
@@ -1281,9 +1329,44 @@ function renderHow() {
     <p>The Sandbox lets you place any players you like and try different layouts. Once all 9 are in, the Solution tab shows the best arrangement. On the Leaders tab, tap a draft to see its picks and the players that were passed over.</p>`;
 }
 
-// ---- Tabs: Sandbox, Draft, Leaders, About, Account and (owner only) Admin.
-const TABS = {sandbox:'tabSandbox', draft:'tabDraft', leaders:'tabLeaders', about:'tabAbout', account:'tabAccount', admin:'tabAdmin'};
-const VIEWOF = {sandbox:'viewSandbox', draft:'viewSandbox', leaders:'viewLeaders', about:'viewAbout', account:'viewAccount', admin:'viewAdmin'};
+// ---- Stats: one person's numbers over their whole draft history (from the Draft History sheet tab).
+let stName = '', stOdds = 'all', stMode = 'all', stTok = 0;
+function stCard(label, value, cls) { return `<div class="sc ${cls || ''}"><span>${label}</span><strong>${value}</strong></div>`; }
+async function loadStats() {
+  const msg = $('stMsg'), grid = $('stGrid');
+  if (!SIGNUP_URL || !user || user.status !== 'approved') { grid.innerHTML = ''; $('stPerson').hidden = true; msg.textContent = 'Sign up in the Account tab to see stats.'; return; }
+  $('stPerson').hidden = false;
+  const tok = ++stTok; msg.textContent = 'Loading…';
+  try {
+    const r = await api('stats', user.phone, {name:stName, odds:stOdds, mode:stMode});
+    if (tok !== stTok) return;
+    if (!r.ok) { grid.innerHTML = ''; msg.textContent = ERR[r.error] || 'Could not load stats.'; return; }
+    stName = r.name || '';
+    const sel = $('stPerson'), names = r.people || [];
+    if (stName && !names.includes(stName)) names.push(stName);
+    sel.innerHTML = names.map(n => `<option value="${esc(n)}">${esc(n)}${r.self && n === r.self ? ' (you)' : ''}</option>`).join('');
+    sel.value = stName;
+    const s = r.stats || {drafts:0};
+    if (!s.drafts) { grid.innerHTML = ''; msg.textContent = 'No drafts yet for this selection.'; return; }
+    msg.textContent = '';
+    const f = v => v == null ? '–' : v, pct = v => v == null ? '–' : v.toFixed(1) + '%';
+    grid.innerHTML = stCard('Drafts Completed', s.drafts, 'wide') + stCard('Highest Score', s.high, 'accent') + stCard('Lowest Score', s.low) +
+      stCard('Average Talent', f(s.avgTalent)) + stCard('Average Chemistry', f(s.avgChemistry)) + stCard('Average Total', f(s.avgTotal), 'accent') + stCard('Average Accuracy', pct(s.avgAccuracy)) +
+      `<div class="sc wide"><span>Most Drafted Player</span>` + (s.top && s.top.length
+        ? `<ol>${s.top.map(x => `<li><span style="color:var(--ink);font-size:.9rem">${esc(x.name)}</span><b>${x.count}</b></li>`).join('')}</ol><small>Based on ${s.withPicks} draft${s.withPicks === 1 ? '' : 's'} with saved picks.</small>`
+        : '<strong style="font-size:15px">–</strong><small>Pick history is saved for drafts made after the update.</small>') + '</div>';
+  } catch (e) { if (tok === stTok) { grid.innerHTML = ''; msg.textContent = OFFLINE; } }
+}
+$('stPerson').addEventListener('change', () => { stName = $('stPerson').value; loadStats(); });
+[['stOdds', 'o'], ['stMode', 'm']].forEach(([id, k]) => $(id).addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (id === 'stOdds') stOdds = b.dataset.o; else stMode = b.dataset.m;
+  Array.from($(id).children).forEach(x => x.classList.toggle('on', x === b)); loadStats();
+}));
+
+// ---- Tabs: Sandbox, Draft, Leaders, Stats, About, Account and (owner only) Admin.
+const TABS = {sandbox:'tabSandbox', draft:'tabDraft', leaders:'tabLeaders', stats:'tabStats', about:'tabAbout', account:'tabAccount', admin:'tabAdmin'};
+const VIEWOF = {sandbox:'viewSandbox', draft:'viewSandbox', leaders:'viewLeaders', stats:'viewStats', about:'viewAbout', account:'viewAccount', admin:'viewAdmin'};
 let curTab = 'sandbox';
 function showTab(name, keepReview) {
   if (draftLocked() && name !== 'draft') return;
@@ -1292,12 +1375,13 @@ function showTab(name, keepReview) {
   curTab = name;
   if (name === 'sandbox' || name === 'draft') enterMode(name);
   for (const k in TABS) $(TABS[k]).setAttribute('aria-selected', String(k === name));
-  ['viewSandbox', 'viewLeaders', 'viewAbout', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
+  ['viewSandbox', 'viewLeaders', 'viewStats', 'viewAbout', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
   closePicker(false);
   if (name === 'admin') pollRequests();
   else if (name === 'leaders') loadLeaders();
   else if (name === 'account') renderAccount();
   else if (name === 'about') renderAbout();
+  else if (name === 'stats') loadStats();
   else { fit(); if (name === 'draft') { loadCountLocal(); refreshCount(); } }
 }
 Object.keys(TABS).forEach(k => $(TABS[k]).addEventListener('click', () => showTab(k)));
@@ -1744,40 +1828,15 @@ if (!VIEW) {
   loadCountLocal();
 }
 
-// ---- Getting new versions of the app without re-adding it to the Home Screen.
-const CHECK_KEY = 'fud.checked.v1';
-async function latestState() {
-  if (!/^https?:$/.test(location.protocol)) return 'unknown';
-  let any = false, stale = false;
-  try {
-    const res = await fetch('index.html', {cache:'no-store'});
-    if (res.ok) { any = true; const m = (await res.text()).match(/const APP_VERSION = '([^']+)'/); if (m && m[1] !== APP_VERSION) stale = true; }
-  } catch (e) {}
-  for (const name of DB_NAMES) {
-    try {
-      const res = await fetch(encodeURI(name), {cache:'no-cache'});
-      if (res.status === 404) continue;
-      if (!res.ok) break;
-      any = true;
-      if (dbMeta.hostedHash && hashBytes(new Uint8Array(await res.arrayBuffer())) !== dbMeta.hostedHash) stale = true;
-      break;
-    } catch (e) { break; }
-  }
-  return !any ? 'unknown' : stale ? 'update' : 'ok';
-}
-async function runNote() {
-  let on = false; try { on = localStorage.getItem(CHECK_KEY) === '1'; } catch (e) {}
-  if (VIEW || !on) return;
-  const n = $('upNote'); n.className = ''; n.textContent = 'Checking…';
-  const st = await latestState();
-  if (st === 'ok') { n.className = 'ok'; n.textContent = '✓ Up to date'; }
-  else if (st === 'update') { n.className = 'need'; n.textContent = 'Update Required'; }
-  else n.textContent = 'Could not check. Connect to the internet and try again.';
+// ---- Getting new versions of the app: a pop-up appears on the next open after the page or the player database changes.
+function showUpdate(kind) {
+  if (VIEW) return;
+  $('umText').textContent = kind === 'db' ? 'The player database has been updated. Update your app to make sure you have the latest players.' : 'Changes have been made to FUD. Update your app to keep playing.';
+  $('updateModal').hidden = false;
 }
 async function refreshApp() {
-  try { localStorage.setItem(CHECK_KEY, '1'); } catch (e) {}
-  if (navigator.onLine === false) { $('refreshMsg').textContent = 'You are offline. Connect to the internet and try again.'; return; }
-  $('refreshMsg').textContent = 'Updating…';
+  if (navigator.onLine === false) { $('umMsg').textContent = 'You are offline. Connect to the internet and try again.'; return; }
+  $('umMsg').textContent = 'Updating…'; $('umGo').disabled = true;
   try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r => r.unregister())); } catch (e) {}
   try { const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); } catch (e) {}
   location.reload();
@@ -1788,14 +1847,13 @@ async function checkNewVersion() {
     const res = await fetch('index.html', {cache:'no-store'});
     if (!res.ok) return;
     const m = (await res.text()).match(/const APP_VERSION = '([^']+)'/);
-    if (m && m[1] !== APP_VERSION) { $('updateBar').hidden = false; runNote(); }
+    if (m && m[1] !== APP_VERSION) showUpdate('app');
   } catch (e) {}
 }
-$('refreshApp').addEventListener('click', refreshApp);
-$('updateNow').addEventListener('click', refreshApp);
+$('umGo').addEventListener('click', refreshApp);
 if (!VIEW) {
   $('appVer').textContent = APP_VERSION;
-  setTimeout(checkNewVersion, 2500);
+  setTimeout(checkNewVersion, 1500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewVersion(); });
 }
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !VIEW) {
