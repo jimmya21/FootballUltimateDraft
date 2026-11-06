@@ -481,7 +481,7 @@
       </div>
       <div class="sect">
         <h3>App</h3>
-        <dl class="db"><dt>Version</dt><dd id="appVer"></dd><dt>Player database</dt><dd id="dbUpdated">No player database loaded yet</dd></dl>
+        <dl class="db"><dt>Version</dt><dd id="appVer"></dd><dt>Headshots</dt><dd id="slStat">Not checked yet</dd><dt>Player database</dt><dd id="dbUpdated">No player database loaded yet</dd></dl>
         <p id="status"></p>
         <p id="hint"></p>
       </div>
@@ -593,7 +593,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-11-06.1';
+const APP_VERSION = '2026-11-06.2';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -906,6 +906,7 @@ function loadDb() {
 const SL_KEY = 'fud.sleeper.v1', SL_DAY = 864e5;
 const slNorm = n => String(n || '').toLowerCase().replace(/[\u2018\u2019'.]/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, ' ').replace(/\s+/g, ' ').trim();
 let slIdx = null, slBusy = false;
+const slStat = msg => { const e = document.getElementById('slStat'); if (e) e.textContent = msg; };
 function slLoadCache() { try { const c = JSON.parse(localStorage.getItem(SL_KEY) || 'null'); if (c && c.idx) return c; } catch (e) {} return null; }
 function slApply() {
   if (!slIdx) return 0;
@@ -948,12 +949,15 @@ async function slResolve() {
   const c = slLoadCache();
   if (c && !slIdx) slIdx = c.idx;
   if (slIdx && slApply()) slPaint();
+  slStat(Object.keys(HSMAP).length + ' of ' + players.length + ' found' + (c ? ' (saved list)' : ''));
   const missing = players.some(p => p && !p.headshot && !HSMAP[String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase()]);
   const stale = !c || Date.now() - c.t > SL_DAY;
   // Only go back to Sleeper when someone is missing a photo AND the saved copy is over a day old (or absent).
   if (!missing || !stale) return;
   slBusy = true;
-  try { slIdx = await slFetch(); if (slApply()) slPaint(); } catch (e) {} finally { slBusy = false; }
+  slStat('Contacting Sleeper...');
+  try { slIdx = await slFetch(); slApply(); slPaint(); slStat(Object.keys(HSMAP).length + ' of ' + players.length + ' found'); }
+  catch (e) { slStat('Could not reach Sleeper: ' + (e && e.message ? e.message : e)); } finally { slBusy = false; }
 }
 
 const keyOf = p => String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase();
