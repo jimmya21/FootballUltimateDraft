@@ -593,7 +593,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-11-06.2';
+const APP_VERSION = '2026-11-06.3';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -1033,6 +1033,7 @@ async function loadHosted() {
 
 
 if (!VIEW) loadDb();
+window.addEventListener('load', () => { try { slResolve(); } catch (e) { slStat('Error: ' + e.message); } });
 if (!VIEW && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 if (!VIEW) loadHosted().then(() => { refreshTop(); });
 
