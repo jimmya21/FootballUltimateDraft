@@ -106,6 +106,8 @@
   #ldTable th { font-size:.64rem; font-weight:600; color:var(--muted); text-align:right; padding:6px 3px; border-bottom:1px solid var(--line); }
   #ldTable td { padding:8px 3px; text-align:right; border-bottom:1px solid #1a2029; font-variant-numeric:tabular-nums; }
   #ldTable th:nth-child(2), #ldTable td:nth-child(2) { text-align:left; word-break:break-all; }
+  #ldTable th:nth-child(2) { width:34%; }
+  #ldTable th:nth-child(6), #ldTable td:nth-child(6) { width:34px; padding-left:2px; padding-right:2px; }
   #ldTable th:first-child, #ldTable td:first-child { width:26px; text-align:left; color:var(--muted); }
   #ldTable td:nth-child(7) { font-weight:700; color:var(--accent); }
   #ldTable th:nth-child(3), #ldTable td:nth-child(3), #ldTable th:nth-child(4), #ldTable td:nth-child(4) { text-align:center; padding-left:4px; padding-right:4px; }
@@ -259,14 +261,18 @@
   .pc b { font-size:12px; line-height:1.15; font-weight:700; }
   .pc i { font-style:normal; font-size:9.5px; line-height:1.25; }
   .pc em { font-style:normal; color:#ffd400; font-size:11px; letter-spacing:.5px; margin-top:3px; text-shadow:0 0 2px #3a2a00; }
-  .hs { position:relative; flex:none; display:block; width:var(--hs,40px); height:var(--hs,40px); border-radius:50%; overflow:hidden; border:1.5px solid rgba(255,255,255,.6);
-    background:rgba(255,255,255,.25) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><circle cx='20' cy='15' r='7.5' fill='%2314181f' fill-opacity='.5'/><path d='M5 40c0-10 6-16 15-16s15 6 15 16z' fill='%2314181f' fill-opacity='.5'/></svg>") center/100% 100% no-repeat; }
+  .hs { position:relative; flex:none; display:block; width:var(--hs,40px); height:var(--hs,40px); border-radius:50%; overflow:hidden; border:0; background:none; }
+  .hs:empty { background:rgba(255,255,255,.25) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><circle cx='20' cy='15' r='7.5' fill='%2314181f' fill-opacity='.5'/><path d='M5 40c0-10 6-16 15-16s15 6 15 16z' fill='%2314181f' fill-opacity='.5'/></svg>") center/100% 100% no-repeat; }
   .hs img { display:block; width:100%; height:100%; object-fit:cover; }
-  .cell .hs { position:absolute; left:50%; top:-56px; --hs:46px; transform:translateX(-50%); pointer-events:none; }
+  /* Board photo: bottom edge sits just above the name box, top of the head just inside the octagon's top edge. */
+  .cell .hs { position:absolute; left:50%; top:-68px; width:90px; height:67px; border-radius:0; transform:translateX(-50%); pointer-events:none;
+    clip-path:polygon(23px 0, 67px 0, 100% 27px, 100% 100%, 0 100%, 0 27px); }
+  .cell .hs img { object-fit:contain; object-position:center bottom; }
+  .cell .hs:empty { background-size:auto 100%; background-color:transparent; }
   .cell:not(.filled) .hs { display:none; }
   .opt .hs { --hs:24px; margin-bottom:2px; }
   .pc .hs { --hs:40px; margin-bottom:5px; }
-  body.bk .hs { display:none !important; }
+  body.bk .opt .hs, body.bk .pc .hs { display:none !important; }
   #pdMore { display:block; margin:0 auto 18px; }
   #pdMsg { text-align:center; color:var(--muted); font-size:.9rem; padding:24px 16px; }
   #abHow { flex:1; min-height:0; overflow:auto; }
@@ -419,7 +425,7 @@
       <p id="ldMsg" role="status"></p>
       <p class="hintline" id="ldHint" hidden>Tap a column to sort the top 50. Tap a row to see that draft.</p>
       <table id="ldTable" hidden>
-        <thead><tr><th>#</th><th>Username</th><th>Odds</th><th>Mode</th><th data-k="talent">Talent</th><th data-k="chemistry">Chemistry</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
+        <thead><tr><th>#</th><th>Username</th><th>Odds</th><th>Mode</th><th data-k="talent">Talent</th><th data-k="chemistry">Chem</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
         <tbody id="ldBody"></tbody>
       </table>
     </div>
@@ -453,6 +459,7 @@
   <section id="viewAbout" class="view" role="tabpanel" aria-labelledby="tabAbout" hidden>
     <div id="abSub" role="group" aria-label="About"><button type="button" data-v="db" class="on">Player Database</button><button type="button" data-v="how">How To</button></div>
     <div id="abDb">
+      <p id="dbUpdated" class="hintline">No player database loaded yet</p>
       <div id="pdBar"><input id="pdSearch" type="search" placeholder="Search players" aria-label="Search players" autocomplete="off" autocorrect="off" spellcheck="false"><button id="pdFilterBtn" class="quiet" type="button" aria-expanded="false">Filter<span id="pdFilterN"></span></button></div>
       <div id="pdPanel" hidden></div>
       <div id="pdCount" role="status"></div>
@@ -481,7 +488,7 @@
       </div>
       <div class="sect">
         <h3>App</h3>
-        <dl class="db"><dt>Version</dt><dd id="appVer"></dd><dt>Headshots</dt><dd id="slStat">Not checked yet</dd><dt>Player database</dt><dd id="dbUpdated">No player database loaded yet</dd></dl>
+        <dl class="db"><dt>Version</dt><dd id="appVer"></dd><dt>Headshots</dt><dd id="slStat">Not checked yet</dd></dl>
         <p id="status"></p>
         <p id="hint"></p>
       </div>
@@ -584,7 +591,7 @@
   </form>
 </div>
 
-<div id="blocked" hidden role="alert"><div><h2>Access removed</h2><p>Your access to FUD has been turned off. If you think this is a mistake, contact the person who invited you.</p></div></div>
+<div id="blocked" hidden role="alert"><div><h2>This app is offline</h2></div></div>
 
 <div id="solveOverlay" hidden>
   <div class="bar"><button id="solveClose">Close</button><strong>Best lineup</strong></div>
@@ -593,7 +600,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-11-06.3';
+const APP_VERSION = '2026-11-06.5';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -882,7 +889,7 @@ function saveDb(name, hostedHash, dataTime) {
 function refreshTop() {
   if (VIEW) return;
   if (mode === 'draft') renderDraft();
-  $('dbUpdated').textContent = players.length ? 'Last updated ' + fmt(dbMeta.dataTime || dbMeta.updated) : 'No player database loaded yet';
+  $('dbUpdated').textContent = players.length ? 'Player database last updated ' + fmt(dbMeta.dataTime || dbMeta.updated) : 'No player database loaded yet';
 }
 function dbStatus(extra) {
   $('status').textContent = extra || '';
@@ -903,22 +910,30 @@ function loadDb() {
 
 
 // ---- Sleeper headshots ----
-const SL_KEY = 'fud.sleeper.v1', SL_DAY = 864e5;
+const SL_KEY = 'fud.sleeper.v2';
 const slNorm = n => String(n || '').toLowerCase().replace(/[\u2018\u2019'.]/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, ' ').replace(/\s+/g, ' ').trim();
 let slIdx = null, slBusy = false;
 const slStat = msg => { const e = document.getElementById('slStat'); if (e) e.textContent = msg; };
 function slLoadCache() { try { const c = JSON.parse(localStorage.getItem(SL_KEY) || 'null'); if (c && c.idx) return c; } catch (e) {} return null; }
 function slApply() {
   if (!slIdx) return 0;
+  const names = slIdx.n || {}, lasts = slIdx.l || {};
   let n = 0;
   (Array.isArray(players) ? players : []).forEach(p => {
     if (!p || p.headshot) return;
     const k = String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase();
     if (HSMAP[k]) return;
-    const list = slIdx[slNorm(p.name) + '|' + String(p.position).trim().toUpperCase()];
-    if (!list || !list.length) return;
-    const team = String(p.team).trim().toUpperCase();
-    const hit = list.find(e => e.t === team) || list.find(e => e.t) || list[0];
+    const pos = String(p.position).trim().toUpperCase(), team = String(p.team).trim().toUpperCase(), nn = slNorm(p.name);
+    const byName = names[nn] || [];
+    // 1) same name and position (team preferred)  2) same name, any position (a two-way player or fullback)
+    let hit = byName.find(e => e.p === pos && e.t === team) || byName.find(e => e.p === pos) || byName.find(e => e.t === team) || byName[0];
+    // 3) nickname used as a first name: same last name, team and position, only if exactly one player fits
+    if (!hit) {
+      const parts = nn.split(' '), last = parts[parts.length - 1];
+      const c = (lasts[last + '|' + team + '|' + pos] || []);
+      if (parts.length > 1 && c.length === 1) hit = c[0];
+    }
+    if (!hit) return;
     HSMAP[k] = 'https://sleepercdn.com/content/nfl/players/' + hit.id + '.jpg'; n++;
   });
   return n;
@@ -934,29 +949,30 @@ function slPaint() {
 async function slFetch() {
   const res = await fetch('https://api.sleeper.app/v1/players/nfl');
   if (!res.ok) throw new Error('sleeper ' + res.status);
-  const all = await res.json(), idx = {};
+  const all = await res.json(), idx = {n:{}, l:{}};
   Object.keys(all).forEach(id => {
-    const x = all[id]; if (!x || !x.full_name || !['QB','RB','WR','TE'].includes(x.position)) return;
-    const k = slNorm(x.full_name) + '|' + x.position;
-    (idx[k] = idx[k] || []).push({id, t: x.team ? String(x.team).toUpperCase() : ''});
+    const x = all[id]; if (!x || !x.full_name || !(x.team || x.active)) return;
+    const pos = String(x.position || '').toUpperCase(), t = x.team ? String(x.team).toUpperCase() : '';
+    const nn = slNorm(x.full_name), e = {id, t, p: pos};
+    (idx.n[nn] = idx.n[nn] || []).push(e);
+    const parts = nn.split(' ');
+    if (t && parts.length > 1) { const lk = parts[parts.length - 1] + '|' + t + '|' + pos; (idx.l[lk] = idx.l[lk] || []).push(e); }
   });
   try { localStorage.setItem(SL_KEY, JSON.stringify({t: Date.now(), idx})); } catch (e) {}
   return idx;
 }
-// Call after the player list changes (page load, swapped-in players, new database).
-async function slResolve() {
+// Matches photos from the saved Sleeper list. Sleeper is only contacted when a new player database was just loaded
+// (fresh=true), or when there is no saved list yet.
+async function slResolve(fresh) {
   if (slBusy || !players.length) return;
   const c = slLoadCache();
   if (c && !slIdx) slIdx = c.idx;
   if (slIdx && slApply()) slPaint();
-  slStat(Object.keys(HSMAP).length + ' of ' + players.length + ' found' + (c ? ' (saved list)' : ''));
-  const missing = players.some(p => p && !p.headshot && !HSMAP[String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase()]);
-  const stale = !c || Date.now() - c.t > SL_DAY;
-  // Only go back to Sleeper when someone is missing a photo AND the saved copy is over a day old (or absent).
-  if (!missing || !stale) return;
+  slStat(Object.keys(HSMAP).length + ' of ' + players.length + ' found' + (c && !fresh ? ' (saved list)' : ''));
+  if (c && !fresh) return;
   slBusy = true;
   slStat('Contacting Sleeper...');
-  try { slIdx = await slFetch(); slApply(); slPaint(); slStat(Object.keys(HSMAP).length + ' of ' + players.length + ' found'); }
+  try { slIdx = await slFetch(); for (const k in HSMAP) delete HSMAP[k]; slApply(); slPaint(); slStat(Object.keys(HSMAP).length + ' of ' + players.length + ' found'); }
   catch (e) { slStat('Could not reach Sleeper: ' + (e && e.message ? e.message : e)); } finally { slBusy = false; }
 }
 
@@ -991,7 +1007,7 @@ async function parse(buf, name, hostedHash, lastMod) {
   });
   const cleared = kept.filter(Boolean).length - picks.filter(Boolean).length;
   fill(picks);
-  slResolve();
+  slResolve(true);
   saveDb(name, hostedHash, dataTime);
   dbStatus(cleared ? cleared + ' lineup spot' + (cleared > 1 ? 's' : '') + ' cleared (player not in the new file)' : 'Player database updated.');
 }
