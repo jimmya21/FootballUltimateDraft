@@ -67,8 +67,9 @@
   .cell.filled { cursor:grab; touch-action:none; }
   .cell select:not(.lvl) { display:none; }
   .pick { display:block; width:100%; font:inherit; font-size:10.5px; padding:3px 4px; border-radius:4px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
-  .info { margin-top:2px; font-size:9px; line-height:1.28; min-height:2.5em; color:#d9d6cf; user-select:none; }
+  .info { margin-top:2px; font-size:9px; line-height:1.22; min-height:2.5em; color:#d9d6cf; user-select:none; }
   .cell.filled .info { color:var(--tx, #14181f); }
+  .info .col { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .cell .lvl { display:block; margin:2px auto 0; font:inherit; font-size:9px; padding:0 3px; height:15px; border-radius:4px; border:1px solid #4a5361; background:var(--field); color:var(--fieldtext); cursor:pointer; }
   /* Phones zoom into form fields under 16px, so the level menu is 16px and shrunk with a transform. */
   @media (pointer:coarse) { .cell .lvl { font-size:16px; height:22px; transform:scale(.56); transform-origin:center top; margin:2px auto -9px; } }
@@ -83,11 +84,15 @@
   #total { flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 10px 8px; color:var(--muted); text-align:center; border-top:1px solid var(--line); }
   #total .clearRow { align-self:flex-end; margin-bottom:2px; display:flex; gap:8px; }
   #total .clearRow { width:100%; justify-content:flex-end; }
-  #draftForfeit, #draftNew.left, #modeSel { margin-right:auto; }
+  #draftForfeit, #draftNew.left, #modSel { margin-right:auto; }
   #total .clearRow { gap:6px; }
   #total .clearRow #oddsSel button, #total .clearRow #modeSel button { padding:6px 6px; font-size:11px; white-space:nowrap; }
   #total .clearRow #draftNew { padding:6px 9px; white-space:nowrap; }
-  #oddsSel, #modeSel { display:flex; } #oddsSel[hidden], #modeSel[hidden] { display:none; }
+  #oddsSel, #modeSel, #modSel { display:flex; } #oddsSel[hidden], #modeSel[hidden], #modSel[hidden] { display:none; }
+  #modSel button { padding:6px 6px; font-size:11px; white-space:nowrap; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:6px; }
+  #modSel button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  #draftStart { width:100%; min-height:84px; font-size:1.25rem; font-weight:700; letter-spacing:.3px; border-radius:10px; background:var(--accent); color:#07090d; border:0; margin:4px 0 2px; }
+  #draftStart[hidden] { display:none; }
   #oddsSel button, #modeSel button { padding:6px 8px; font-size:11.5px; background:transparent; color:var(--ink); border:1px solid #4a5361; border-radius:0; }
   #oddsSel button:first-child, #modeSel button:first-child { border-radius:6px 0 0 6px; } #oddsSel button:last-child, #modeSel button:last-child { border-radius:0 6px 6px 0; }
   #oddsSel button + button, #modeSel button + button { border-left:0; }
@@ -107,10 +112,10 @@
   #ldTable td { padding:8px 3px; text-align:right; border-bottom:1px solid #1a2029; font-variant-numeric:tabular-nums; }
   #ldTable th:nth-child(2), #ldTable td:nth-child(2) { text-align:left; word-break:break-all; }
   #ldTable th:nth-child(2) { width:34%; }
-  #ldTable th:nth-child(6), #ldTable td:nth-child(6) { width:34px; padding-left:2px; padding-right:2px; }
+  #ldTable th:nth-child(7), #ldTable td:nth-child(7) { width:34px; padding-left:2px; padding-right:2px; }
   #ldTable th:first-child, #ldTable td:first-child { width:26px; text-align:left; color:var(--muted); }
-  #ldTable td:nth-child(7) { font-weight:700; color:var(--accent); }
-  #ldTable th:nth-child(3), #ldTable td:nth-child(3), #ldTable th:nth-child(4), #ldTable td:nth-child(4) { text-align:center; padding-left:4px; padding-right:4px; }
+  #ldTable td:nth-child(8) { font-weight:700; color:var(--accent); }
+  #ldTable th:nth-child(3), #ldTable td:nth-child(3), #ldTable th:nth-child(4), #ldTable td:nth-child(4), #ldTable th:nth-child(5), #ldTable td:nth-child(5) { text-align:center; padding-left:4px; padding-right:4px; }
   body.bk .info { visibility:hidden; }
   #ldTable tr.me td { background:#16261b; }
   #ldTable th[data-k] { cursor:pointer; user-select:none; }
@@ -362,6 +367,7 @@
   <label for="chOpp">Opponent</label><select id="chOpp"></select>
   <label>Odds</label><div id="chOddsSel" class="seg" role="group" aria-label="Odds"><button type="button" data-o="Default" class="on">Default</button><button type="button" data-o="Chaos">Chaos</button></div>
   <label>Mode</label><div id="chModeSel" class="seg" role="group" aria-label="Mode"><button type="button" data-m="Normal" class="on">Normal</button><button type="button" data-m="Ball-Knower">Ball-Knower</button></div>
+  <label>Modifier</label><div id="chModSel" class="seg" role="group" aria-label="Modifier"><button type="button" data-v="0" class="on">None</button><button type="button" data-v="1">College Match</button></div>
   <p id="chErr" role="alert"></p>
   <div class="row"><button type="button" id="chCancel" class="quiet">Cancel</button><button type="button" id="chSend">Send Challenge</button></div>
 </div></div>
@@ -390,12 +396,14 @@
       <div class="clearRow">
         <div id="oddsSel" role="group" aria-label="Draft odds" hidden><button type="button" data-o="Default" class="on">Default</button><button type="button" data-o="Chaos">Chaos</button></div>
         <div id="modeSel" role="group" aria-label="Draft mode" hidden><button type="button" data-m="Normal" class="on">Normal</button><button type="button" data-m="Ball-Knower">Ball-Knower</button></div>
+        <div id="modSel" role="group" aria-label="Modifier" hidden><button type="button" aria-pressed="false">College Match</button></div>
         <button id="draftForfeit" class="quiet" hidden>Forfeit</button>
         <button id="draftNew" class="quiet" hidden>New Draft</button>
         <button id="draftNext" hidden disabled>Next</button>
         <button id="clearAll" class="quiet" disabled>Clear</button>
       </div>
-      <div class="row">
+      <button id="draftStart" type="button" hidden>New Draft</button>
+      <div class="row" id="statRow">
         <div class="stat"><span>Talent</span><strong id="talentNum">0</strong><small>from star levels</small></div>
         <div class="stat"><span>Total chemistry</span><strong id="chemNum">0</strong><small id="chemSub">players 0 + links 0</small></div>
         <div class="stat draft"><span>Draft total</span><strong id="draftNum">0</strong><small id="draftSub">chemistry + talent</small></div>
@@ -412,7 +420,7 @@
   <section id="viewLeaders" class="view" role="tabpanel" aria-labelledby="tabLeaders" hidden>
     <div class="pane">
       <div class="lhead"><h2>Leaders</h2><button id="ldRefresh" class="quiet">Refresh</button></div>
-      <p id="ldLegend"><b>Odds:</b> D = Default, C = Chaos &nbsp;&middot;&nbsp; <b>Mode:</b> N = Normal, BK = Ball-Knower</p>
+      <p id="ldLegend"><b>Odds:</b> D = Default, C = Chaos &nbsp;&middot;&nbsp; <b>Mode:</b> N = Normal, BK = Ball-Knower &nbsp;&middot;&nbsp; <b>Mod:</b> Y = College Match on, N = off</p>
       <div id="ldFilter" role="group" aria-label="Time range">
         <button type="button" data-r="today" class="on">Today</button><button type="button" data-r="week">This Week</button><button type="button" data-r="all">All-Time</button>
       </div>
@@ -422,10 +430,13 @@
       <div id="ldMode" class="seg" role="group" aria-label="Mode">
         <button type="button" data-m="all" class="on">All Modes</button><button type="button" data-m="normal">Normal</button><button type="button" data-m="bk">Ball-Knower</button>
       </div>
+      <div id="ldModSel" class="seg" role="group" aria-label="Modifier">
+        <button type="button" data-v="all" class="on">All Mods</button><button type="button" data-v="off">No Modifier</button><button type="button" data-v="on">College Match</button>
+      </div>
       <p id="ldMsg" role="status"></p>
       <p class="hintline" id="ldHint" hidden>Tap a column to sort the top 50. Tap a row to see that draft.</p>
       <table id="ldTable" hidden>
-        <thead><tr><th>#</th><th>Username</th><th>Odds</th><th>Mode</th><th data-k="talent">Talent</th><th data-k="chemistry">Chem</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
+        <thead><tr><th>#</th><th>Username</th><th>Odds</th><th>Mode</th><th>Mod</th><th data-k="talent">Talent</th><th data-k="chemistry">Chem</th><th data-k="total">Total</th><th>Accuracy</th></tr></thead>
         <tbody id="ldBody"></tbody>
       </table>
     </div>
@@ -451,6 +462,7 @@
       <select id="stPerson" aria-label="Player"></select>
       <div id="stOdds" class="seg" role="group" aria-label="Odds"><button type="button" data-o="all" class="on">All odds</button><button type="button" data-o="default">Default</button><button type="button" data-o="chaos">Chaos</button></div>
       <div id="stMode" class="seg" role="group" aria-label="Mode"><button type="button" data-m="all" class="on">All modes</button><button type="button" data-m="normal">Normal</button><button type="button" data-m="bk">Ball-Knower</button></div>
+      <div id="stModSel" class="seg" role="group" aria-label="Modifier"><button type="button" data-v="all" class="on">All mods</button><button type="button" data-v="off">No Modifier</button><button type="button" data-v="on">College Match</button></div>
       <p id="stMsg" role="status"></p>
       <div id="stGrid"></div>
     </div>
@@ -459,7 +471,7 @@
   <section id="viewAbout" class="view" role="tabpanel" aria-labelledby="tabAbout" hidden>
     <div id="abSub" role="group" aria-label="About"><button type="button" data-v="db" class="on">Player Database</button><button type="button" data-v="how">How To</button></div>
     <div id="abDb">
-      <p id="dbUpdated" class="hintline">No player database loaded yet</p>
+      <p id="dbUpdated" class="hintline" style="text-align:center;margin:6px 0 8px">No player database loaded yet</p>
       <div id="pdBar"><input id="pdSearch" type="search" placeholder="Search players" aria-label="Search players" autocomplete="off" autocorrect="off" spellcheck="false"><button id="pdFilterBtn" class="quiet" type="button" aria-expanded="false">Filter<span id="pdFilterN"></span></button></div>
       <div id="pdPanel" hidden></div>
       <div id="pdCount" role="status"></div>
@@ -600,7 +612,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-11-06.5';
+const APP_VERSION = '2026-11-06.6';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -750,7 +762,7 @@ function show(i) {
   labels[i].setAttribute('stroke', p ? '#07090d' : 'none');
   starEls[i].textContent = p ? '★'.repeat(n) : '';
   hsEls[i].innerHTML = p && hsUrl(p) ? hsImg(p) : '';
-  infos[i].innerHTML = p ? `${esc(p.position)} &middot; ${esc(p.team)}<br>${esc(p.division)} &middot; ${esc(p.draft)}` : '';
+  infos[i].innerHTML = p ? `${esc(p.position)} &middot; ${esc(p.team)}<br>${esc(p.division)} &middot; ${esc(p.draft)}` + (p.college ? `<br><span class="col">${esc(p.college)}</span>` : '') : '';
 }
 
 // Chemistry: 1 point each for matching division, team, draft year (max 2 per link).
@@ -760,13 +772,18 @@ const same = (x, y) => { const a = String(x).trim().toLowerCase(), b = String(y)
 // Total chemistry = player chemistry + link points (yellow link 1, green link 2).
 const CHEM = [['#ff4b47',0],['#ffd92e',6],['#2fe074',11]];
 const TALENT = {5:15, 4:11, 3:8, 2:5, 1:3};
+// College Match modifier: on for a draft that was started with it (and for the Sandbox after "See in Sandbox" on such a draft).
+// When on, a college match is a 4th way to earn link points and a link can be worth up to 3 instead of 2.
+let sbMod = false;
+const modOn = () => (mode === 'draft' ? !!(draft && draft.mod) : sbMod);
+const linkPts = (p, q) => { const m = modOn(); return Math.min(m ? 3 : 2, same(p.division,q.division) + same(p.team,q.team) + same(p.draft,q.draft) + (m ? same(p.college,q.college) : 0)); };
 // Best possible Draft total for the 9 chosen players: try every legal arrangement.
 let lastBest = null;
 function bestDraft() {
   const ps = selects.map(sel => players[sel.value]);
   if (ps.some(p => !p)) return null;
   const n = ps.length;
-  const pair = ps.map(p => ps.map(q => Math.min(2, same(p.division,q.division) + same(p.team,q.team) + same(p.draft,q.draft))));
+  const pair = ps.map(p => ps.map(q => linkPts(p, q)));
   const fits = NODES.map((_, i) => ps.map(p => allowed(i, p)));
   const talent = ps.reduce((t, p) => t + TALENT[stars(p)], 0);
   const slot = new Array(n).fill(-1), used = new Array(n).fill(false);
@@ -792,8 +809,8 @@ function chemistry() {
     const p = players[selects[a].value], q = players[selects[b].value];
     lines[n].setAttribute('class', 'edge');
     if (!p || !q) return;
-    const pts = Math.min(2, same(p.division,q.division) + same(p.team,q.team) + same(p.draft,q.draft));
-    lines[n].setAttribute('class', 'edge c' + pts);
+    const pts = linkPts(p, q);
+    lines[n].setAttribute('class', 'edge c' + Math.min(2, pts));
     nodePts[a] += pts; nodePts[b] += pts; linkTotal += pts;
   });
   let playerTotal = 0, talent = 0;
@@ -983,7 +1000,7 @@ async function parse(buf, name, hostedHash, lastMod) {
   const get = (r, key) => { const k = Object.keys(r).find(c => c.trim().toLowerCase() === key); return k ? r[k] : ''; };
   const next = rows.map(r => ({
     levels:parseLevels(get(r,'skill level')), name:get(r,'name'), position:get(r,'position'),
-    team:get(r,'team'), division:get(r,'division'), draft:yearOf(get(r,'draft year')), headshot:cleanHs(get(r,'headshot'))
+    team:get(r,'team'), division:get(r,'division'), draft:yearOf(get(r,'draft year')), college:String(get(r,'college') == null ? '' : get(r,'college')).trim(), headshot:cleanHs(get(r,'headshot'))
   })).filter(p => String(p.name).trim());
   // A file with no players never replaces the database you already have.
   if (!next.length) {
@@ -1059,6 +1076,7 @@ const DRAFT_KEY = 'fud.draft.v1', DLQ_KEY = 'fud.draftlog.v1', ODDS_KEY = 'fud.o
 const ODDS = [[2,80,18,0,0],[2,50,45,3,0],[2,10,65,23,0],[2,8,45,40,5],[2,8,25,60,5],[2,7,10,50,31],[2,7,10,41,40],[2,5,7,21,65],[2,4,6,18,70]];
 let oddsPref = 'Default', modePref = 'Normal';
 try { if (localStorage.getItem('fud.mode.v1') === 'Ball-Knower') modePref = 'Ball-Knower'; } catch (e) {}
+let modPref = false;  // College Match always starts off
 try { if (localStorage.getItem(ODDS_KEY) === 'Chaos') oddsPref = 'Chaos'; } catch (e) {}
 function rollStar(round) {
   const w = ODDS[Math.min(9, Math.max(1, round)) - 1]; let r = Math.random() * 100;
@@ -1087,14 +1105,14 @@ function saveDraft() {
 function loadDraft() {
   try {
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) { draft = d; draft.view = 'sub'; if (draft.odds !== 'Default') draft.odds = 'Chaos'; if (draft.mode !== 'Ball-Knower') draft.mode = 'Normal'; }
+    if (d && (d.phase === 'picking' || d.phase === 'submitted') && Array.isArray(d.snap) && Array.isArray(d.opts) && Array.isArray(d.seen)) { draft = d; draft.view = 'sub'; if (draft.odds !== 'Default') draft.odds = 'Chaos'; if (draft.mode !== 'Ball-Knower') draft.mode = 'Normal'; draft.mod = !!draft.mod; }
   } catch (e) {}
 }
 const draftLocked = () => !!(draft && draft.phase === 'picking');
 function forfeitDraft() {
   if (!draftLocked() || draft.challenge) return;
   if (!window.confirm('Forfeit this draft? Your picks will be lost and nothing is saved to the leaderboard.')) return;
-  const rec = {id:draft.id, odds:draft.odds, mode:draft.mode};
+  const rec = {id:draft.id, odds:draft.odds, mode:draft.mode, mod:draft.mod ? 'Y' : 'N'};
   draft = null; try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
   setForf(forfN + 1); flushForfeits(rec).then(refreshCount);
   restore([]); renderDraft(); openNamePrompt();
@@ -1105,7 +1123,7 @@ function clearDraft() {
   restore([]); renderDraft();
 }
 function newDraft() {
-  draft = {phase:'picking', odds:oddsPref, mode:modePref, opts:[], chosen:null, seen:[], hist:[], picks:[], view:'sub', id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
+  draft = {phase:'picking', odds:oddsPref, mode:modePref, mod:modPref, opts:[], chosen:null, seen:[], hist:[], picks:[], view:'sub', id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
   restore([]); dealRound(); saveDraft();
 }
 // Three players that fit at least one open spot. Chaos: any player, any of their levels. Default: each card rolls its
@@ -1192,7 +1210,7 @@ function pickOption(n) {
 }
 function draftAction() {
   if (!draft) return;
-  if (draft.phase === 'submitted') { sandboxSnap = draft.snap; showTab('sandbox'); return; }
+  if (draft.phase === 'submitted') { sandboxSnap = draft.snap; sbMod = !!draft.mod; showTab('sandbox'); return; }
   if (!draft.chosen) return;
   if (filledCount() >= 9) { submitDraft(); return; }
   dealRound(); saveDraft(); renderDraft();
@@ -1218,7 +1236,7 @@ function submitDraft() {
   draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent), accuracy:isNaN(acc) ? null : acc};
   saveDraft(); setCount(todayN + 1); renderDraft(); openNamePrompt();
   if (draft.challenge) flash('Challenge submitted. The result shows on the Challenge tab once both of you have finished.');
-  logDraft(Object.assign({id:draft.id, odds:draft.odds, mode:draft.mode, rounds:roundStrings(), challenge:draft.challenge ? draft.challenge.id : undefined, time:draft.challenge && draft.t0 ? Math.round((Date.now() - draft.t0) / 1000) : undefined}, draft.result)).then(refreshCount);
+  logDraft(Object.assign({id:draft.id, odds:draft.odds, mode:draft.mode, mod:draft.mod ? 'Y' : 'N', rounds:roundStrings(), challenge:draft.challenge ? draft.challenge.id : undefined, time:draft.challenge && draft.t0 ? Math.round((Date.now() - draft.t0) / 1000) : undefined}, draft.result)).then(refreshCount);
 }
 // Sub-tabs after a draft is submitted: "Submission" (the team as drafted) and "Solution" (the best possible layout).
 function setSubView(v) {
@@ -1248,6 +1266,8 @@ function updateSubTabs() {
 }
 $('subTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) (mode === 'draft' ? setSubView : setSbView)(b.dataset.v); });
 $('modeSel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; modePref = b.dataset.m; try { localStorage.setItem('fud.mode.v1', modePref); } catch (e2) {} renderDraft(); });
+$('modSel').addEventListener('click', () => { modPref = !modPref; try { localStorage.setItem('fud.modifier.v1', modPref ? '1' : '0'); } catch (e2) {} renderDraft(); });
+$('draftStart').addEventListener('click', () => { newDraft(); renderDraft(); });
 $('oddsSel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; oddsPref = b.dataset.o; try { localStorage.setItem(ODDS_KEY, oddsPref); } catch (e2) {} renderDraft(); });
 // ---- Review: tap a draft on the Leaders tab to see it the way it looked when it was submitted.
 let stash = null;
@@ -1266,7 +1286,7 @@ function openReview(x, sides, back) {
   const snap = Array(9).fill(null); let missing = 0;
   rs.forEach(r => { const p = findPlayer(r.name, r.level); if (p && r.spot >= 1 && r.spot <= 9) snap[r.spot - 1] = {key:keyOf(p), level:r.level}; else missing++; });
   if (!stash) stash = {draft};
-  draft = {phase:'submitted', review:true, snap, view:'sub', odds:x.odds, opts:[], seen:[], rv:{x, rs, missing, sides:sides || null, back:back || 'leaders'}};
+  draft = {phase:'submitted', review:true, snap, view:'sub', odds:x.odds, mod:x.mod === 'Y', opts:[], seen:[], rv:{x, rs, missing, sides:sides || null, back:back || 'leaders'}};
   if (mode === 'draft') restore(snap);
   showTab('draft', true); renderDraft();
 }
@@ -1286,7 +1306,7 @@ function renderRounds() {
   box.hidden = !on; $('reviewBar').hidden = !on;
   if (!on) return;
   const {x, rs, missing, sides} = draft.rv;
-  $('reviewBar').innerHTML = (sides ? '<div class="seg">' + sides.map((s, i) => `<button type="button" data-i="${i}" class="${s === x ? 'on' : ''}">${esc(s.username)}</button>`).join('') + '</div>' : '<b>' + esc(x.username) + '</b> &middot; ') + '' + (x.odds === 'Default' ? 'Default' : 'Chaos') + ' odds' + (x.mode === 'Ball-Knower' ? ' &middot; Ball-Knower' : '') + (missing ? ' &middot; ' + missing + ' player' + (missing > 1 ? 's' : '') + ' no longer in the database' : '');
+  $('reviewBar').innerHTML = (sides ? '<div class="seg">' + sides.map((s, i) => `<button type="button" data-i="${i}" class="${s === x ? 'on' : ''}">${esc(s.username)}</button>`).join('') + '</div>' : '<b>' + esc(x.username) + '</b> &middot; ') + '' + (x.odds === 'Default' ? 'Default' : 'Chaos') + ' odds' + (x.mode === 'Ball-Knower' ? ' &middot; Ball-Knower' : '') + (x.mod === 'Y' ? ' &middot; College Match' : '') + (missing ? ' &middot; ' + missing + ' player' + (missing > 1 ? 's' : '') + ' no longer in the database' : '');
   box.innerHTML = '<h3>Draft picks</h3>' + rs.map((r, i) =>
     `<div class="rr"><small>Round ${i + 1} &middot; placed in spot ${r.spot}</small><div class="ropts">${roundCard(r.name, r.level, 'sel')}${r.alts.map(a => roundCard(a.name, a.level, 'off')).join('')}</div></div>`).join('');
 }
@@ -1341,10 +1361,12 @@ function renderDraft() {
   $('draftNext').hidden = !(isD && (picking || done));
   const nOn = filledCount();
   $('draftForfeit').hidden = !(isD && picking && (nOn < 8 || (nOn === 8 && !!draft.chosen)) && !draft.challenge);   // round 9 has to be submitted
-  $('draftNew').hidden = !(isD && !picking); $('draftNew').classList.toggle('left', done); $('draftNew').textContent = done ? (draft.review ? 'Close' : 'Clear') : 'New Draft';
+  $('draftNew').hidden = !(isD && !picking && !!draft); $('draftNew').classList.toggle('left', done);
+  $('draftStart').hidden = !(isD && !draft); $('statRow').hidden = isD && !draft; $('draftNew').textContent = done ? (draft.review ? 'Close' : 'Clear') : 'New Draft';
   $('oddsSel').hidden = !(isD && !picking && !done);
   Array.from($('oddsSel').children).forEach(b => b.classList.toggle('on', b.dataset.o === oddsPref));
-  $('modeSel').hidden = $('oddsSel').hidden;
+  $('modeSel').hidden = $('oddsSel').hidden; $('modSel').hidden = $('oddsSel').hidden;
+  { const mb = $('modSel').firstElementChild; mb.classList.toggle('on', modPref); mb.setAttribute('aria-pressed', String(modPref)); }
   Array.from($('modeSel').children).forEach(b => b.classList.toggle('on', b.dataset.m === modePref));
   document.body.classList.toggle('bk', !!(isD && draft && picking && draft.mode === 'Ball-Knower'));
   $('scoreRow').hidden = isD ? !(done && draft.view !== 'sol') : roView();
@@ -1355,7 +1377,7 @@ function renderDraft() {
   $('draftBanner').hidden = !(isD && !done);
   if (!isD) return;
   if (!draft) {
-    $('draftTitle').textContent = 'Choose Default (weighted by round) or Chaos (fully random) odds and Normal or Ball-Knower (names and stars only until you submit), then press New Draft. Each round you pick 1 of 3 players, for 9 rounds. Other tabs stay locked until you submit or forfeit.';
+    $('draftTitle').innerHTML = '<b>Default</b>: star levels are weighted by round. <b>Chaos</b>: every card is fully random.<br><b>Normal</b>: every detail about each player is shown. <b>Ball-Knower</b>: only names and star levels are shown until you submit.<br><b>College Match</b>: players from the same college earn an extra chemistry point (a link can be worth up to 3).';
     $('draftOpts').innerHTML = ''; return;
   }
   if (picking && !draft.opts.length && !draft.chosen && players.length && filledCount() < 9) { dealRound(); saveDraft(); }
@@ -1367,13 +1389,13 @@ function renderDraft() {
   $('draftTitle').textContent = !players.length ? 'No players loaded yet. Connect to the internet once so the player database can load.'
     : !draft.opts.length ? 'No eligible players are left in the database for the open spots.'
     : chosen ? 'Round ' + n + ' of 9: ' + chosen.name + ' added. ' + (n >= 9 ? 'Move players if you like, then press Submit.' : 'Press Next for the next three.')
-    : 'Round ' + (n + 1) + ' of 9 (' + draft.odds + ' odds' + (draft.mode === 'Ball-Knower' ? ', Ball-Knower' : '') + '): choose one player';
+    : 'Round ' + (n + 1) + ' of 9 (' + draft.odds + ' odds' + (draft.mode === 'Ball-Knower' ? ', Ball-Knower' : '') + (draft.mod ? ', College Match' : '') + '): choose one player';
   if (draft.challenge) $('draftTitle').textContent = 'Challenge vs ' + draft.challenge.opp + ' · ' + $('draftTitle').textContent;
   $('draftOpts').innerHTML = draft.opts.map((o, k) => {
     const p = byKey(o.key); if (!p) return '';
     const t = TIER[o.level];
     return `<button type="button" class="opt${draft.chosen ? (draft.chosen === o.key ? ' sel' : ' off') : ''}" data-n="${k}" style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"${draft.chosen ? ' disabled' : ''}>` +
-      `<span class="in">` + (draft.mode === 'Ball-Knower' ? '' : hsHTML(p)) + `<b>${esc(p.name)}</b>` + (draft.mode === 'Ball-Knower' ? '' : `<i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i>`) + `<em>${'★'.repeat(o.level)}</em></span></button>`;
+      `<span class="in">` + (draft.mode === 'Ball-Knower' ? '' : hsHTML(p)) + `<b>${esc(p.name)}</b>` + (draft.mode === 'Ball-Knower' ? '' : `<i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i>` + (draft.mod && p.college ? `<i>${esc(p.college)}</i>` : '')) + `<em>${'★'.repeat(o.level)}</em></span></button>`;
   }).join('');
 }
 $('draftOpts').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && !b.disabled) pickOption(Number(b.dataset.n)); });
@@ -1391,7 +1413,7 @@ function enterMode(m) {
 }
 
 // ---- Leaders: the top 50 drafts (by Total) from the "Draft History" sheet tab. Talent, Chemistry and Total can be re-sorted.
-let ldRange = 'today', ldOdds = 'all', ldMode = 'all', ldTok = 0, ldRows = [], ldSort = {k:'total', dir:-1};
+let ldRange = 'today', ldOdds = 'all', ldMode = 'all', ldMod = 'all', ldTok = 0, ldRows = [], ldSort = {k:'total', dir:-1};
 const sameName = (x, y) => String(x || '').trim().toLowerCase() === String(y || '').trim().toLowerCase();
 const isMine = x => user && (x.name ? sameName(x.name, user.name) : sameName(x.username, user.username));
 function renderLeaders() {
@@ -1403,7 +1425,7 @@ function renderLeaders() {
     const tr = document.createElement('tr');
     if (isMine(x)) tr.className = 'me';
     if (x.rounds && x.rounds.length === 9 && x.rounds[0]) { tr.classList.add('go'); tr._x = x; }
-    [rank, x.username, x.odds === 'Default' ? 'D' : 'C', x.mode === 'Ball-Knower' ? 'BK' : 'N', x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+    [rank, x.username, x.odds === 'Default' ? 'D' : 'C', x.mode === 'Ball-Knower' ? 'BK' : 'N', x.mod === 'Y' ? 'Y' : 'N', x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(1) + '%'].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
     body.appendChild(tr);
   });
   Array.from(tbl.querySelectorAll('th[data-k]')).forEach(th => { const on = th.dataset.k === k; th.classList.toggle('sorted', on); th.textContent = th.dataset.k[0].toUpperCase() + th.dataset.k.slice(1) + (on ? (ldSort.dir < 0 ? ' ▼' : ' ▲') : ''); });
@@ -1415,7 +1437,7 @@ async function loadLeaders() {
   if (!SIGNUP_URL || !user || user.status !== 'approved') { tbl.hidden = true; $('ldHint').hidden = true; msg.textContent = 'Sign up in the Account tab to see the leaderboard.'; return; }
   const tok = ++ldTok; msg.textContent = 'Loading…';
   try {
-    const r = await api('leaders', user.phone, {range:ldRange, odds:ldOdds, mode:ldMode});
+    const r = await api('leaders', user.phone, {range:ldRange, odds:ldOdds, mode:ldMode, mod:ldMod});
     if (tok !== ldTok) return;
     if (!r.ok) { tbl.hidden = true; $('ldHint').hidden = true; msg.textContent = ERR[r.error] || 'Could not load the leaderboard.'; return; }
     ldRows = (r.rows || []).slice(0, 50);
@@ -1439,6 +1461,10 @@ $('reviewBar').addEventListener('click', e => { const b = e.target.closest('butt
 $('ldMode').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   ldMode = b.dataset.m; Array.from($('ldMode').children).forEach(x => x.classList.toggle('on', x === b)); loadLeaders();
+});
+$('ldModSel').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  ldMod = b.dataset.v; Array.from($('ldModSel').children).forEach(x => x.classList.toggle('on', x === b)); loadLeaders();
 });
 $('ldBody').addEventListener('click', e => { const tr = e.target.closest('tr'); if (tr && tr._x) openReview(tr._x); });
 $('ldRefresh').addEventListener('click', loadLeaders);
@@ -1549,7 +1575,7 @@ function renderHow() {
 
 // ---- Challenge: head-to-head drafts where both players get the same player options.
 let chData = null, chSubView = 'everyone', chTok = 0;
-const chMeta = c => (c.odds === 'Default' ? 'Default' : 'Chaos') + ' · ' + (c.mode === 'Ball-Knower' ? 'Ball-Knower' : 'Normal');
+const chMeta = c => (c.odds === 'Default' ? 'Default' : 'Chaos') + ' · ' + (c.mode === 'Ball-Knower' ? 'Ball-Knower' : 'Normal') + (c.mod === 'Y' ? ' · College Match' : '');
 // A challenge's shared options: for every round, 3 slots. Each slot is a ranked list of candidates: a primary pick of one
 // star level, then stand-ins of that same star level for every position (so whatever spot a player still has open there is
 // a same-rating card for it), then the nearest ratings at any position that has too few. Each player is offered the first
@@ -1590,7 +1616,7 @@ function startChallengeDraft(c) {
   let deck = null; try { deck = JSON.parse(c.deck); } catch (e) {}
   if (!Array.isArray(deck)) { flash('That challenge could not be loaded.'); return false; }
   if (stash) exitReview();
-  draft = {phase:'picking', odds:c.odds, mode:c.mode, challenge:{id:c.id, opp:c.opponent, deck}, opts:[], chosen:null, seen:[], hist:[], picks:[], view:'sub', t0:Date.now(),
+  draft = {phase:'picking', odds:c.odds, mode:c.mode, mod:c.mod === 'Y', challenge:{id:c.id, opp:c.opponent, deck}, opts:[], chosen:null, seen:[], hist:[], picks:[], view:'sub', t0:Date.now(),
     id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
   showTab('draft', true); restore([]); dealRound(); saveDraft(); renderDraft();
   return true;
@@ -1668,7 +1694,7 @@ async function openChallengeView(id) {
   } catch (e) { flash(OFFLINE); }
 }
 $('chSub').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; chSubView = b.dataset.v; Array.from($('chSub').children).forEach(x => x.classList.toggle('on', x === b)); renderChallenges(); });
-let chOdds = 'Default', chModeSel = 'Normal';
+let chOdds = 'Default', chModeSel = 'Normal', chMod = false;
 $('chNew').addEventListener('click', () => {
   const people = (chData && chData.people) || [];
   $('chOpp').innerHTML = people.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
@@ -1676,16 +1702,16 @@ $('chNew').addEventListener('click', () => {
   $('chModal').hidden = false;
 });
 $('chCancel').addEventListener('click', () => { $('chModal').hidden = true; });
-[['chOddsSel', 'o'], ['chModeSel', 'm']].forEach(([id]) => $(id).addEventListener('click', e => {
+[['chOddsSel', 'o'], ['chModeSel', 'm'], ['chModSel', 'v']].forEach(([id]) => $(id).addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (id === 'chOddsSel') chOdds = b.dataset.o; else chModeSel = b.dataset.m;
+  if (id === 'chOddsSel') chOdds = b.dataset.o; else if (id === 'chModSel') chMod = b.dataset.v === '1'; else chModeSel = b.dataset.m;
   Array.from($(id).children).forEach(x => x.classList.toggle('on', x === b));
 }));
 $('chSend').addEventListener('click', async () => {
   if (!players.length) { $('chErr').textContent = 'The player database has not loaded yet.'; return; }
   $('chSend').disabled = true; $('chErr').textContent = '';
   try {
-    const r = await api('challenge_send', user.phone, {opponent:$('chOpp').value, odds:chOdds, mode:chModeSel, deck:JSON.stringify(makeDeck(chOdds))});
+    const r = await api('challenge_send', user.phone, {opponent:$('chOpp').value, odds:chOdds, mode:chModeSel, mod:chMod ? 'Y' : 'N', deck:JSON.stringify(makeDeck(chOdds))});
     if (r.ok) { $('chModal').hidden = true; flash('Challenge sent.'); loadChallenges(); }
     else $('chErr').textContent = ERR[r.error] || ERR.server;
   } catch (e) { $('chErr').textContent = OFFLINE; }
@@ -1695,7 +1721,7 @@ setInterval(() => { if (!document.hidden && !VIEW) loadChallenges(true); }, 6000
 setTimeout(() => { if (!VIEW) loadChallenges(true); }, 4000);
 
 // ---- Stats: one person's numbers over their whole draft history (from the Draft History sheet tab).
-let stName = '', stOdds = 'all', stMode = 'all', stTok = 0;
+let stName = '', stOdds = 'all', stMode = 'all', stMod = 'all', stTok = 0;
 function stCard(label, value, cls) { return `<div class="sc ${cls || ''}"><span>${label}</span><strong>${value}</strong></div>`; }
 async function loadStats() {
   const msg = $('stMsg'), grid = $('stGrid');
@@ -1703,7 +1729,7 @@ async function loadStats() {
   $('stPerson').hidden = false;
   const tok = ++stTok; msg.textContent = 'Loading…';
   try {
-    const r = await api('stats', user.phone, {name:stName, odds:stOdds, mode:stMode});
+    const r = await api('stats', user.phone, {name:stName, odds:stOdds, mode:stMode, mod:stMod});
     if (tok !== stTok) return;
     if (!r.ok) { grid.innerHTML = ''; msg.textContent = ERR[r.error] || 'Could not load stats.'; return; }
     stName = r.name || '';
@@ -1724,9 +1750,9 @@ async function loadStats() {
   } catch (e) { if (tok === stTok) { grid.innerHTML = ''; msg.textContent = OFFLINE; } }
 }
 $('stPerson').addEventListener('change', () => { stName = $('stPerson').value; loadStats(); });
-[['stOdds', 'o'], ['stMode', 'm']].forEach(([id, k]) => $(id).addEventListener('click', e => {
+[['stOdds', 'o'], ['stMode', 'm'], ['stModSel', 'v']].forEach(([id, k]) => $(id).addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (id === 'stOdds') stOdds = b.dataset.o; else stMode = b.dataset.m;
+  if (id === 'stOdds') stOdds = b.dataset.o; else if (id === 'stModSel') stMod = b.dataset.v; else stMode = b.dataset.m;
   Array.from($(id).children).forEach(x => x.classList.toggle('on', x === b)); loadStats();
 }));
 
