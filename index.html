@@ -40,8 +40,10 @@
   main { flex:1; min-height:0; position:relative; }
   .view { position:absolute; inset:0; display:flex; flex-direction:column; min-height:0; }
   #tabs { flex:none; display:flex; border-top:1px solid var(--line); background:#0b0e13; padding-bottom:env(safe-area-inset-bottom); }
-  #tabs button { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 2px 6px; border:0; border-radius:0; background:transparent; color:var(--muted); font-size:10px; }
-  #tabs button svg { width:22px; height:22px; }
+  #tabs { overflow-x:auto; overflow-y:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  #tabs::-webkit-scrollbar { display:none; }
+  #tabs button { flex:1 0 auto; min-width:78px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 8px 9px; border:0; border-radius:0; background:transparent; color:var(--muted); font-size:12px; white-space:nowrap; }
+  #tabs button svg { width:27px; height:27px; }
   #tabs button[aria-selected="true"] { color:var(--accent); }
   body.view #tabs { display:none; }
 
@@ -124,7 +126,7 @@
   #draftBanner { width:100%; }
   #draftBanner .dt { font-size:10.5px; color:var(--ink); margin:0 0 4px; line-height:1.25; }
   #draftOpts { display:flex; gap:6px; justify-content:center; }
-  #total .opt { --cut:11px; position:relative; flex:0 1 73px; height:78px; padding:0; border:0; border-radius:0; background:#7a8494; cursor:pointer; color:var(--tx);
+  #total .opt { --cut:11px; position:relative; flex:0 1 73px; height:94px; padding:0; border:0; border-radius:0; background:#7a8494; cursor:pointer; color:var(--tx);
     clip-path:polygon(var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)), 0 var(--cut)); }
   .opt .in { --c2:calc(var(--cut) - 2px); position:absolute; inset:2px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; padding:0 3px; text-align:center;
     background:linear-gradient(180deg,var(--l),var(--b) 40%,var(--d));
@@ -151,6 +153,7 @@
     body.drafting #total { justify-content:flex-start; }
     #draftOpts { flex-direction:column; gap:5px; }
     #total .opt { --cut:8px; flex:none; width:100%; height:32px; }
+    .opt .hs { display:none; }
     .opt .in { flex-direction:row; flex-wrap:wrap; gap:0 6px; padding:2px 12px; }
   }
 
@@ -193,7 +196,9 @@
   #chTable { width:100%; border-collapse:collapse; font-size:.82rem; margin-top:4px; }
   #chTable th { font-size:.64rem; font-weight:600; color:var(--muted); padding:6px 3px; border-bottom:1px solid var(--line); text-align:center; }
   #chTable td { padding:9px 3px; text-align:center; border-bottom:1px solid #1a2029; font-variant-numeric:tabular-nums; }
-  #chTable td:first-child, #chTable th:first-child { text-align:left; } #chTable td:last-child, #chTable th:last-child { text-align:right; }
+  #chTable td:first-child, #chTable th:first-child { text-align:left; } #chTable td:nth-child(4), #chTable th:nth-child(4) { text-align:right; }
+  #chTable td:nth-child(5) { font-size:.72rem; color:var(--muted); padding-left:8px; } #chTable th:nth-child(5) { padding-left:8px; }
+  #chRecord { margin:2px 0 12px; font-size:1rem; font-weight:700; color:var(--ink); text-align:center; }
   #chTable tr { cursor:pointer; } #chTable tr:active td { background:#1c2531; }
   #chTable .win { color:#3ddc84; font-weight:700; } #chTable .lose { color:#ff6b66; font-weight:700; }
   #chModal { position:fixed; inset:0; z-index:70; background:rgba(0,0,0,.78); display:flex; align-items:center; justify-content:center; padding:20px; }
@@ -246,7 +251,7 @@
   #pdCount b { color:var(--accent); }
   #pdScroll { flex:1; min-height:0; overflow:auto; }
   #pdGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:10px; padding:12px; }
-  .pc { --cut:15px; position:relative; aspect-ratio:96/128; background:#7a8494; color:var(--tx);
+  .pc { --cut:15px; position:relative; aspect-ratio:96/140; background:#7a8494; color:var(--tx);
     clip-path:polygon(var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)), 0 var(--cut)); }
   .pc .in { --c2:calc(var(--cut) - 2px); position:absolute; inset:2px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 6px; text-align:center;
     background:linear-gradient(180deg,var(--l),var(--b) 40%,var(--d));
@@ -254,6 +259,14 @@
   .pc b { font-size:12px; line-height:1.15; font-weight:700; }
   .pc i { font-style:normal; font-size:9.5px; line-height:1.25; }
   .pc em { font-style:normal; color:#ffd400; font-size:11px; letter-spacing:.5px; margin-top:3px; text-shadow:0 0 2px #3a2a00; }
+  .hs { position:relative; flex:none; display:block; width:var(--hs,40px); height:var(--hs,40px); border-radius:50%; overflow:hidden; border:1.5px solid rgba(255,255,255,.6);
+    background:rgba(255,255,255,.25) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><circle cx='20' cy='15' r='7.5' fill='%2314181f' fill-opacity='.5'/><path d='M5 40c0-10 6-16 15-16s15 6 15 16z' fill='%2314181f' fill-opacity='.5'/></svg>") center/100% 100% no-repeat; }
+  .hs img { display:block; width:100%; height:100%; object-fit:cover; }
+  .cell .hs { position:absolute; left:50%; top:-56px; --hs:46px; transform:translateX(-50%); pointer-events:none; }
+  .cell:not(.filled) .hs { display:none; }
+  .opt .hs { --hs:24px; margin-bottom:2px; }
+  .pc .hs { --hs:40px; margin-bottom:5px; }
+  body.bk .hs { display:none !important; }
   #pdMore { display:block; margin:0 auto 18px; }
   #pdMsg { text-align:center; color:var(--muted); font-size:.9rem; padding:24px 16px; }
   #abHow { flex:1; min-height:0; overflow:auto; }
@@ -350,7 +363,7 @@
 
 <main>
   <section id="viewSandbox" class="view" role="tabpanel" aria-labelledby="tabSandbox">
-    <div id="draftCount" hidden>Drafts Completed Today: <b id="draftCountN">0</b></div>
+    <div id="draftCount" hidden>Drafts Completed Today: <b id="draftCountN">0</b><br>Drafts Attempted Today: <b id="draftAttN">0</b></div>
     <div id="reviewBar" hidden></div>
     <div id="stage">
       <div id="toast" role="status"></div>
@@ -414,6 +427,7 @@
 
   <section id="viewChallenge" class="view" role="tabpanel" aria-labelledby="tabChallenge" hidden>
     <div class="pane">
+      <p id="chRecord" hidden></p>
       <button id="chNew">Challenge</button>
       <h3>Outgoing Challenges</h3>
       <ul id="chOut" class="chList"></ul><p id="chOutNone" class="chNone">No outgoing challenges.</p>
@@ -422,7 +436,7 @@
       <h3>Matchup Results</h3>
       <div id="chSub" class="seg" role="group" aria-label="Results"><button type="button" data-v="everyone" class="on">Everyone</button><button type="button" data-v="mine">Myself</button></div>
       <p id="chMsg" class="chNone" role="status"></p>
-      <table id="chTable" hidden><thead><tr><th>Challenger</th><th>Score</th><th>Score</th><th>Challenged</th></tr></thead><tbody id="chBody"></tbody></table>
+      <table id="chTable" hidden><thead><tr><th>Challenger</th><th>Score</th><th>Score</th><th>Challenged</th><th>Record</th></tr></thead><tbody id="chBody"></tbody></table>
     </div>
   </section>
 
@@ -579,7 +593,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-10-27.1';
+const APP_VERSION = '2026-11-06.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -620,7 +634,7 @@ LINKS.forEach(([a,b]) => {
   l.setAttribute('x2',NODES[b][0]); l.setAttribute('y2',NODES[b][1]);
   svg.appendChild(l); lines.push(l);
 });
-const hexes = [], selects = [], infos = [], cells = [], labels = [], shines = [], circles = [], starEls = [], btns = [], lvls = [];
+const hsEls = [], hexes = [], selects = [], infos = [], cells = [], labels = [], shines = [], circles = [], starEls = [], btns = [], lvls = [];
 NODES.forEach(([x,y],i) => {
   const p = document.createElementNS(NS,'polygon');
   const C = .29, CY = 30 / HH; // corner cuts of the octagon (sideways, and up/down)
@@ -667,7 +681,8 @@ NODES.forEach(([x,y],i) => {
   const lv = document.createElement('select');
   lv.className = 'lvl'; lv.hidden = true; lv.setAttribute('aria-label', 'Skill level for player ' + (i+1));
   lv.addEventListener('change', () => { const p = players[selects[i].value]; if (p) { p.level = Number(lv.value); fill(); } });
-  cell.append(btn, sel, info, lv); board.appendChild(cell); btns.push(btn); lvls.push(lv);
+  const hs = document.createElement('div'); hs.className = 'hs'; hsEls.push(hs);
+  cell.append(hs, btn, sel, info, lv); board.appendChild(cell); btns.push(btn); lvls.push(lv);
   selects.push(sel); infos.push(info); cells.push(cell);
 });
 
@@ -702,6 +717,12 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 
 const stars = p => p.level;  // the level currently chosen for this card
 
+// Headshots: a link typed in the Headshot column wins; otherwise the photo comes from Sleeper (looked up in the browser, cached for a day).
+const HSMAP = {};
+const hsUrl = p => (p && (p.headshot || HSMAP[String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase()])) || '';
+const hsImg = p => '<img src="' + esc(hsUrl(p)) + '" alt="" loading="lazy" onerror="this.remove()">';
+const hsHTML = p => '<span class="hs" data-k="' + esc(p ? String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase() : '') + '">' + (hsUrl(p) ? hsImg(p) : '') + '</span>';
+const cleanHs = v => { v = String(v == null ? '' : v).trim(); return /^(https?:\/\/\S+|\w[\w ./%()-]*\.(png|jpe?g|webp|gif|svg))$/i.test(v) ? v : ''; };
 function show(i) {
   const p = players[selects[i].value];
   const n = p ? stars(p) : 0;
@@ -721,6 +742,7 @@ function show(i) {
   labels[i].setAttribute('fill', p ? '#d5d9e0' : '#9aa0aa');
   labels[i].setAttribute('stroke', p ? '#07090d' : 'none');
   starEls[i].textContent = p ? '★'.repeat(n) : '';
+  hsEls[i].innerHTML = p && hsUrl(p) ? hsImg(p) : '';
   infos[i].innerHTML = p ? `${esc(p.position)} &middot; ${esc(p.team)}<br>${esc(p.division)} &middot; ${esc(p.draft)}` : '';
 }
 
@@ -874,9 +896,64 @@ function loadDb() {
     if (!list.length) return;
     players = list; players.forEach(p => { p.level = maxLevel(p); });
     dbMeta = {name:c.name || DB_FILE, updated:c.updated || 0, dataTime:c.dataTime || 0, hostedHash:c.hostedHash || '', source:c.source || ''};
-    selects.forEach(sel => sel.value = ''); fill();
+    selects.forEach(sel => sel.value = ''); fill(); slResolve();
     dbStatus('', true);
   } catch (e) {}
+}
+
+
+// ---- Sleeper headshots ----
+const SL_KEY = 'fud.sleeper.v1', SL_DAY = 864e5;
+const slNorm = n => String(n || '').toLowerCase().replace(/[\u2018\u2019'.]/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, ' ').replace(/\s+/g, ' ').trim();
+let slIdx = null, slBusy = false;
+function slLoadCache() { try { const c = JSON.parse(localStorage.getItem(SL_KEY) || 'null'); if (c && c.idx) return c; } catch (e) {} return null; }
+function slApply() {
+  if (!slIdx) return 0;
+  let n = 0;
+  (Array.isArray(players) ? players : []).forEach(p => {
+    if (!p || p.headshot) return;
+    const k = String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase();
+    if (HSMAP[k]) return;
+    const list = slIdx[slNorm(p.name) + '|' + String(p.position).trim().toUpperCase()];
+    if (!list || !list.length) return;
+    const team = String(p.team).trim().toUpperCase();
+    const hit = list.find(e => e.t === team) || list.find(e => e.t) || list[0];
+    HSMAP[k] = 'https://sleepercdn.com/content/nfl/players/' + hit.id + '.jpg'; n++;
+  });
+  return n;
+}
+function slPaint() {
+  document.querySelectorAll('.hs[data-k]').forEach(el => {
+    if (el.firstChild) return;
+    const u = HSMAP[el.dataset.k]; if (!u) return;
+    const im = document.createElement('img'); im.src = u; im.alt = ''; im.loading = 'lazy'; im.onerror = () => im.remove(); el.appendChild(im);
+  });
+  try { selects.forEach((sel, i) => { if (sel.value !== '' && !hsEls[i].firstChild) show(i); }); } catch (e) {}
+}
+async function slFetch() {
+  const res = await fetch('https://api.sleeper.app/v1/players/nfl');
+  if (!res.ok) throw new Error('sleeper ' + res.status);
+  const all = await res.json(), idx = {};
+  Object.keys(all).forEach(id => {
+    const x = all[id]; if (!x || !x.full_name || !['QB','RB','WR','TE'].includes(x.position)) return;
+    const k = slNorm(x.full_name) + '|' + x.position;
+    (idx[k] = idx[k] || []).push({id, t: x.team ? String(x.team).toUpperCase() : ''});
+  });
+  try { localStorage.setItem(SL_KEY, JSON.stringify({t: Date.now(), idx})); } catch (e) {}
+  return idx;
+}
+// Call after the player list changes (page load, swapped-in players, new database).
+async function slResolve() {
+  if (slBusy || !players.length) return;
+  const c = slLoadCache();
+  if (c && !slIdx) slIdx = c.idx;
+  if (slIdx && slApply()) slPaint();
+  const missing = players.some(p => p && !p.headshot && !HSMAP[String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase()]);
+  const stale = !c || Date.now() - c.t > SL_DAY;
+  // Only go back to Sleeper when someone is missing a photo AND the saved copy is over a day old (or absent).
+  if (!missing || !stale) return;
+  slBusy = true;
+  try { slIdx = await slFetch(); if (slApply()) slPaint(); } catch (e) {} finally { slBusy = false; }
 }
 
 const keyOf = p => String(p.name).trim().toLowerCase() + '|' + String(p.position).trim().toUpperCase();
@@ -886,7 +963,7 @@ async function parse(buf, name, hostedHash, lastMod) {
   const get = (r, key) => { const k = Object.keys(r).find(c => c.trim().toLowerCase() === key); return k ? r[k] : ''; };
   const next = rows.map(r => ({
     levels:parseLevels(get(r,'skill level')), name:get(r,'name'), position:get(r,'position'),
-    team:get(r,'team'), division:get(r,'division'), draft:yearOf(get(r,'draft year'))
+    team:get(r,'team'), division:get(r,'division'), draft:yearOf(get(r,'draft year')), headshot:cleanHs(get(r,'headshot'))
   })).filter(p => String(p.name).trim());
   // A file with no players never replaces the database you already have.
   if (!next.length) {
@@ -910,6 +987,7 @@ async function parse(buf, name, hostedHash, lastMod) {
   });
   const cleared = kept.filter(Boolean).length - picks.filter(Boolean).length;
   fill(picks);
+  slResolve();
   saveDb(name, hostedHash, dataTime);
   dbStatus(cleared ? cleared + ' lineup spot' + (cleared > 1 ? 's' : '') + ' cleared (player not in the new file)' : 'Player database updated.');
 }
@@ -993,9 +1071,11 @@ function loadDraft() {
 }
 const draftLocked = () => !!(draft && draft.phase === 'picking');
 function forfeitDraft() {
-  if (!draftLocked()) return;
+  if (!draftLocked() || draft.challenge) return;
   if (!window.confirm('Forfeit this draft? Your picks will be lost and nothing is saved to the leaderboard.')) return;
+  const rec = {id:draft.id, odds:draft.odds, mode:draft.mode};
   draft = null; try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  setForf(forfN + 1); flushForfeits(rec).then(refreshCount);
   restore([]); renderDraft(); openNamePrompt();
 }
 function clearDraft() {
@@ -1177,7 +1257,7 @@ function exitReview() {
 }
 function roundCard(name, level, cls) {
   const p = findPlayer(name, level), t = TIER[level] || TIER[3];
-  return `<button type="button" class="opt ${cls}" disabled style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"><span class="in"><b>${esc(name)}</b>` +
+  return `<button type="button" class="opt ${cls}" disabled style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"><span class="in">${hsHTML(p)}<b>${esc(name)}</b>` +
     (p ? `<i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i>` : '') + `<em>${'★'.repeat(level)}</em></span></button>`;
 }
 function renderRounds() {
@@ -1193,11 +1273,30 @@ function renderRounds() {
 const COUNT_KEY = 'fud.count.v1';
 const easternDay = () => new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'});
 let todayN = 0;
-function setCount(n) { todayN = n; $('draftCountN').textContent = n; try { localStorage.setItem(COUNT_KEY, JSON.stringify({d:easternDay(), n})); } catch (e) {} }
-function loadCountLocal() { let n = 0; try { const c = JSON.parse(localStorage.getItem(COUNT_KEY) || 'null'); if (c && c.d === easternDay()) n = c.n; } catch (e) {} todayN = n; $('draftCountN').textContent = n; }
+let forfN = 0;      // drafts given up today (shown with the completed ones as "Drafts Attempted Today")
+const FLQ_KEY = 'fud.forfeitlog.v1';
+function paintCount() { $('draftCountN').textContent = todayN; $('draftAttN').textContent = todayN + forfN; try { localStorage.setItem(COUNT_KEY, JSON.stringify({d:easternDay(), n:todayN, f:forfN})); } catch (e) {} }
+function setCount(n) { todayN = n; paintCount(); }
+function setForf(f) { forfN = f; paintCount(); }
+function loadCountLocal() { let n = 0, f = 0; try { const c = JSON.parse(localStorage.getItem(COUNT_KEY) || 'null'); if (c && c.d === easternDay()) { n = c.n || 0; f = c.f || 0; } } catch (e) {} todayN = n; forfN = f; $('draftCountN').textContent = n; $('draftAttN').textContent = n + f; }
+const queuedForfeits = () => { try { return JSON.parse(localStorage.getItem(FLQ_KEY) || '[]').length; } catch (e) { return 0; } };
+async function flushForfeits(rec) {
+  if (!SIGNUP_URL || !user) return;
+  let q = []; try { q = JSON.parse(localStorage.getItem(FLQ_KEY) || '[]'); } catch (e) {}
+  if (rec) q.push(rec);
+  q = q.slice(-20);
+  const left = [];
+  if (user.status === 'approved') {
+    for (const r of q) {
+      try { const x = await api('forfeit', user.phone, r); if (!x.ok && (x.error === 'busy' || x.error === 'server')) left.push(r); }
+      catch (e) { left.push(r); }
+    }
+  } else left.push(...q);
+  try { left.length ? localStorage.setItem(FLQ_KEY, JSON.stringify(left)) : localStorage.removeItem(FLQ_KEY); } catch (e) {}
+}
 async function refreshCount() {
   if (!SIGNUP_URL || !user || user.status !== 'approved') return;
-  try { const r = await api('count', user.phone); if (r.ok) setCount(r.count); } catch (e) {}
+  try { const r = await api('count', user.phone); if (r.ok) { todayN = r.count; setForf((r.forfeits || 0) + queuedForfeits()); } } catch (e) {}
 }
 async function logDraft(rec) {
   if (!SIGNUP_URL || !user) return;
@@ -1253,7 +1352,7 @@ function renderDraft() {
     const p = byKey(o.key); if (!p) return '';
     const t = TIER[o.level];
     return `<button type="button" class="opt${draft.chosen ? (draft.chosen === o.key ? ' sel' : ' off') : ''}" data-n="${k}" style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"${draft.chosen ? ' disabled' : ''}>` +
-      `<span class="in"><b>${esc(p.name)}</b>` + (draft.mode === 'Ball-Knower' ? '' : `<i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i>`) + `<em>${'★'.repeat(o.level)}</em></span></button>`;
+      `<span class="in">` + (draft.mode === 'Ball-Knower' ? '' : hsHTML(p)) + `<b>${esc(p.name)}</b>` + (draft.mode === 'Ball-Knower' ? '' : `<i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i>`) + `<em>${'★'.repeat(o.level)}</em></span></button>`;
   }).join('');
 }
 $('draftOpts').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && !b.disabled) pickOption(Number(b.dataset.n)); });
@@ -1357,7 +1456,7 @@ function pdList() {
 }
 function pdCard(x) {
   const t = TIER[x.l] || TIER[3], p = x.p;
-  return `<div class="pc" style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"><div class="in"><b>${esc(p.name)}</b><i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i><em>${'★'.repeat(x.l)}</em></div></div>`;
+  return `<div class="pc" style="--l:${t.light};--b:${t.base};--d:${t.dark};--tx:${t.text}"><div class="in">${hsHTML(p)}<b>${esc(p.name)}</b><i>${esc(p.position)} &middot; ${esc(p.team)}</i><i>${esc(p.division)} &middot; ${esc(p.draft)}</i><em>${'★'.repeat(x.l)}</em></div></div>`;
 }
 function renderPD(keepShown) {
   const nf = PD_FIELDS.reduce((n, [f]) => n + pdSel[f].size, 0);
@@ -1430,12 +1529,16 @@ function renderHow() {
 // ---- Challenge: head-to-head drafts where both players get the same player options.
 let chData = null, chSubView = 'everyone', chTok = 0;
 const chMeta = c => (c.odds === 'Default' ? 'Default' : 'Chaos') + ' · ' + (c.mode === 'Ball-Knower' ? 'Ball-Knower' : 'Normal');
-// A challenge's shared options: for every round, 3 slots. Each slot is a ranked list of candidates of one star level
-// (the first is the primary pick, the rest are same-level stand-ins for a player whose open spots it does not fit),
-// followed by a few random players as a last resort.
+// A challenge's shared options: for every round, 3 slots. Each slot is a ranked list of candidates: a primary pick of one
+// star level, then stand-ins of that same star level for every position (so whatever spot a player still has open there is
+// a same-rating card for it), then the nearest ratings at any position that has too few. Each player is offered the first
+// candidate on each slot who fits their open spots and is not already on their team.
 function makeDeck(odds) {
   const deck = [], primary = new Set(), rnd = n => Math.floor(Math.random() * n);
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const pos = p => String(p.position).trim().toUpperCase();
+  const positions = Array.from(new Set(players.map(pos)));
+  const nearest = (p, lv) => p.levels.slice().sort((a, b) => Math.abs(a - lv) - Math.abs(b - lv) || b - a)[0];
   for (let r = 1; r <= 9; r++) {
     const round = [];
     for (let s = 0; s < 3; s++) {
@@ -1445,12 +1548,20 @@ function makeDeck(odds) {
       for (let d = 0; d <= 4 && !lv; d++) for (const L of d ? [want - d, want + d] : [want]) if (players.some(x => x.levels.includes(L))) { lv = L; break; }
       const same = shuffle(players.filter(x => x.levels.includes(lv))).sort((a, b) => (primary.has(keyOf(a)) ? 1 : 0) - (primary.has(keyOf(b)) ? 1 : 0));
       primary.add(keyOf(same[0]));
-      const head = same.slice(0, 14);
-      const extra = shuffle(players.filter(x => !head.includes(x))).slice(0, 8);
-      round.push(head.map(p => [p.name, lv]).concat(extra.map(p => [p.name, p.levels[rnd(p.levels.length)]])));
+      const head = same.slice(0, 8), seen = new Set(head), list = head.map(p => [p.name, lv]);
+      for (const ps of positions) {
+        let have = head.filter(x => pos(x) === ps).length;
+        same.filter(x => pos(x) === ps && !seen.has(x)).slice(0, 4).forEach(x => { seen.add(x); list.push([x.name, lv]); have++; });
+        if (have < 3) {
+          shuffle(players.filter(x => pos(x) === ps && !seen.has(x))).sort((a, b) => Math.abs(nearest(a, lv) - lv) - Math.abs(nearest(b, lv) - lv)).slice(0, 4)
+            .forEach(x => { seen.add(x); list.push([x.name, nearest(x, lv)]); });
+        }
+      }
+      round.push(list);
     }
     deck.push(round);
   }
+  while (JSON.stringify(deck).length > 44000) deck.forEach(rd => rd.forEach(l => { l.length = Math.max(12, l.length - 4); }));
   return deck;
 }
 function startChallengeDraft(c) {
@@ -1494,6 +1605,7 @@ function renderChallenges() {
   const d = chData, msg = $('chMsg'), tbl = $('chTable');
   const out = $('chOut'), inn = $('chIn'); out.innerHTML = ''; inn.innerHTML = ''; $('chBody').innerHTML = '';
   $('chNew').disabled = !(d && d.me);
+  $('chRecord').hidden = !(d && d.record); if (d && d.record) $('chRecord').textContent = 'Challenge Record: ' + d.record.w + '-' + d.record.l + '-' + d.record.t;
   if (!d || d.error) {
     $('chOutNone').hidden = $('chInNone').hidden = true; tbl.hidden = true;
     msg.textContent = !user || user.status !== 'approved' ? 'Sign up in the Account tab to use challenges.' : (d ? d.error : 'Loading…'); return;
@@ -1521,7 +1633,7 @@ function renderChallenges() {
   msg.textContent = rows.length ? '' : 'No finished challenges yet.'; tbl.hidden = !rows.length;
   rows.forEach(x => {
     const tr = document.createElement('tr'), cw = x.winner === 'challenger' ? 'win' : x.winner === 'challenged' ? 'lose' : '', dw = x.winner === 'challenged' ? 'win' : x.winner === 'challenger' ? 'lose' : '';
-    [[x.challenger, cw], [x.cTotal, cw], [x.dTotal, dw], [x.challenged, dw]].forEach(([v, cl]) => { const td = document.createElement('td'); td.textContent = v == null ? '–' : v; if (cl) td.className = cl; tr.appendChild(td); });
+    [[x.challenger, cw], [x.cTotal, cw], [x.dTotal, dw], [x.challenged, dw], [x.record || '', '']].forEach(([v, cl]) => { const td = document.createElement('td'); td.textContent = v == null ? '–' : v; if (cl) td.className = cl; tr.appendChild(td); });
     tr.addEventListener('click', () => openChallengeView(x.id)); $('chBody').appendChild(tr);
   });
 }
@@ -1579,10 +1691,11 @@ async function loadStats() {
     sel.innerHTML = names.map(n => `<option value="${esc(n)}">${esc(n)}${r.self && n === r.self ? ' (you)' : ''}</option>`).join('');
     sel.value = stName;
     const s = r.stats || {drafts:0};
-    if (!s.drafts) { grid.innerHTML = ''; msg.textContent = 'No drafts yet for this selection.'; return; }
+    const fRow = `<div class="sc3">${stCard('Forfeits Today', s.fToday || 0)}${stCard('Forfeits This Week', s.fWeek || 0)}${stCard('Forfeits All-Time', s.fAll || 0)}</div>`;
+    if (!s.drafts) { grid.innerHTML = s.fAll ? fRow : ''; msg.textContent = 'No drafts yet for this selection.'; return; }
     msg.textContent = '';
     const f = v => v == null ? '–' : v, pct = v => v == null ? '–' : v.toFixed(1) + '%';
-    grid.innerHTML = `<div class="sc3">${stCard('Drafts Today', s.today || 0)}${stCard('Drafts This Week', s.week || 0)}${stCard('Drafts All-Time', s.drafts)}</div>` + stCard('Highest Score', s.high, 'accent') + stCard('Lowest Score', s.low) +
+    grid.innerHTML = `<div class="sc3">${stCard('Drafts Today', s.today || 0)}${stCard('Drafts This Week', s.week || 0)}${stCard('Drafts All-Time', s.drafts)}</div>` + fRow + stCard('Highest Score', s.high, 'accent') + stCard('Lowest Score', s.low) +
       stCard('Average Talent', f(s.avgTalent)) + stCard('Average Chemistry', f(s.avgChemistry)) + stCard('Average Total', f(s.avgTotal), 'accent') + stCard('Average Accuracy', pct(s.avgAccuracy)) +
       `<div class="sc wide"><span>5★ Players Pulled</span><strong>${s.fiveStar || 0}</strong><small>${s.withPicks ? 'Picked across ' + s.withPicks + ' draft' + (s.withPicks === 1 ? '' : 's') + ' with saved picks.' : 'Pick history is saved for drafts made after the update.'}</small></div>` + `<div class="sc wide"><span>Most Drafted Player</span>` + (s.top && s.top.length
         ? `<ol>${s.top.map(x => `<li><span style="color:var(--ink);font-size:.9rem">${esc(x.name)}</span><b>${x.count}</b></li>`).join('')}</ol><small>Based on ${s.withPicks} draft${s.withPicks === 1 ? '' : 's'} with saved picks.</small>`
@@ -1609,6 +1722,7 @@ function showTab(name, keepReview) {
   for (const k in TABS) $(TABS[k]).setAttribute('aria-selected', String(k === name));
   ['viewSandbox', 'viewLeaders', 'viewChallenge', 'viewStats', 'viewAbout', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
   closePicker(false);
+  try { const tb = $('tabs'), b = $(TABS[name]); tb.scrollTo({left:b.offsetLeft - (tb.clientWidth - b.offsetWidth) / 2, behavior:'smooth'}); } catch (e) {}
   if (name === 'admin') pollRequests();
   else if (name === 'leaders') loadLeaders();
   else if (name === 'account') renderAccount();
@@ -2049,7 +2163,7 @@ async function syncAccount() {
       user.status = 'approved'; user.username = r.username || user.username; user.admin = !!r.admin; if (r.name) user.name = r.name; saveUser(); renderAccount();
       if (!user.name) openNamePrompt();
       if (wasBlocked) applyBlocked(); else if (was !== isAdmin()) applyAccess();
-      logDraft();
+      logDraft(); flushForfeits();
     } else { user = null; saveUser(); renderAccount(); applyBlocked(); if (isInstalled()) openSignup(false); }
   } catch (e) {}
 }

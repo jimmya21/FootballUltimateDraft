@@ -23,6 +23,9 @@ self.addEventListener('fetch', e => {
   // The player database is always fetched fresh.
   if (/\.xlsx?$/i.test(decodeURIComponent(url.pathname))) return;
 
+  // Sleeper's player list is cached by the app itself (once a day); never serve a stale copy from here.
+  if (url.hostname === 'api.sleeper.app') return;
+
   const sameOrigin = url.origin === location.origin;
   const isPage = req.mode === 'navigate' || (sameOrigin && /(^|\/)(index\.html)?$/.test(url.pathname));
   if (isPage) {
