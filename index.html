@@ -519,14 +519,11 @@
 </main>
 
 <nav id="tabs" role="tablist" aria-label="Sections">
-  <button id="tabSandbox" role="tab" aria-selected="true" aria-controls="viewSandbox">
+    <button id="tabAbout" role="tab" aria-selected="false" aria-controls="viewAbout">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <rect x="2.5" y="14" width="19" height="6" rx="1"/>
-      <path d="M4.5 14c1.2-4.2 6.3-4.2 7.5 0"/>
-      <path d="M17.5 3.5l-2.8 7.2"/>
-      <path d="M13.2 10.6l3.2 1.3"/>
+      <circle cx="12" cy="12" r="9"/><path d="M9.4 9.4a2.7 2.7 0 1 1 3.9 2.4c-.9.5-1.3 1-1.3 2"/><circle cx="12" cy="17" r=".6" fill="currentColor"/>
     </svg>
-    <span>Sandbox</span>
+    <span>About</span>
   </button>
   <button id="tabDraft" role="tab" aria-selected="false" aria-controls="viewSandbox">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -537,18 +534,27 @@
     </svg>
     <span>Draft</span>
   </button>
-  <button id="tabLeaders" role="tab" aria-selected="false" aria-controls="viewLeaders">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M3.5 20.5h17"/><rect x="5" y="12" width="3.6" height="8.5" rx=".8"/><rect x="10.2" y="5" width="3.6" height="15.5" rx=".8"/><rect x="15.4" y="9" width="3.6" height="11.5" rx=".8"/>
-    </svg>
-    <span>Leaders</span>
-  </button>
   <button id="tabChallenge" role="tab" aria-selected="false" aria-controls="viewChallenge">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M4.5 4.5 13 13"/><path d="M10.5 15.5l5-5"/><path d="M13 13l6 6"/>
       <path d="M19.5 4.5 11 13"/><path d="M13.5 15.5l-5-5"/><path d="M11 13l-6 6"/>
     </svg>
     <span>Challenge</span><em id="chBadge" hidden>0</em>
+  </button>
+  <button id="tabSandbox" role="tab" aria-selected="false" aria-controls="viewSandbox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2.5" y="14" width="19" height="6" rx="1"/>
+      <path d="M4.5 14c1.2-4.2 6.3-4.2 7.5 0"/>
+      <path d="M17.5 3.5l-2.8 7.2"/>
+      <path d="M13.2 10.6l3.2 1.3"/>
+    </svg>
+    <span>Sandbox</span>
+  </button>
+  <button id="tabLeaders" role="tab" aria-selected="false" aria-controls="viewLeaders">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3.5 20.5h17"/><rect x="5" y="12" width="3.6" height="8.5" rx=".8"/><rect x="10.2" y="5" width="3.6" height="15.5" rx=".8"/><rect x="15.4" y="9" width="3.6" height="11.5" rx=".8"/>
+    </svg>
+    <span>Leaders</span>
   </button>
   <button id="tabStats" role="tab" aria-selected="false" aria-controls="viewStats">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -558,12 +564,6 @@
       <circle cx="9" cy="19" r=".8" fill="currentColor"/><circle cx="12" cy="19" r=".8" fill="currentColor"/><circle cx="15" cy="19" r=".8" fill="currentColor"/>
     </svg>
     <span>Stats</span>
-  </button>
-  <button id="tabAbout" role="tab" aria-selected="false" aria-controls="viewAbout">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9"/><path d="M9.4 9.4a2.7 2.7 0 1 1 3.9 2.4c-.9.5-1.3 1-1.3 2"/><circle cx="12" cy="17" r=".6" fill="currentColor"/>
-    </svg>
-    <span>About</span>
   </button>
   <button id="tabAccount" role="tab" aria-selected="false" aria-controls="viewAccount">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -610,7 +610,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-11-06.7';
+const APP_VERSION = '2026-11-07.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -1758,11 +1758,11 @@ $('stPerson').addEventListener('change', () => { stName = $('stPerson').value; l
 // ---- Tabs: Sandbox, Draft, Leaders, Stats, About, Account and (owner only) Admin.
 const TABS = {sandbox:'tabSandbox', draft:'tabDraft', leaders:'tabLeaders', challenge:'tabChallenge', stats:'tabStats', about:'tabAbout', account:'tabAccount', admin:'tabAdmin'};
 const VIEWOF = {sandbox:'viewSandbox', draft:'viewSandbox', leaders:'viewLeaders', challenge:'viewChallenge', stats:'viewStats', about:'viewAbout', account:'viewAccount', admin:'viewAdmin'};
-let curTab = 'sandbox';
+let curTab = 'draft';
 function showTab(name, keepReview) {
   if (draftLocked() && name !== 'draft') return;
   if (stash && !(keepReview && name === 'draft')) exitReview();      // a draft in progress keeps the user on the Draft tab
-  if (name === 'admin' && !isAdmin()) name = 'sandbox';
+  if (name === 'admin' && !isAdmin()) name = 'draft';
   curTab = name;
   if (name === 'sandbox' || name === 'draft') enterMode(name);
   for (const k in TABS) $(TABS[k]).setAttribute('aria-selected', String(k === name));
@@ -2024,7 +2024,7 @@ function applyBlocked() {
 }
 function applyAccess() {
   $('tabAdmin').hidden = !isAdmin();
-  if (!isAdmin() && curTab === 'admin') showTab('sandbox');
+  if (!isAdmin() && curTab === 'admin') showTab('draft');
   startPolling();
 }
 function renderAccount() {
@@ -2215,7 +2215,7 @@ async function syncAccount() {
 }
 setInterval(syncAccount, 45000);
 if (!VIEW) {
-  loadDraft(); if (draftLocked()) showTab('draft');
+  loadDraft(); showTab('draft');
   renderAccount(); applyBlocked();
   if (user && user.status === 'pending') openSignup(false);
   else if (isInstalled() && !user) openSignup(false);
