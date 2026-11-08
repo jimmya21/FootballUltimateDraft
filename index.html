@@ -307,6 +307,15 @@
 
   /* ---- app updates, account, sign-up ---- */
   #tabs button[hidden] { display:none; }
+  #gate { position:fixed; inset:0; z-index:300; background:var(--bg); display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; overflow:auto; }
+  #gate[hidden] { display:none; }
+  #gate h2 { margin:0 0 10px; font-size:1.5rem; }
+  #gate p { margin:0 auto 16px; max-width:340px; color:var(--muted); line-height:1.45; }
+  #gate ol { text-align:left; max-width:340px; margin:0 auto; padding-left:22px; line-height:1.6; }
+  #gate li { margin-bottom:6px; }
+  #gateInstall { margin:0 auto 18px; padding:12px 22px; font-size:1rem; font-weight:700; border:0; border-radius:10px; background:var(--accent); color:#07090d; }
+  #gateInstall[hidden] { display:none; }
+  body.gate main, body.gate nav#tabs { display:none !important; }
   #blocked { position:fixed; inset:0; z-index:100; background:var(--bg); display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; }
   #blocked h2 { margin:0 0 8px; font-size:1.4rem; }
   #blocked p { margin:0 auto; max-width:320px; color:var(--muted); line-height:1.45; }
@@ -601,6 +610,12 @@
   </form>
 </div>
 
+<div id="gate" hidden><div>
+  <h2>Install FUD to play</h2>
+  <p>This game only runs as an installed app. Add it to your device, then open it from your home screen or app list.</p>
+  <button id="gateInstall" type="button" hidden>Install FUD</button>
+  <ol id="gateSteps"></ol>
+</div></div>
 <div id="blocked" hidden role="alert"><div><h2>This app is offline</h2></div></div>
 
 <div id="solveOverlay" hidden>
@@ -610,7 +625,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-11-07.1';
+const APP_VERSION = '2026-11-07.2';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -618,6 +633,16 @@ window.addEventListener('resize', setAppH);
 window.addEventListener('orientationchange', () => setTimeout(setAppH, 150));
 if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppH);
 // When this page is opened with #solution=..., it shows the best lineup read-only.
+// Install gate: on a normal web page (not the installed app) only the install instructions are shown.
+// Shared solution/review links stay open, and adding #dev to the address skips the gate for testing (remembered for the tab).
+const IS_APP = () => navigator.standalone === true || !!(window.matchMedia && ['standalone', 'fullscreen', 'minimal-ui'].some(m => window.matchMedia('(display-mode: ' + m + ')').matches));
+let GATE = false;
+try {
+  if (/^https?:$/.test(location.protocol) && !IS_APP() && !/^#(?:solution|review)=/.test(location.hash)) {
+    if (/^#dev\b/.test(location.hash)) sessionStorage.setItem('fud.dev', '1');
+    GATE = sessionStorage.getItem('fud.dev') !== '1';
+  }
+} catch (e) { GATE = /^https?:$/.test(location.protocol) && !IS_APP(); }
 let VIEW = null;
 let VIEW_TITLE = '';
 try { const m = location.hash.match(/^#(?:solution|review)=([^&]+)(?:&t=(.*))?$/); if (m) { const v = JSON.parse(decodeURIComponent(m[1])); if (Array.isArray(v) && v.length === 9) { VIEW = v; VIEW_TITLE = m[2] ? decodeURIComponent(m[2]) : ''; } } } catch (e) {}
@@ -1064,10 +1089,10 @@ async function loadHosted() {
 }
 
 
-if (!VIEW) loadDb();
-window.addEventListener('load', () => { try { slResolve(); } catch (e) { slStat('Error: ' + e.message); } });
+if (!VIEW && !GATE) loadDb();
+window.addEventListener('load', () => { if (GATE) return; try { slResolve(); } catch (e) { slStat('Error: ' + e.message); } });
 if (!VIEW && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-if (!VIEW) loadHosted().then(() => { refreshTop(); });
+if (!VIEW && !GATE) loadHosted().then(() => { refreshTop(); });
 
 // ---- Draft mode: 9 rounds of "pick 1 of 3". It uses the same board as the Sandbox tab.
 const DRAFT_KEY = 'fud.draft.v1', DLQ_KEY = 'fud.draftlog.v1', ODDS_KEY = 'fud.odds.v1';
@@ -2213,8 +2238,20 @@ async function syncAccount() {
     } else { user = null; saveUser(); renderAccount(); applyBlocked(); if (isInstalled()) openSignup(false); }
   } catch (e) {}
 }
-setInterval(syncAccount, 45000);
-if (!VIEW) {
+setInterval(() => { if (!GATE) syncAccount(); }, 45000);
+if (GATE) {
+  document.body.classList.add('gate'); $('gate').hidden = false;
+  const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1), android = /Android/.test(ua);
+  $('gateSteps').innerHTML = ios
+    ? '<li>Open this page in <b>Safari</b> (not inside another app).</li><li>Tap the <b>Share</b> button.</li><li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li><li>Open <b>FUD</b> from your home screen.</li>'
+    : android
+    ? '<li>Tap the <b>&#8942; menu</b> in Chrome.</li><li>Tap <b>Install app</b> (or <b>Add to Home screen</b>).</li><li>Open <b>FUD</b> from your app list or home screen.</li>'
+    : '<li>In Chrome or Edge, click the <b>Install</b> icon at the right end of the address bar (or the browser menu &rarr; <b>Install FUD</b>).</li><li>Open <b>FUD</b> from the window that appears.</li>';
+  let ip = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); ip = e; $('gateInstall').hidden = false; });
+  $('gateInstall').addEventListener('click', async () => { if (ip) { ip.prompt(); try { await ip.userChoice; } catch (e) {} ip = null; $('gateInstall').hidden = true; } });
+}
+if (!VIEW && !GATE) {
   loadDraft(); showTab('draft');
   renderAccount(); applyBlocked();
   if (user && user.status === 'pending') openSignup(false);
@@ -2246,7 +2283,7 @@ async function checkNewVersion() {
   } catch (e) {}
 }
 $('umGo').addEventListener('click', refreshApp);
-if (!VIEW) {
+if (!VIEW && !GATE) {
   $('appVer').textContent = APP_VERSION;
   setTimeout(checkNewVersion, 1500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewVersion(); });
