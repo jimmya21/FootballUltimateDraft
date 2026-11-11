@@ -197,6 +197,19 @@
   .chList .btns { display:flex; gap:6px; }
   .chList button { padding:7px 12px; font-size:.82rem; }
   .chList .deny { background:transparent; color:#e58a87; border:1px solid #7a3b3a; }
+  /* ---- Daily ---- */
+  #dailyGo { width:100%; padding:12px 16px; font-size:1rem; margin:4px 0 0; }
+  #dailyGo:disabled { opacity:.5; }
+  #viewDaily h3 { margin:22px 0 8px; font-size:1rem; }
+  #viewDaily .seg { margin-bottom:6px; }
+  #dailyTable, #dailyWins { width:100%; border-collapse:collapse; font-size:.82rem; margin-top:4px; }
+  #dailyTable th, #dailyWins th { font-size:.64rem; font-weight:600; color:var(--muted); padding:6px 3px; border-bottom:1px solid var(--line); text-align:center; }
+  #dailyTable td, #dailyWins td { padding:9px 3px; text-align:center; border-bottom:1px solid #1a2029; font-variant-numeric:tabular-nums; }
+  #dailyTable td:nth-child(2), #dailyTable th:nth-child(2), #dailyWins td:nth-child(2), #dailyWins th:nth-child(2) { text-align:left; word-break:break-word; }
+  #dailyTable th:first-child, #dailyTable td:first-child, #dailyWins th:first-child, #dailyWins td:first-child { width:28px; color:var(--muted); }
+  #dailyTable td:last-child { font-weight:700; color:var(--accent); }
+  #dailyTable tr.open { cursor:pointer; } #dailyTable tr.open:active td { background:#1c2531; }
+  #dailyTable td.hid { color:var(--muted); }
   .chNone { color:var(--muted); font-size:.85rem; margin:4px 0; }
   #chTable { width:100%; border-collapse:collapse; font-size:.82rem; margin-top:4px; }
   #chTable th { font-size:.64rem; font-weight:600; color:var(--muted); padding:6px 3px; border-bottom:1px solid var(--line); text-align:center; }
@@ -464,6 +477,20 @@
     </div>
   </section>
 
+  <section id="viewDaily" class="view" role="tabpanel" aria-labelledby="tabDaily" hidden>
+    <div class="pane">
+      <button id="dailyGo">Daily Challenge</button>
+      <p id="dailyMsg" class="chNone" role="status"></p>
+      <h3 id="dailyTitle">Today's Leaderboard</h3>
+      <div id="dailyDay" class="seg" role="group" aria-label="Day"><button type="button" data-v="today" class="on">Today</button><button type="button" data-v="yesterday">Yesterday</button></div>
+      <p id="dailyNote" class="chNone"></p>
+      <table id="dailyTable" hidden><thead><tr><th>#</th><th>Username</th><th>Talent</th><th>Chem</th><th>Total</th></tr></thead><tbody id="dailyBody"></tbody></table>
+      <h3>Daily Wins</h3>
+      <p id="dailyWinsNone" class="chNone">No Daily Challenge has been won yet.</p>
+      <table id="dailyWins" hidden><thead><tr><th>#</th><th>Username</th><th>1st Place Finishes</th></tr></thead><tbody id="dailyWinsBody"></tbody></table>
+    </div>
+  </section>
+
   <section id="viewStats" class="view" role="tabpanel" aria-labelledby="tabStats" hidden>
     <div class="pane">
       <select id="stPerson" aria-label="Player"></select>
@@ -533,6 +560,12 @@
       <circle cx="12" cy="12" r="9"/><path d="M9.4 9.4a2.7 2.7 0 1 1 3.9 2.4c-.9.5-1.3 1-1.3 2"/><circle cx="12" cy="17" r=".6" fill="currentColor"/>
     </svg>
     <span>About</span>
+  </button>
+  <button id="tabDaily" role="tab" aria-selected="false" aria-controls="viewDaily">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="4" y="5.5" width="16" height="14.5" rx="2.2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/><path d="m9.2 15 2 2 3.6-3.8"/>
+    </svg>
+    <span>Daily</span>
   </button>
   <button id="tabDraft" role="tab" aria-selected="false" aria-controls="viewSandbox">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -625,7 +658,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-11-07.2';
+const APP_VERSION = '2026-11-10.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -1134,9 +1167,11 @@ function loadDraft() {
 }
 const draftLocked = () => !!(draft && draft.phase === 'picking');
 function forfeitDraft() {
-  if (!draftLocked() || draft.challenge) return;
-  if (!window.confirm('Forfeit this draft? Your picks will be lost and nothing is saved to the leaderboard.')) return;
+  if (!draftLocked() || (draft.challenge && !draft.challenge.daily)) return;
+  const dy = draft.challenge && draft.challenge.daily;
+  if (!window.confirm(dy ? "Forfeit today's Daily Challenge? You will not be able to try it again today." : 'Forfeit this draft? Your picks will be lost and nothing is saved to the leaderboard.')) return;
   const rec = {id:draft.id, odds:draft.odds, mode:draft.mode, mod:draft.mod ? 'Y' : 'N'};
+  if (dy) rec.daily = draft.challenge.date;
   draft = null; try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
   setForf(forfN + 1); flushForfeits(rec).then(refreshCount);
   restore([]); renderDraft(); openNamePrompt();
@@ -1259,7 +1294,7 @@ function submitDraft() {
   draft.snap = snap; draft.phase = 'submitted'; draft.view = 'sub'; draft.opts = draft.opts.filter(o => o.key === draft.chosen);
   draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent), accuracy:isNaN(acc) ? null : acc};
   saveDraft(); setCount(todayN + 1); renderDraft(); openNamePrompt();
-  if (draft.challenge) flash('Challenge submitted. The result shows on the Challenge tab once both of you have finished.');
+  if (draft.challenge) flash(draft.challenge.daily ? 'Daily Challenge submitted. See the leaderboard on the Daily tab.' : 'Challenge submitted. The result shows on the Challenge tab once both of you have finished.');
   logDraft(Object.assign({id:draft.id, odds:draft.odds, mode:draft.mode, mod:draft.mod ? 'Y' : 'N', rounds:roundStrings(), challenge:draft.challenge ? draft.challenge.id : undefined, time:draft.challenge && draft.t0 ? Math.round((Date.now() - draft.t0) / 1000) : undefined}, draft.result)).then(refreshCount);
 }
 // Sub-tabs after a draft is submitted: "Submission" (the team as drafted) and "Solution" (the best possible layout).
@@ -1384,7 +1419,7 @@ function renderDraft() {
   $('clearAll').hidden = isD;
   $('draftNext').hidden = !(isD && (picking || done));
   const nOn = filledCount();
-  $('draftForfeit').hidden = !(isD && picking && (nOn < 8 || (nOn === 8 && !!draft.chosen)) && !draft.challenge);   // round 9 has to be submitted
+  $('draftForfeit').hidden = !(isD && picking && (nOn < 8 || (nOn === 8 && !!draft.chosen)) && !(draft.challenge && !draft.challenge.daily));   // round 9 has to be submitted
   $('draftNew').hidden = !(isD && !picking && !!draft); $('draftNew').classList.toggle('left', done);
   $('draftStart').hidden = !(isD && !draft); $('statRow').hidden = isD && !draft; $('draftNew').textContent = done ? (draft.review ? 'Close' : 'Clear') : 'New Draft';
   $('oddsSel').hidden = !(isD && !picking && !done);
@@ -1414,7 +1449,7 @@ function renderDraft() {
     : !draft.opts.length ? 'No eligible players are left in the database for the open spots.'
     : chosen ? 'Round ' + n + ' of 9: ' + chosen.name + ' added. ' + (n >= 9 ? 'Move players if you like, then press Submit.' : 'Press Next for the next three.')
     : 'Round ' + (n + 1) + ' of 9 (' + draft.odds + ' odds' + (draft.mode === 'Ball-Knower' ? ', Ball-Knower' : '') + (draft.mod ? ', Colleges' : '') + '): choose one player';
-  if (draft.challenge) $('draftTitle').textContent = 'Challenge vs ' + draft.challenge.opp + ' · ' + $('draftTitle').textContent;
+  if (draft.challenge) $('draftTitle').textContent = (draft.challenge.daily ? 'Daily Challenge' : 'Challenge vs ' + draft.challenge.opp) + ' · ' + $('draftTitle').textContent;
   $('draftOpts').innerHTML = draft.opts.map((o, k) => {
     const p = byKey(o.key); if (!p) return '';
     const t = TIER[o.level];
@@ -1593,9 +1628,67 @@ function renderHow() {
     <table class="tbl"><tr><th>Round</th>${[5, 4, 3, 2, 1].map(n => '<th>' + n + '★</th>').join('')}</tr>
     ${ODDS.map((r, i) => '<tr><td>' + (i + 1) + '</td>' + r.map(v => '<td>' + (v ? v + '%' : '–') + '</td>').join('') + '</tr>').join('')}</table>
 
+    <h3>Daily Challenge</h3>
+    <p>Once a day, everyone drafts from the same cards (Default odds, Normal mode, no modifier). You get one try, and a forfeit counts as your try. Scores and drafts on the Daily leaderboard stay hidden until you finish, and the Daily Wins board counts each person's first-place finishes.</p>
     <h3>Sandbox and Leaders</h3>
     <p>The Sandbox lets you place any players you like and try different layouts. Once all 9 are in, the Solution tab shows the best arrangement. On the Leaders tab, tap a draft to see its picks and the players that were passed over.</p>`;
 }
+
+// ---- Daily Challenge: everyone drafts from the same cards once a day.
+let dyData = null, dyDay = 'today', dyTok = 0;
+async function loadDaily(quiet) {
+  if (!SIGNUP_URL || !user || user.status !== 'approved') { if (!quiet) { dyData = null; renderDaily(); } return; }
+  const tok = ++dyTok;
+  try {
+    const r = await api('daily', user.phone, {day:dyDay});
+    if (tok !== dyTok) return;
+    dyData = r.ok ? r : {error:ERR[r.error] || 'Could not load the Daily Challenge.'};
+  } catch (e) { if (!quiet) dyData = {error:OFFLINE}; }
+  if (curTab === 'daily') renderDaily();
+}
+function renderDaily() {
+  const d = dyData, go = $('dailyGo'), msg = $('dailyMsg'), tbl = $('dailyTable'), body = $('dailyBody'), note = $('dailyNote');
+  body.innerHTML = ''; $('dailyWinsBody').innerHTML = '';
+  $('dailyTitle').textContent = dyDay === 'yesterday' ? "Yesterday's Leaderboard" : "Today's Leaderboard";
+  Array.from($('dailyDay').children).forEach(b => b.classList.toggle('on', b.dataset.v === dyDay));
+  go.textContent = 'Daily Challenge'; go.disabled = true; go.dataset.a = '';
+  if (!d || d.error) {
+    tbl.hidden = true; note.textContent = ''; $('dailyWins').hidden = true; $('dailyWinsNone').hidden = true;
+    msg.textContent = !user || user.status !== 'approved' ? 'Sign up in the Account tab to play the Daily Challenge.' : (d ? d.error : 'Loading…'); return;
+  }
+  const mineLocal = !!(draft && draft.challenge && draft.challenge.daily && draft.challenge.date === d.today && draft.phase === 'picking');
+  if (d.status === 'new') { go.disabled = false; go.dataset.a = 'start'; msg.textContent = 'Everyone gets the same cards today. You get one try, and a forfeit counts as your try.'; }
+  else if (d.status === 'started') {
+    if (mineLocal) { go.disabled = false; go.dataset.a = 'resume'; go.textContent = 'Resume Daily Challenge'; msg.textContent = 'Your Daily Challenge is in progress.'; }
+    else msg.textContent = 'Your Daily Challenge was started and cannot be restarted today.';
+  } else if (d.status === 'finished') msg.textContent = "You've completed today's Daily Challenge. A new one starts at midnight (Eastern).";
+  else msg.textContent = "You forfeited today's Daily Challenge. A new one starts at midnight (Eastern).";
+  const rows = d.board || [];
+  const none = dyDay === 'yesterday' ? 'Nobody finished yesterday\'s Daily Challenge.' : 'No completed drafts yet.';
+  note.textContent = !rows.length ? none : d.canView ? 'Tap a draft to see its picks.' : 'Scores and drafts are hidden until you complete ' + (dyDay === 'yesterday' ? "yesterday's" : "today's") + ' Daily Challenge.';
+  tbl.hidden = !rows.length;
+  rows.forEach((x, i) => {
+    const tr = document.createElement('tr');
+    const cells = x.hidden ? ['–', x.name, '–', '–', '–'] : [x.rank, x.name, x.talent, x.chemistry, x.total];
+    cells.forEach((v, k) => { const td = document.createElement('td'); td.textContent = v == null ? '–' : v; if (x.hidden && k !== 1) td.className = 'hid'; tr.appendChild(td); });
+    if (!x.hidden) { tr.className = 'open'; tr.addEventListener('click', () => openReview(x, null, 'daily')); }
+    body.appendChild(tr);
+  });
+  const wins = d.wins || [];
+  $('dailyWinsNone').hidden = wins.length > 0; $('dailyWins').hidden = !wins.length;
+  wins.forEach((x, i) => { const tr = document.createElement('tr'); [i + 1, x.name, x.wins].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); }); $('dailyWinsBody').appendChild(tr); });
+}
+async function startDaily() {
+  if (!players.length) { flash('The player database has not loaded yet.'); return; }
+  const go = $('dailyGo'); go.disabled = true;
+  try {
+    const r = await api('daily_start', user.phone, {deck:JSON.stringify(makeDeck('Default'))});
+    if (!r.ok) { flash(r.error === 'daily_done' ? "You've already used today's try." : (ERR[r.error] || 'Could not start the Daily Challenge.')); loadDaily(); return; }
+    startChallengeDraft({id:'D:' + r.date, deck:r.deck, odds:'Default', mode:'Normal', mod:'N', opponent:'Daily', daily:true, date:r.date});
+  } catch (e) { flash(OFFLINE); go.disabled = false; }
+}
+$('dailyGo').addEventListener('click', () => { const a = $('dailyGo').dataset.a; if (a === 'start') startDaily(); else if (a === 'resume') showTab('draft'); });
+$('dailyDay').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; dyDay = b.dataset.v; dyData = null; renderDaily(); loadDaily(); });
 
 // ---- Challenge: head-to-head drafts where both players get the same player options.
 let chData = null, chSubView = 'everyone', chTok = 0;
@@ -1640,7 +1733,7 @@ function startChallengeDraft(c) {
   let deck = null; try { deck = JSON.parse(c.deck); } catch (e) {}
   if (!Array.isArray(deck)) { flash('That challenge could not be loaded.'); return false; }
   if (stash) exitReview();
-  draft = {phase:'picking', odds:c.odds, mode:c.mode, mod:c.mod === 'Y', challenge:{id:c.id, opp:c.opponent, deck}, opts:[], chosen:null, seen:[], hist:[], picks:[], view:'sub', t0:Date.now(),
+  draft = {phase:'picking', odds:c.odds, mode:c.mode, mod:c.mod === 'Y', challenge:{id:c.id, opp:c.opponent, deck, daily:!!c.daily, date:c.date || ''}, opts:[], chosen:null, seen:[], hist:[], picks:[], view:'sub', t0:Date.now(),
     id:Date.now().toString(36) + Math.random().toString(36).slice(2, 8)};
   showTab('draft', true); restore([]); dealRound(); saveDraft(); renderDraft();
   return true;
@@ -1781,8 +1874,8 @@ $('stPerson').addEventListener('change', () => { stName = $('stPerson').value; l
 }));
 
 // ---- Tabs: Sandbox, Draft, Leaders, Stats, About, Account and (owner only) Admin.
-const TABS = {sandbox:'tabSandbox', draft:'tabDraft', leaders:'tabLeaders', challenge:'tabChallenge', stats:'tabStats', about:'tabAbout', account:'tabAccount', admin:'tabAdmin'};
-const VIEWOF = {sandbox:'viewSandbox', draft:'viewSandbox', leaders:'viewLeaders', challenge:'viewChallenge', stats:'viewStats', about:'viewAbout', account:'viewAccount', admin:'viewAdmin'};
+const TABS = {sandbox:'tabSandbox', daily:'tabDaily', draft:'tabDraft', leaders:'tabLeaders', challenge:'tabChallenge', stats:'tabStats', about:'tabAbout', account:'tabAccount', admin:'tabAdmin'};
+const VIEWOF = {sandbox:'viewSandbox', daily:'viewDaily', draft:'viewSandbox', leaders:'viewLeaders', challenge:'viewChallenge', stats:'viewStats', about:'viewAbout', account:'viewAccount', admin:'viewAdmin'};
 let curTab = 'draft';
 function showTab(name, keepReview) {
   if (draftLocked() && name !== 'draft') return;
@@ -1791,7 +1884,7 @@ function showTab(name, keepReview) {
   curTab = name;
   if (name === 'sandbox' || name === 'draft') enterMode(name);
   for (const k in TABS) $(TABS[k]).setAttribute('aria-selected', String(k === name));
-  ['viewSandbox', 'viewLeaders', 'viewChallenge', 'viewStats', 'viewAbout', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
+  ['viewSandbox', 'viewLeaders', 'viewChallenge', 'viewDaily', 'viewStats', 'viewAbout', 'viewAccount', 'viewAdmin'].forEach(v => { $(v).hidden = v !== VIEWOF[name]; });
   closePicker(false);
   try { const tb = $('tabs'), b = $(TABS[name]); tb.scrollTo({left:b.offsetLeft - (tb.clientWidth - b.offsetWidth) / 2, behavior:'smooth'}); } catch (e) {}
   if (name === 'admin') pollRequests();
@@ -1800,6 +1893,7 @@ function showTab(name, keepReview) {
   else if (name === 'about') renderAbout();
   else if (name === 'stats') loadStats();
   else if (name === 'challenge') { renderChallenges(); loadChallenges(); }
+  else if (name === 'daily') { renderDaily(); loadDaily(); }
   else { fit(); if (name === 'draft') { loadCountLocal(); refreshCount(); } }
 }
 Object.keys(TABS).forEach(k => $(TABS[k]).addEventListener('click', () => showTab(k)));
