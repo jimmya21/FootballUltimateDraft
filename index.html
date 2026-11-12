@@ -207,7 +207,10 @@
   #dailyTable td, #dailyWins td { padding:9px 3px; text-align:center; border-bottom:1px solid #1a2029; font-variant-numeric:tabular-nums; }
   #dailyTable td:nth-child(2), #dailyTable th:nth-child(2), #dailyWins td:nth-child(2), #dailyWins th:nth-child(2) { text-align:left; word-break:break-word; }
   #dailyTable th:first-child, #dailyTable td:first-child, #dailyWins th:first-child, #dailyWins td:first-child { width:28px; color:var(--muted); }
-  #dailyTable td:last-child { font-weight:700; color:var(--accent); }
+  #dailyTable td:nth-child(5) { font-weight:700; color:var(--accent); }
+  #dailyTable td:nth-child(6), #dailyTable td:nth-child(7) { font-size:.74rem; color:var(--muted); }
+  #dailyTable tr.sad td { color:var(--muted); }
+  #dailyTable tr.sad td:nth-child(5) { color:var(--muted); font-weight:400; }
   #dailyTable tr.open { cursor:pointer; } #dailyTable tr.open:active td { background:#1c2531; }
   #dailyTable td.hid { color:var(--muted); }
   .chNone { color:var(--muted); font-size:.85rem; margin:4px 0; }
@@ -484,7 +487,7 @@
       <h3 id="dailyTitle">Today's Leaderboard</h3>
       <div id="dailyDay" class="seg" role="group" aria-label="Day"><button type="button" data-v="today" class="on">Today</button><button type="button" data-v="yesterday">Yesterday</button></div>
       <p id="dailyNote" class="chNone"></p>
-      <table id="dailyTable" hidden><thead><tr><th>#</th><th>Username</th><th>Talent</th><th>Chem</th><th>Total</th></tr></thead><tbody id="dailyBody"></tbody></table>
+      <table id="dailyTable" hidden><thead><tr><th>#</th><th>Username</th><th>Talent</th><th>Chem</th><th>Total</th><th>Acc</th><th>Time</th></tr></thead><tbody id="dailyBody"></tbody></table>
       <h3>Daily Wins</h3>
       <p id="dailyWinsNone" class="chNone">No Daily Challenge has been won yet.</p>
       <table id="dailyWins" hidden><thead><tr><th>#</th><th>Username</th><th>1st Place Finishes</th></tr></thead><tbody id="dailyWinsBody"></tbody></table>
@@ -658,7 +661,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026-11-10.1';
+const APP_VERSION = '2026-11-11.1';
 // Keep the page exactly as tall as the visible screen (Safari's toolbars come and go).
 function setAppH() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
 setAppH();
@@ -1288,6 +1291,24 @@ function roundStrings() {
   }
   return out;
 }
+// A frozen copy of every player card in this draft (the 9 picks and every option offered), saved with the draft so it always looks
+// the same in the viewer, even if a player is later changed or removed from the pool.
+function cardsJSON() {
+  const seen = new Set(), out = [];
+  const add = o => {
+    const p = o && byKey(o.key); if (!p || seen.has(keyOf(p))) return; seen.add(keyOf(p));
+    const u = hsUrl(p), m = /^https:\/\/sleepercdn\.com\/content\/nfl\/players\/([^/.]+)\.jpg$/.exec(u);
+    out.push([p.name, p.position, p.team, p.division, p.draft, p.college || '', p.levels, m ? m[1] : u]);
+  };
+  (draft.hist || []).forEach(h => (h || []).forEach(add));
+  (draft.snap || []).forEach(k => k && add({key:k.key}));
+  return out.length ? JSON.stringify(out) : undefined;
+}
+const parseCards = str => {
+  const map = {};
+  try { JSON.parse(str || '[]').forEach(c => { if (Array.isArray(c) && c.length >= 7) map[c[0]] = {name:String(c[0]), position:String(c[1]), team:String(c[2]), division:String(c[3]), draft:String(c[4]), college:String(c[5] || ''), levels:(c[6] || []).map(Number).filter(Boolean), headshot:c[7] ? (/^https?:/.test(c[7]) ? c[7] : 'https://sleepercdn.com/content/nfl/players/' + c[7] + '.jpg') : ''}; }); } catch (e) {}
+  return map;
+};
 function submitDraft() {
   const acc = parseFloat($('accNum').textContent);
   const snap = snapshot();
@@ -1295,7 +1316,7 @@ function submitDraft() {
   draft.result = {talent:Number($('talentNum').textContent), chemistry:Number($('chemNum').textContent), total:Number($('draftNum').textContent), accuracy:isNaN(acc) ? null : acc};
   saveDraft(); setCount(todayN + 1); renderDraft(); openNamePrompt();
   if (draft.challenge) flash(draft.challenge.daily ? 'Daily Challenge submitted. See the leaderboard on the Daily tab.' : 'Challenge submitted. The result shows on the Challenge tab once both of you have finished.');
-  logDraft(Object.assign({id:draft.id, odds:draft.odds, mode:draft.mode, mod:draft.mod ? 'Y' : 'N', rounds:roundStrings(), challenge:draft.challenge ? draft.challenge.id : undefined, time:draft.challenge && draft.t0 ? Math.round((Date.now() - draft.t0) / 1000) : undefined}, draft.result)).then(refreshCount);
+  logDraft(Object.assign({id:draft.id, odds:draft.odds, mode:draft.mode, mod:draft.mod ? 'Y' : 'N', rounds:roundStrings(), cards:cardsJSON(), challenge:draft.challenge ? draft.challenge.id : undefined, time:draft.challenge && draft.t0 ? Math.round((Date.now() - draft.t0) / 1000) : undefined}, draft.result)).then(refreshCount);
 }
 // Sub-tabs after a draft is submitted: "Submission" (the team as drafted) and "Solution" (the best possible layout).
 function setSubView(v) {
@@ -1329,7 +1350,7 @@ $('modSel').addEventListener('click', e => { const b = e.target.closest('button'
 $('draftStart').addEventListener('click', () => { newDraft(); renderDraft(); });
 $('oddsSel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; oddsPref = b.dataset.o; try { localStorage.setItem(ODDS_KEY, oddsPref); } catch (e2) {} renderDraft(); });
 // ---- Review: tap a draft on the Leaders tab to see it the way it looked when it was submitted.
-let stash = null;
+let stash = null, stashPlayers = null;
 function parseRound(s) {
   const parts = String(s || '').split(' | '), m = /^(.*) (\d)★ @(\d)$/.exec(parts[0]);
   if (!m) return null;
@@ -1339,9 +1360,20 @@ function parseRound(s) {
 const findPlayer = (name, level) => players.find(p => p.name === name && p.levels.includes(level)) || players.find(p => p.name === name);
 function openReview(x, sides, back) {
   if (draftLocked()) return;
-  if (!players.length) { flash('The player database has not loaded yet.'); return; }
+  if (!players.length && !x.cards) { flash('The player database has not loaded yet.'); return; }
   const rs = (x.rounds || []).map(parseRound);
   if (rs.length < 9 || rs.some(r => !r)) return;
+  // The viewer works from a small pool made of the draft's own saved cards (or the current pool for older drafts without them).
+  const db = stashPlayers || players, cards = parseCards(x.cards), names = new Set();
+  rs.forEach(r => { names.add(r.name); r.alts.forEach(a => names.add(a.name)); });
+  const pool = [];
+  names.forEach(n => {
+    const c = cards[n], d = db.find(q => q.name === n);
+    const p = c && c.levels.length ? c : (d ? Object.assign({}, d, {levels:d.levels.slice()}) : null);
+    if (p) { p.level = maxLevel(p); pool.push(p); }
+  });
+  if (!stashPlayers) stashPlayers = players;
+  players = pool;
   const snap = Array(9).fill(null); let missing = 0;
   rs.forEach(r => { const p = findPlayer(r.name, r.level); if (p && r.spot >= 1 && r.spot <= 9) snap[r.spot - 1] = {key:keyOf(p), level:r.level}; else missing++; });
   if (!stash) stash = {draft};
@@ -1352,6 +1384,7 @@ function openReview(x, sides, back) {
 function exitReview() {
   if (!stash) return;
   draft = stash.draft; stash = null;
+  if (stashPlayers) { players = stashPlayers; stashPlayers = null; }
   if (mode === 'draft') restore(draft ? draft.snap : []);
   renderDraft();
 }
@@ -1629,7 +1662,7 @@ function renderHow() {
     ${ODDS.map((r, i) => '<tr><td>' + (i + 1) + '</td>' + r.map(v => '<td>' + (v ? v + '%' : '–') + '</td>').join('') + '</tr>').join('')}</table>
 
     <h3>Daily Challenge</h3>
-    <p>Once a day, everyone drafts from the same cards (Default odds, Normal mode, no modifier). You get one try, and a forfeit counts as your try. Scores and drafts on the Daily leaderboard stay hidden until you finish, and the Daily Wins board counts each person's first-place finishes.</p>
+    <p>Once a day, everyone drafts from the same cards (Default odds and Normal mode, except Fridays use Chaos odds and Saturdays use Ball-Knower mode; never a modifier). You get one try, and a forfeit counts as your try. Scores and drafts on the Daily leaderboard stay hidden until you finish or forfeit (or the day ends), forfeits show as zeros, and the Daily Wins board counts each person's first-place finishes.</p>
     <h3>Sandbox and Leaders</h3>
     <p>The Sandbox lets you place any players you like and try different layouts. Once all 9 are in, the Solution tab shows the best arrangement. On the Leaders tab, tap a draft to see its picks and the players that were passed over.</p>`;
 }
@@ -1657,7 +1690,8 @@ function renderDaily() {
     msg.textContent = !user || user.status !== 'approved' ? 'Sign up in the Account tab to play the Daily Challenge.' : (d ? d.error : 'Loading…'); return;
   }
   const mineLocal = !!(draft && draft.challenge && draft.challenge.daily && draft.challenge.date === d.today && draft.phase === 'picking');
-  if (d.status === 'new') { go.disabled = false; go.dataset.a = 'start'; msg.textContent = 'Everyone gets the same cards today. You get one try, and a forfeit counts as your try.'; }
+  const rl = d.rules ? (d.rules.odds + ' odds · ' + (d.rules.mode === 'Ball-Knower' ? 'Ball-Knower' : 'Normal') + ' mode') : '';
+  if (d.status === 'new') { go.disabled = false; go.dataset.a = 'start'; msg.textContent = (dyDay === 'today' ? "Today's rules: " + rl + '. ' : '') + 'Everyone gets the same cards. You get one try, and a forfeit counts as your try.'; }
   else if (d.status === 'started') {
     if (mineLocal) { go.disabled = false; go.dataset.a = 'resume'; go.textContent = 'Resume Daily Challenge'; msg.textContent = 'Your Daily Challenge is in progress.'; }
     else msg.textContent = 'Your Daily Challenge was started and cannot be restarted today.';
@@ -1665,13 +1699,18 @@ function renderDaily() {
   else msg.textContent = "You forfeited today's Daily Challenge. A new one starts at midnight (Eastern).";
   const rows = d.board || [];
   const none = dyDay === 'yesterday' ? 'Nobody finished yesterday\'s Daily Challenge.' : 'No completed drafts yet.';
-  note.textContent = !rows.length ? none : d.canView ? 'Tap a draft to see its picks.' : 'Scores and drafts are hidden until you complete ' + (dyDay === 'yesterday' ? "yesterday's" : "today's") + ' Daily Challenge.';
+  const dayRules = dyDay === 'yesterday' && d.rules ? "Yesterday's rules: " + rl + '. ' : '';
+  note.textContent = dayRules + (!rows.length ? none : d.canView ? 'Tap a draft to see its picks.' : 'Scores and drafts are hidden until you complete ' + (dyDay === 'yesterday' ? "yesterday's" : "today's") + ' Daily Challenge.');
   tbl.hidden = !rows.length;
   rows.forEach((x, i) => {
     const tr = document.createElement('tr');
-    const cells = x.hidden ? ['–', x.name, '–', '–', '–'] : [x.rank, x.name, x.talent, x.chemistry, x.total];
+    const mmss = t => t == null ? '–' : Math.floor(t / 60) + ':' + String(Math.round(t) % 60).padStart(2, '0');
+    const cells = x.hidden ? ['–', x.username, '–', '–', '–', '–', '–'] : [x.rank, x.username, x.talent, x.chemistry, x.total, x.accuracy == null ? '–' : Number(x.accuracy).toFixed(x.forfeit ? 0 : 1) + '%', mmss(x.time)];
     cells.forEach((v, k) => { const td = document.createElement('td'); td.textContent = v == null ? '–' : v; if (x.hidden && k !== 1) td.className = 'hid'; tr.appendChild(td); });
-    if (!x.hidden) { tr.className = 'open'; tr.addEventListener('click', () => openReview(x, null, 'daily')); }
+    if (!x.hidden) {
+      tr.className = x.forfeit ? 'open sad' : 'open';
+      tr.addEventListener('click', () => x.forfeit ? flash(x.name + ' forfeited their Daily Challenge. Sad!') : openReview(x, null, 'daily'));
+    }
     body.appendChild(tr);
   });
   const wins = d.wins || [];
@@ -1682,9 +1721,10 @@ async function startDaily() {
   if (!players.length) { flash('The player database has not loaded yet.'); return; }
   const go = $('dailyGo'); go.disabled = true;
   try {
-    const r = await api('daily_start', user.phone, {deck:JSON.stringify(makeDeck('Default'))});
+    let r = await api('daily_start', user.phone, {});
+    if (r.ok && r.need_deck) r = await api('daily_start', user.phone, {deck:JSON.stringify(makeDeck(r.odds))});
     if (!r.ok) { flash(r.error === 'daily_done' ? "You've already used today's try." : (ERR[r.error] || 'Could not start the Daily Challenge.')); loadDaily(); return; }
-    startChallengeDraft({id:'D:' + r.date, deck:r.deck, odds:'Default', mode:'Normal', mod:'N', opponent:'Daily', daily:true, date:r.date});
+    startChallengeDraft({id:'D:' + r.date, deck:r.deck, odds:r.odds, mode:r.mode, mod:'N', opponent:'Daily', daily:true, date:r.date});
   } catch (e) { flash(OFFLINE); go.disabled = false; }
 }
 $('dailyGo').addEventListener('click', () => { const a = $('dailyGo').dataset.a; if (a === 'start') startDaily(); else if (a === 'resume') showTab('draft'); });
